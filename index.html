@@ -2,41 +2,42 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>OfflineArcade</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script defer src="main.js"></script>
 </head>
 <body>
   <div id="loader" class="loader hidden">
-    <div class="loader-bar"></div>
-    <div id="loader-status">Lade…</div>
+    <div class="loader-bar"><div class="loader-progress"></div></div>
+    <div id="loader-status">0%</div>
   </div>
   <header>
     <h1>OfflineArcade</h1>
-    <div class="version">Version <span id="version">1.0.0</span></div>
     <div class="theme-toggle">
-      <button id="theme-auto">Auto</button>
-      <button id="theme-light">Hell</button>
-      <button id="theme-dark">Dunkel</button>
+      <button id="theme-auto" title="System"><span>🖥</span></button>
+      <button id="theme-light" title="Hell"><span>☀️</span></button>
+      <button id="theme-dark" title="Dunkel"><span>🌙</span></button>
     </div>
+    <div class="version">v<span id="version">1.0.0</span></div>
   </header>
   <main>
     <h2>Spieleauswahl</h2>
-    <ul class="game-list">
-      <li>
-        <a href="games/escape-road/index.html">Escape Road</a>
-      </li>
-      <!-- Weitere Spiele können hier einfach ergänzt werden -->
-    </ul>
+    <div class="game-grid">
+      <a class="game-card" href="games/escape-road/index.html">
+        <div class="game-icon">🚗</div>
+        <div class="game-title">Escape Road</div>
+      </a>
+      <!-- Weitere Spiele als weitere .game-card hier eintragen -->
+    </div>
     <div id="update-section" class="hidden">
-      <span>Eine neue Version ist verfügbar!</span>
-      <button id="update-btn">Jetzt aktualisieren</button>
+      <span>Neue Version verfügbar!</span>
+      <button id="update-btn">Update</button>
     </div>
   </main>
   <footer>
-    <small>Deine Spielstände werden offline auf deinem Gerät gespeichert.</small>
+    <small>Offline-Spielesammlung • Spielstände bleiben auf deinem Gerät</small>
   </footer>
 </body>
 </html>
