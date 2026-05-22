@@ -1,0 +1,130 @@
+:root {
+  --color-bg: #f7f7fc;
+  --color-fg: #21213a;
+  --color-accent: #4cc9f0;
+  --color-loader: #7068e4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #16161d;
+    --color-fg: #f2f2f2;
+    --color-accent: #4cc9f0;
+    --color-loader: #91f2ff;
+  }
+}
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+header, main, footer {
+  max-width: 400px;
+  margin: auto;
+  padding: 1em;
+}
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1 { margin-top: 0.2em; }
+.version { margin-bottom: 1em; font-size: 0.9em; color: var(--color-accent);}
+.theme-toggle {
+  margin-bottom: 1em;
+}
+.theme-toggle button {
+  margin-right: 0.4em;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  padding: 0.3em 1em;
+  border-radius: 1.3em;
+  font-size: 1em;
+  cursor: pointer;
+  opacity: 0.9;
+}
+.theme-toggle button:active, .theme-toggle button.selected {
+  opacity: 1;
+  outline: 2px solid var(--color-loader);
+}
+.game-list {
+  list-style: none;
+  padding: 0;
+}
+.game-list li {
+  margin-bottom: 0.8em;
+}
+.game-list a {
+  font-size: 1.2em;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 1px solid var(--color-accent);
+}
+#update-section {
+  margin-top: 1.4em;
+  padding: 1em;
+  background: #fee;
+  color: #a00;
+  text-align: center;
+  border-radius: 1em;
+}
+#update-btn {
+  background: var(--color-loader);
+  color: #fff;
+  border: none;
+  border-radius: 1.1em;
+  padding: 0.4em 1.6em;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+/* --- LADEBILDSCHIRM --- */
+.loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-bg);
+  z-index: 100;
+  transition: opacity 0.4s;
+}
+.loader.hidden { display: none; }
+.loader-bar {
+  width: 220px;
+  height: 15px;
+  background: #e6e6e6;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1em;
+  position: relative;
+}
+.loader-bar::before {
+  content: '';
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-loader) 0%, var(--color-accent) 100%);
+  animation: loadingBar 2.4s cubic-bezier(.26,.72,.5,1.09) forwards;
+}
+@keyframes loadingBar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+#loader-status {
+  font-size: 1em;
+  color: var(--color-accent);
+}
+
+/* --- DARK/LIGHT OVERRIDE --- */
+body.light {
+  --color-bg: #f7f7fc;
+  --color-fg: #21213a;
+}
+body.dark {
+  --color-bg: #16161d;
+  --color-fg: #f2f2f2;
+}
