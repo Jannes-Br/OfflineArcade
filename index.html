@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OfflineArcade</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="main.js"></script>
+</head>
+<body>
+  <div id="loader" class="loader hidden">
+    <div class="loader-bar"></div>
+    <div id="loader-status">Lade…</div>
+  </div>
+  <header>
+    <h1>OfflineArcade</h1>
+    <div class="version">Version <span id="version">1.0.0</span></div>
+    <div class="theme-toggle">
+      <button id="theme-auto">Auto</button>
+      <button id="theme-light">Hell</button>
+      <button id="theme-dark">Dunkel</button>
+    </div>
+  </header>
+  <main>
+    <h2>Spieleauswahl</h2>
+    <ul class="game-list">
+      <li>
+        <a href="games/escape-road/index.html">Escape Road</a>
+      </li>
+      <!-- Weitere Spiele können hier einfach ergänzt werden -->
+    </ul>
+    <div id="update-section" class="hidden">
+      <span>Eine neue Version ist verfügbar!</span>
+      <button id="update-btn">Jetzt aktualisieren</button>
+    </div>
+  </main>
+  <footer>
+    <small>Deine Spielstände werden offline auf deinem Gerät gespeichert.</small>
+  </footer>
+</body>
+</html>
