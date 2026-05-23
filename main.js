@@ -1,38 +1,79 @@
-const CACHE_VERSION = 'v18';
+const CACHE_VERSION = 'v19';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Version anzeigen
-  document.getElementById('version').textContent = CACHE_VERSION;
+  // Version
+  document.getElementById('version')
+    .textContent = CACHE_VERSION;
 
-  // Letztes Update
-  const lastUpdate =
-    localStorage.getItem('offlinearcade-last-update');
-
-  const updateElement =
+  // Last update
+  const lastUpdateElement =
     document.getElementById('last-update');
 
-  if (lastUpdate) {
+  let savedUpdate =
+    localStorage.getItem('offlinearcade-last-update');
 
-    updateElement.textContent = lastUpdate;
+  if (!savedUpdate) {
 
-  } else {
-
-    const now = new Date();
-
-    const formatted =
-      now.toLocaleDateString() +
-      ' ' +
-      now.toLocaleTimeString();
+    savedUpdate =
+      new Date().toLocaleString();
 
     localStorage.setItem(
       'offlinearcade-last-update',
-      formatted
+      savedUpdate
     );
 
-    updateElement.textContent = formatted;
+  }
+
+  lastUpdateElement.textContent =
+    savedUpdate;
+
+  // Online status
+  const statusDot =
+    document.getElementById('status-dot');
+
+  const onlineStatus =
+    document.getElementById('online-status');
+
+  function updateOnlineStatus() {
+
+    if (navigator.onLine) {
+
+      statusDot.style.background =
+        '#22c55e';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #22c55e';
+
+      onlineStatus.textContent =
+        'Online';
+
+    } else {
+
+      statusDot.style.background =
+        '#ef4444';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #ef4444';
+
+      onlineStatus.textContent =
+        'Offline';
+
+    }
 
   }
+
+  updateOnlineStatus();
+
+  window.addEventListener(
+    'online',
+    updateOnlineStatus
+  );
+
+  window.addEventListener(
+    'offline',
+    updateOnlineStatus
+  );
 
   // Service Worker
   if ('serviceWorker' in navigator) {
@@ -43,6 +84,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .then(registration => {
 
+      const progress =
+        document.getElementById(
+          'update-progress'
+        );
+
+      progress.textContent = 'Checking...';
+
+      registration.update();
+
       registration.addEventListener(
         'updatefound',
         () => {
@@ -50,25 +100,40 @@ document.addEventListener('DOMContentLoaded', () => {
           const newWorker =
             registration.installing;
 
+          let fakeProgress = 0;
+
+          const interval = setInterval(() => {
+
+            fakeProgress += 10;
+
+            if (fakeProgress > 90) {
+              fakeProgress = 90;
+            }
+
+            progress.textContent =
+              fakeProgress + '%';
+
+          }, 300);
+
           newWorker.addEventListener(
             'statechange',
             () => {
 
               if (
-                newWorker.state === 'installed' &&
-                navigator.serviceWorker.controller
+                newWorker.state === 'installed'
               ) {
 
-                const now = new Date();
+                clearInterval(interval);
 
-                const formatted =
-                  now.toLocaleDateString() +
-                  ' ' +
-                  now.toLocaleTimeString();
+                progress.textContent =
+                  '100%';
+
+                const now =
+                  new Date().toLocaleString();
 
                 localStorage.setItem(
                   'offlinearcade-last-update',
-                  formatted
+                  now
                 );
 
                 newWorker.postMessage({
