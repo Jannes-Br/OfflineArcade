@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v20';
+const CACHE_VERSION = 'v21';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('version')
     .textContent = CACHE_VERSION;
 
-  // UPDATE ELEMENTE
+  // UPDATE INFO
   const updateLabel =
     document.getElementById(
       'update-label'
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'last-update'
     );
 
-  // LAST UPDATE LADEN
+  // LAST UPDATE
   let savedUpdate =
     localStorage.getItem(
       'offlinearcade-last-update'
@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
   }
+
+  updateLabel.textContent =
+    'Last Update:';
 
   lastUpdateElement.textContent =
     savedUpdate;
@@ -98,49 +101,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .then(registration => {
 
-      // Nach Updates suchen
+      // Prüfen auf Updates
       registration.update();
 
       registration.addEventListener(
         'updatefound',
         () => {
 
-          updateLabel.textContent =
-            'Status:';
-
-          lastUpdateElement.textContent =
-            'Downloading...';
-
           const newWorker =
             registration.installing;
+
+          // Nur anzeigen wenn wirklich neue Version
+          if (
+            navigator.serviceWorker.controller
+          ) {
+
+            updateLabel.textContent =
+              'Status:';
+
+            lastUpdateElement.textContent =
+              'Downloading...';
+
+          }
 
           newWorker.addEventListener(
             'statechange',
             () => {
 
-              // Update fertig
+              // Fertig installiert
               if (
                 newWorker.state === 'installed'
               ) {
 
-                const now =
-                  new Date().toLocaleString();
-
-                localStorage.setItem(
-                  'offlinearcade-last-update',
-                  now
-                );
-
-                updateLabel.textContent =
-                  'Last Update:';
-
-                lastUpdateElement.textContent =
-                  now;
-
-                // Neue Version aktivieren
+                // Nur bei echter neuer Version
                 if (
                   navigator.serviceWorker.controller
                 ) {
+
+                  const now =
+                    new Date().toLocaleString();
+
+                  localStorage.setItem(
+                    'offlinearcade-last-update',
+                    now
+                  );
+
+                  updateLabel.textContent =
+                    'Last Update:';
+
+                  lastUpdateElement.textContent =
+                    now;
 
                   newWorker.postMessage({
                     type: 'SKIP_WAITING'
@@ -158,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-    // Seite nach Update neu laden
     navigator.serviceWorker.addEventListener(
       'controllerchange',
       () => {
