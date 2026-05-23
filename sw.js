@@ -13,6 +13,8 @@ const ASSETS = [
   '/OfflineArcade/games/escape-road/script.js',
   '/OfflineArcade/games/escape-road/style.css',
 
+  '/OfflineArcade/games/escape-road/icon-512.png',
+  '/OfflineArcade/games/escape-road/icon.png',
 ];
 
 self.addEventListener('install', e => {
