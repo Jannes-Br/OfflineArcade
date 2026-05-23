@@ -1,26 +1,71 @@
-const CACHE='offlinearcade-v4'; // Hochzählen bei echtem Update!
-const ASSETS=[
-  'index.html','style.css','main.js','manifest.json',
-  'games/escape-road/index.html',
-  'games/escape-road/game.js',
-  'games/escape-road/style.css'
+const CACHE = 'offlinearcade-v1';
+
+const ASSETS = [
+
+  '/OfflineArcade/',
+  '/OfflineArcade/index.html',
+  '/OfflineArcade/style.css',
+  '/OfflineArcade/main.js',
+  '/OfflineArcade/manifest.json',
+
+  '/OfflineArcade/games/escape-road/index.html',
+  '/OfflineArcade/games/escape-road/style.css',
+  '/OfflineArcade/games/escape-road/game.js'
+
 ];
 
-self.addEventListener('message',event=>{
-  if(event.data && event.data.type==='SKIP_WAITING'){self.skipWaiting();}
-});
-self.addEventListener('install',e=>{
+self.addEventListener('install', e => {
+
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
-});
-self.addEventListener('activate',e=>{
-  clients.claim();
+
   e.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+
+    caches.open(CACHE)
+      .then(cache => cache.addAll(ASSETS))
+
   );
+
 });
-self.addEventListener('fetch',e=>{
-  e.respondWith(
-    caches.match(e.request).then(res=>res||fetch(e.request))
+
+self.addEventListener('activate', e => {
+
+  clients.claim();
+
+  e.waitUntil(
+
+    caches.keys().then(keys =>
+
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE)
+          .map(key => caches.delete(key))
+      )
+
+    )
+
   );
+
+});
+
+self.addEventListener('fetch', e => {
+
+  e.respondWith(
+
+    fetch(e.request)
+
+      .then(res => {
+
+        const copy = res.clone();
+
+        caches.open(CACHE)
+          .then(cache => cache.put(e.request, copy));
+
+        return res;
+
+      })
+
+      .catch(() => caches.match(e.request))
+
+  );
+
 });
