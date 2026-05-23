@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v25';
+const CACHE_VERSION = 'v26';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -6,34 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('version')
     .textContent = CACHE_VERSION;
 
-  // UPDATE TEXT
+  // ELEMENTE
   const lastUpdateElement =
     document.getElementById(
       'last-update'
     );
 
-  // LAST UPDATE LADEN
-  let savedUpdate =
-    localStorage.getItem(
-      'offlinearcade-last-update'
-    );
-
-  if (!savedUpdate) {
-
-    savedUpdate =
-      new Date().toLocaleString();
-
-    localStorage.setItem(
-      'offlinearcade-last-update',
-      savedUpdate
-    );
-
-  }
-
-  lastUpdateElement.textContent =
-    'Last Update: ' + savedUpdate;
-
-  // ONLINE STATUS
   const statusDot =
     document.getElementById(
       'status-dot'
@@ -44,6 +22,31 @@ document.addEventListener('DOMContentLoaded', () => {
       'online-status'
     );
 
+  // UPDATE TEXT ANZEIGEN
+  function loadLastUpdate() {
+
+    const saved =
+      localStorage.getItem(
+        'offlinearcade-last-update'
+      );
+
+    if (saved) {
+
+      lastUpdateElement.textContent =
+        'Last Update: ' + saved;
+
+    } else {
+
+      lastUpdateElement.textContent =
+        'No Updates Yet';
+
+    }
+
+  }
+
+  loadLastUpdate();
+
+  // ONLINE STATUS
   function updateOnlineStatus() {
 
     if (navigator.onLine) {
@@ -102,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const newWorker =
             registration.installing;
 
-          // Nur bei echter neuer Version
+          // Nur wenn echte alte Version existiert
           if (
             navigator.serviceWorker.controller
           ) {
@@ -127,22 +130,24 @@ document.addEventListener('DOMContentLoaded', () => {
                   const now =
                     new Date().toLocaleString();
 
+                  // SPEICHERN
                   localStorage.setItem(
                     'offlinearcade-last-update',
                     now
                   );
 
+                  // DIREKT anzeigen
                   lastUpdateElement.textContent =
                     'Last Update: ' + now;
 
-                  // kurz warten damit iOS speichern kann
+                  // Warten damit Safari speichert
                   setTimeout(() => {
 
                     newWorker.postMessage({
                       type: 'SKIP_WAITING'
                     });
 
-                  }, 500);
+                  }, 1000);
 
                 }
 
@@ -160,7 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
       'controllerchange',
       () => {
 
-        window.location.reload();
+        // Nach Reload nochmal laden
+        setTimeout(() => {
+
+          window.location.reload();
+
+        }, 300);
 
       }
     );
