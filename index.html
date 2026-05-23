@@ -2,43 +2,53 @@
 <html lang="de">
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
 
-  <title>OfflineArcade</title>
+<title>OfflineArcade</title>
 
-  <link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json">
 
-  <link
-    rel="apple-touch-icon"
-    href="assets/icon-192.png"
-  >
+<link
+  rel="apple-touch-icon"
+  href="assets/icon-192.png"
+>
 
-  <meta
-    name="apple-mobile-web-app-capable"
-    content="yes"
-  >
+<meta
+  name="apple-mobile-web-app-capable"
+  content="yes"
+>
 
-  <link rel="stylesheet" href="style.css">
+<meta
+  name="theme-color"
+  content="#111827"
+>
 
-  <script defer src="main.js"></script>
+<link rel="stylesheet" href="style.css">
+
+<script defer src="main.js"></script>
 
 </head>
+
 <body>
+
+<div class="background-glow"></div>
 
 <header>
 
   <h1>OfflineArcade</h1>
 
+  <p class="subtitle">
+    Offline Spieleplattform
+  </p>
+
 </header>
 
 <main>
-
-  <h2>Spieleauswahl</h2>
 
   <div class="game-grid">
 
@@ -47,10 +57,16 @@
       href="games/escape-road/index.html"
     >
 
-      <div class="game-icon">🚗</div>
+      <div class="game-icon">
+        🚗
+      </div>
 
       <div class="game-title">
         Escape Road
+      </div>
+
+      <div class="game-description">
+        Fliehe vor der Polizei
       </div>
 
     </a>
@@ -61,23 +77,17 @@
 
 <div id="app-info">
 
-  Version:
-  <span id="version"></span>
+  <div>
+    Version:
+    <span id="version"></span>
+  </div>
 
-  <br>
-
-  Update:
-  <span id="last-update"></span>
+  <div>
+    Update:
+    <span id="last-update"></span>
+  </div>
 
 </div>
-
-<footer>
-
-  <small>
-    Offline-Spielesammlung • Funktioniert ohne Internet
-  </small>
-
-</footer>
 
 </body>
 </html>
