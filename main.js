@@ -1,51 +1,75 @@
-const VERSION = '1.0.0';
+const CACHE_VERSION = 'v14';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Versionsanzeige
-  const versionElement = document.getElementById('version');
+  // Version anzeigen
+  document.getElementById('version').textContent = CACHE_VERSION;
 
-  if (versionElement) {
-    versionElement.textContent = VERSION;
-  }
+  // Letztes Update
+  const lastUpdate =
+    localStorage.getItem('offlinearcade-last-update');
 
-  // Letztes Update anzeigen
-  const lastUpdateElement = document.getElementById('last-update');
+  const updateElement =
+    document.getElementById('last-update');
 
-  const savedUpdate = localStorage.getItem('offlinearcade-last-update');
+  if (lastUpdate) {
 
-  if (lastUpdateElement) {
+    updateElement.textContent = lastUpdate;
 
-    if (savedUpdate) {
-      lastUpdateElement.textContent = savedUpdate;
-    } else {
-      lastUpdateElement.textContent = 'Erster Start';
-    }
+  } else {
+
+    const now = new Date();
+
+    const formatted =
+      now.toLocaleDateString() +
+      ' ' +
+      now.toLocaleTimeString();
+
+    localStorage.setItem(
+      'offlinearcade-last-update',
+      formatted
+    );
+
+    updateElement.textContent = formatted;
 
   }
 
   // Service Worker
   if ('serviceWorker' in navigator) {
 
-    window.addEventListener('load', () => {
+    navigator.serviceWorker.register(
+      '/OfflineArcade/sw.js'
+    )
 
-      navigator.serviceWorker.register('/OfflineArcade/sw.js')
+    .then(registration => {
 
-        .then(registration => {
+      registration.addEventListener(
+        'updatefound',
+        () => {
 
-          console.log('Service Worker registriert');
+          const newWorker =
+            registration.installing;
 
-          // Automatische Updates
-          registration.addEventListener('updatefound', () => {
-
-            const newWorker = registration.installing;
-
-            newWorker.addEventListener('statechange', () => {
+          newWorker.addEventListener(
+            'statechange',
+            () => {
 
               if (
                 newWorker.state === 'installed' &&
                 navigator.serviceWorker.controller
               ) {
+
+                const now = new Date();
+
+                const formatted =
+                  now.toLocaleDateString() +
+                  ' ' +
+                  now.toLocaleTimeString();
+
+                localStorage.setItem(
+                  'offlinearcade-last-update',
+                  formatted
+                );
 
                 newWorker.postMessage({
                   type: 'SKIP_WAITING'
@@ -53,39 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
               }
 
-            });
+            }
+          );
 
-          });
-
-          if (registration.waiting) {
-
-            registration.waiting.postMessage({
-              type: 'SKIP_WAITING'
-            });
-
-          }
-
-        });
+        }
+      );
 
     });
-
-    // Nach Update neu laden
-    let refreshing = false;
 
     navigator.serviceWorker.addEventListener(
       'controllerchange',
       () => {
-
-        if (refreshing) return;
-
-        refreshing = true;
-
-        const now = new Date();
-
-        localStorage.setItem(
-          'offlinearcade-last-update',
-          now.toLocaleString()
-        );
 
         window.location.reload();
 
