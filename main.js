@@ -1,101 +1,173 @@
-if ('serviceWorker' in navigator) {
+const CACHE_VERSION = 'v19';
 
-  navigator.serviceWorker.register(
-    '/OfflineArcade/sw.js'
-  )
+document.addEventListener('DOMContentLoaded', () => {
 
-  .then(registration => {
+  // VERSION
+  document.getElementById('version')
+    .textContent = CACHE_VERSION;
 
-    const label =
-      document.getElementById(
-        'update-label'
-      );
+  // UPDATE ELEMENTE
+  const updateLabel =
+    document.getElementById(
+      'update-label'
+    );
 
-    const updateText =
-      document.getElementById(
-        'last-update'
-      );
+  const lastUpdateElement =
+    document.getElementById(
+      'last-update'
+    );
 
-    function saveUpdateTime() {
+  // LAST UPDATE LADEN
+  let savedUpdate =
+    localStorage.getItem(
+      'offlinearcade-last-update'
+    );
 
-      const now =
-        new Date().toLocaleString();
+  if (!savedUpdate) {
 
-      localStorage.setItem(
-        'offlinearcade-last-update',
-        now
-      );
+    savedUpdate =
+      new Date().toLocaleString();
 
-      label.textContent =
-        'Last Update:';
+    localStorage.setItem(
+      'offlinearcade-last-update',
+      savedUpdate
+    );
 
-      updateText.textContent =
-        now;
+  }
+
+  lastUpdateElement.textContent =
+    savedUpdate;
+
+  // ONLINE STATUS
+  const statusDot =
+    document.getElementById(
+      'status-dot'
+    );
+
+  const onlineStatus =
+    document.getElementById(
+      'online-status'
+    );
+
+  function updateOnlineStatus() {
+
+    if (navigator.onLine) {
+
+      statusDot.style.background =
+        '#22c55e';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #22c55e';
+
+      onlineStatus.textContent =
+        'Online';
+
+    } else {
+
+      statusDot.style.background =
+        '#ef4444';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #ef4444';
+
+      onlineStatus.textContent =
+        'Offline';
 
     }
 
-    registration.addEventListener(
-      'updatefound',
-      () => {
+  }
 
-        label.textContent =
-          'Status:';
+  updateOnlineStatus();
 
-        updateText.textContent =
-          'Downloading...';
+  window.addEventListener(
+    'online',
+    updateOnlineStatus
+  );
 
-        const newWorker =
-          registration.installing;
+  window.addEventListener(
+    'offline',
+    updateOnlineStatus
+  );
 
-        newWorker.addEventListener(
-          'statechange',
-          () => {
+  // SERVICE WORKER
+  if ('serviceWorker' in navigator) {
 
-            // installiert
-            if (
-              newWorker.state === 'installed'
-            ) {
+    navigator.serviceWorker.register(
+      '/OfflineArcade/sw.js'
+    )
 
-              saveUpdateTime();
+    .then(registration => {
 
+      // Nach Updates suchen
+      registration.update();
+
+      registration.addEventListener(
+        'updatefound',
+        () => {
+
+          updateLabel.textContent =
+            'Status:';
+
+          lastUpdateElement.textContent =
+            'Downloading...';
+
+          const newWorker =
+            registration.installing;
+
+          newWorker.addEventListener(
+            'statechange',
+            () => {
+
+              // Update fertig
               if (
-                navigator.serviceWorker.controller
+                newWorker.state === 'installed'
               ) {
 
-                newWorker.postMessage({
-                  type: 'SKIP_WAITING'
-                });
+                const now =
+                  new Date().toLocaleString();
+
+                localStorage.setItem(
+                  'offlinearcade-last-update',
+                  now
+                );
+
+                updateLabel.textContent =
+                  'Last Update:';
+
+                lastUpdateElement.textContent =
+                  now;
+
+                // Neue Version aktivieren
+                if (
+                  navigator.serviceWorker.controller
+                ) {
+
+                  newWorker.postMessage({
+                    type: 'SKIP_WAITING'
+                  });
+
+                }
 
               }
 
             }
+          );
 
-          }
-        );
+        }
+      );
+
+    });
+
+    // Seite nach Update neu laden
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      () => {
+
+        window.location.reload();
 
       }
     );
 
-    // Kein Update gefunden
-    if (!registration.installing) {
+  }
 
-      const saved =
-        localStorage.getItem(
-          'offlinearcade-last-update'
-        );
-
-      if (saved) {
-
-        label.textContent =
-          'Last Update:';
-
-        updateText.textContent =
-          saved;
-
-      }
-
-    }
-
-  });
-
-}
+});
