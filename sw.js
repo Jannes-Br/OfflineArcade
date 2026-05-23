@@ -9,8 +9,9 @@ const ASSETS = [
   '/OfflineArcade/manifest.json',
 
   '/OfflineArcade/games/escape-road/index.html',
+  '/OfflineArcade/games/escape-road/manifest.json',
+  '/OfflineArcade/games/escape-road/script.js',
   '/OfflineArcade/games/escape-road/style.css',
-  '/OfflineArcade/games/escape-road/game.js'
 
 ];
 
