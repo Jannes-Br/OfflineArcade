@@ -1,26 +1,196 @@
-#app-info {
-  position: fixed;
+* {
+  box-sizing: border-box;
+}
 
-  right: 10px;
-  bottom: 10px;
+html,
+body {
+  margin: 0;
+  padding: 0;
 
-  background: rgba(0,0,0,0.7);
-
-  color: white;
-
-  padding: 8px 12px;
-
-  border-radius: 12px;
-
-  font-size: 12px;
-
-  line-height: 1.5;
-
-  z-index: 9999;
+  width: 100%;
+  min-height: 100%;
 
   font-family: Arial, sans-serif;
 
-  backdrop-filter: blur(6px);
+  background:
+    linear-gradient(
+      180deg,
+      #111827 0%,
+      #0b1120 100%
+    );
 
-  opacity: 0.85;
+  color: white;
+
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
+
+.background-glow {
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(76,201,240,0.18),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(99,102,241,0.18),
+      transparent 35%
+    );
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+header {
+  position: relative;
+  z-index: 1;
+
+  text-align: center;
+
+  padding:
+    max(40px, env(safe-area-inset-top))
+    20px
+    20px;
+}
+
+h1 {
+  margin: 0;
+
+  font-size: 42px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  margin-top: 10px;
+
+  opacity: 0.7;
+
+  font-size: 16px;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+
+  max-width: 1100px;
+
+  margin: auto;
+
+  padding: 20px;
+}
+
+.game-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px,1fr));
+
+  gap: 24px;
+}
+
+.game-card {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  border-radius: 28px;
+
+  padding: 28px;
+
+  text-decoration: none;
+
+  color: white;
+
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    border 0.2s;
+}
+
+.game-card:hover {
+  transform:
+    translateY(-5px);
+
+  background:
+    rgba(255,255,255,0.1);
+
+  border:
+    1px solid rgba(76,201,240,0.5);
+}
+
+.game-icon {
+  font-size: 58px;
+
+  margin-bottom: 18px;
+}
+
+.game-title {
+  font-size: 24px;
+
+  font-weight: 700;
+}
+
+.game-description {
+  margin-top: 10px;
+
+  opacity: 0.7;
+
+  line-height: 1.4;
+}
+
+#app-info {
+  position: fixed;
+
+  right: 14px;
+  bottom: 14px;
+
+  z-index: 20;
+
+  background:
+    rgba(0,0,0,0.45);
+
+  backdrop-filter: blur(12px);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  border-radius: 16px;
+
+  padding: 10px 14px;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
