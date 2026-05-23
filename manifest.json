@@ -1,10 +1,11 @@
 {
   "name": "OfflineArcade",
   "short_name": "OfflineArcade",
-  "start_url": ".",
+  "start_url": "/OfflineArcade/",
   "display": "standalone",
   "background_color": "#181921",
   "theme_color": "#4cc9f0",
+
   "icons": [
     {
       "src": "assets/icon-192.png",
