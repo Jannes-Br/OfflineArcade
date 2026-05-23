@@ -111,12 +111,25 @@ main {
   gap: 28px;
 }
 
+.game-grid {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 20px;
+
+  margin-top: 25px;
+}
+
 .game-card {
-  position: relative;
+
+  width: 190px;
 
   overflow: hidden;
 
-  border-radius: 28px;
+  border-radius: 22px;
 
   background:
     rgba(255,255,255,0.06);
@@ -129,33 +142,59 @@ main {
   color: white;
 
   transition:
-    transform 0.22s,
-    border 0.22s,
-    box-shadow 0.22s;
+    transform 0.2s,
+    border 0.2s,
+    box-shadow 0.2s;
 
   backdrop-filter: blur(10px);
+
+  flex-shrink: 0;
 }
 
 .game-card:hover {
 
   transform:
-    translateY(-6px);
+    translateY(-5px);
 
   border:
     1px solid rgba(76,201,240,0.55);
 
   box-shadow:
-    0 10px 35px rgba(0,0,0,0.35);
+    0 10px 30px rgba(0,0,0,0.3);
 }
 
 .game-thumb {
+
   width: 100%;
 
-  aspect-ratio: 16/9;
+  height: 110px;
 
   object-fit: cover;
 
   display: block;
+}
+
+.game-content {
+
+  padding: 12px;
+}
+
+.game-title {
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  margin-bottom: 6px;
+}
+
+.game-description {
+
+  opacity: 0.7;
+
+  line-height: 1.3;
+
+  font-size: 12px;
 }
 
 .game-content {
