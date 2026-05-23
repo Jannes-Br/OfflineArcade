@@ -4,36 +4,40 @@
   <meta charset="UTF-8">
   <title>OfflineArcade</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
+
   <script defer src="main.js"></script>
 </head>
 <body>
-  <div id="loader" class="loader hidden">
-    <div class="loader-bar"><div class="loader-progress"></div></div>
-    <div id="loader-status">0%</div>
+
+<header>
+  <h1>OfflineArcade</h1>
+
+  <div class="version">
+    v<span id="version">1.0.0</span>
   </div>
-  <header>
-    <h1>OfflineArcade</h1>
-    <div class="theme-toggle">
-      <button id="theme-auto" title="System"><span>🖥</span></button>
-      <button id="theme-light" title="Hell"><span>☀️</span></button>
-      <button id="theme-dark" title="Dunkel"><span>🌙</span></button>
-    </div>
-    <div class="version">v<span id="version">1.0.0</span></div>
-  </header>
-  <main>
-    <h2>Spieleauswahl</h2>
-    <div class="game-grid">
-      <a class="game-card" href="games/escape-road/index.html">
-        <div class="game-icon">🚗</div>
-        <div class="game-title">Escape Road</div>
-      </a>
-      <!-- Weitere Spiele als weitere .game-card hier eintragen -->
-    </div>
-  </main>
-  <footer>
-    <small>Offline-Spielesammlung • Spielstände bleiben auf deinem Gerät</small>
-  </footer>
+</header>
+
+<main>
+  <h2>Spieleauswahl</h2>
+
+  <div class="game-grid">
+
+    <a class="game-card" href="games/escape-road/index.html">
+      <div class="game-icon">🚗</div>
+      <div class="game-title">Escape Road</div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <small>
+    Offline-Spielesammlung • Funktioniert ohne Internet
+  </small>
+</footer>
+
 </body>
 </html>
