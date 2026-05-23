@@ -1,140 +1,66 @@
-const CACHE_VERSION = 'v19';
+if ('serviceWorker' in navigator) {
 
-document.addEventListener('DOMContentLoaded', () => {
+  navigator.serviceWorker.register(
+    '/OfflineArcade/sw.js'
+  )
 
-  // Version
-  document.getElementById('version')
-    .textContent = CACHE_VERSION;
+  .then(registration => {
 
-  // Last update
-  const lastUpdateElement =
-    document.getElementById('last-update');
+    const label =
+      document.getElementById(
+        'update-label'
+      );
 
-  let savedUpdate =
-    localStorage.getItem('offlinearcade-last-update');
+    const updateText =
+      document.getElementById(
+        'last-update'
+      );
 
-  if (!savedUpdate) {
+    function saveUpdateTime() {
 
-    savedUpdate =
-      new Date().toLocaleString();
+      const now =
+        new Date().toLocaleString();
 
-    localStorage.setItem(
-      'offlinearcade-last-update',
-      savedUpdate
-    );
+      localStorage.setItem(
+        'offlinearcade-last-update',
+        now
+      );
 
-  }
+      label.textContent =
+        'Last Update:';
 
-  lastUpdateElement.textContent =
-    savedUpdate;
-
-  // Online status
-  const statusDot =
-    document.getElementById('status-dot');
-
-  const onlineStatus =
-    document.getElementById('online-status');
-
-  function updateOnlineStatus() {
-
-    if (navigator.onLine) {
-
-      statusDot.style.background =
-        '#22c55e';
-
-      statusDot.style.boxShadow =
-        '0 0 10px #22c55e';
-
-      onlineStatus.textContent =
-        'Online';
-
-    } else {
-
-      statusDot.style.background =
-        '#ef4444';
-
-      statusDot.style.boxShadow =
-        '0 0 10px #ef4444';
-
-      onlineStatus.textContent =
-        'Offline';
+      updateText.textContent =
+        now;
 
     }
 
-  }
+    registration.addEventListener(
+      'updatefound',
+      () => {
 
-  updateOnlineStatus();
+        label.textContent =
+          'Status:';
 
-  window.addEventListener(
-    'online',
-    updateOnlineStatus
-  );
+        updateText.textContent =
+          'Downloading...';
 
-  window.addEventListener(
-    'offline',
-    updateOnlineStatus
-  );
+        const newWorker =
+          registration.installing;
 
-  // Service Worker
-  if ('serviceWorker' in navigator) {
+        newWorker.addEventListener(
+          'statechange',
+          () => {
 
-    navigator.serviceWorker.register(
-      '/OfflineArcade/sw.js'
-    )
+            // installiert
+            if (
+              newWorker.state === 'installed'
+            ) {
 
-    .then(registration => {
-
-      const progress =
-        document.getElementById(
-          'update-progress'
-        );
-
-      progress.textContent = 'Checking...';
-
-      registration.update();
-
-      registration.addEventListener(
-        'updatefound',
-        () => {
-
-          const newWorker =
-            registration.installing;
-
-          let fakeProgress = 0;
-
-          const interval = setInterval(() => {
-
-            fakeProgress += 10;
-
-            if (fakeProgress > 90) {
-              fakeProgress = 90;
-            }
-
-            progress.textContent =
-              fakeProgress + '%';
-
-          }, 300);
-
-          newWorker.addEventListener(
-            'statechange',
-            () => {
+              saveUpdateTime();
 
               if (
-                newWorker.state === 'installed'
+                navigator.serviceWorker.controller
               ) {
-
-                clearInterval(interval);
-
-                progress.textContent =
-                  '100%';
-
-                const now =
-                  new Date().toLocaleString();
-
-                localStorage.setItem(
-                  'offlinearcade-last-update',
-                  now
-                );
 
                 newWorker.postMessage({
                   type: 'SKIP_WAITING'
@@ -143,22 +69,33 @@ document.addEventListener('DOMContentLoaded', () => {
               }
 
             }
-          );
 
-        }
-      );
-
-    });
-
-    navigator.serviceWorker.addEventListener(
-      'controllerchange',
-      () => {
-
-        window.location.reload();
+          }
+        );
 
       }
     );
 
-  }
+    // Kein Update gefunden
+    if (!registration.installing) {
 
-});
+      const saved =
+        localStorage.getItem(
+          'offlinearcade-last-update'
+        );
+
+      if (saved) {
+
+        label.textContent =
+          'Last Update:';
+
+        updateText.textContent =
+          saved;
+
+      }
+
+    }
+
+  });
+
+}
