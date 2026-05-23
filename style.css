@@ -95,9 +95,11 @@ main {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fit, minmax(220px,1fr));
+    repeat(auto-fit, minmax(170px,220px));
 
-  gap: 24px;
+  justify-content: center;
+
+  gap: 20px;
 }
 
 .game-grid {
@@ -161,7 +163,7 @@ main {
 }
 
 .game-title {
-  font-size: 24px;
+  font-size: 18px;
 
   font-weight: 700;
 
@@ -171,9 +173,9 @@ main {
 .game-description {
   opacity: 0.72;
 
-  line-height: 1.45;
+  line-height: 1.35;
 
-  font-size: 15px;
+  font-size: 12px;
 }
 
 #app-info {
