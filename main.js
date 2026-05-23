@@ -135,9 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
                   lastUpdateElement.textContent =
                     'Last Update: ' + now;
 
-                  newWorker.postMessage({
-                    type: 'SKIP_WAITING'
-                  });
+                  // kurz warten damit iOS speichern kann
+                  setTimeout(() => {
+
+                    newWorker.postMessage({
+                      type: 'SKIP_WAITING'
+                    });
+
+                  }, 500);
 
                 }
 
