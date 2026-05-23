@@ -100,10 +100,21 @@ main {
   gap: 24px;
 }
 
+.game-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(320px,1fr));
+
+  gap: 28px;
+}
+
 .game-card {
   position: relative;
 
   overflow: hidden;
+
+  border-radius: 28px;
 
   background:
     rgba(255,255,255,0.06);
@@ -111,49 +122,58 @@ main {
   border:
     1px solid rgba(255,255,255,0.08);
 
-  border-radius: 28px;
-
-  padding: 28px;
-
   text-decoration: none;
 
   color: white;
 
   transition:
-    transform 0.2s,
-    background 0.2s,
-    border 0.2s;
+    transform 0.22s,
+    border 0.22s,
+    box-shadow 0.22s;
+
+  backdrop-filter: blur(10px);
 }
 
 .game-card:hover {
-  transform:
-    translateY(-5px);
 
-  background:
-    rgba(255,255,255,0.1);
+  transform:
+    translateY(-6px);
 
   border:
-    1px solid rgba(76,201,240,0.5);
+    1px solid rgba(76,201,240,0.55);
+
+  box-shadow:
+    0 10px 35px rgba(0,0,0,0.35);
 }
 
-.game-icon {
-  font-size: 58px;
+.game-thumb {
+  width: 100%;
 
-  margin-bottom: 18px;
+  aspect-ratio: 16/9;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+.game-content {
+  padding: 18px;
 }
 
 .game-title {
   font-size: 24px;
 
   font-weight: 700;
+
+  margin-bottom: 8px;
 }
 
 .game-description {
-  margin-top: 10px;
+  opacity: 0.72;
 
-  opacity: 0.7;
+  line-height: 1.45;
 
-  line-height: 1.4;
+  font-size: 15px;
 }
 
 #app-info {
