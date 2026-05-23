@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v23';
+const CACHE = 'offlinearcade-v24';
 
 const ASSETS = [
 
@@ -18,39 +18,49 @@ const ASSETS = [
    '/OfflineArcade/assets/thumbnails/escape-road.png'
 ];
 
-self.addEventListener('install', e => {
+self.addEventListener('install', event => {
 
   self.skipWaiting();
 
-  e.waitUntil(
+  event.waitUntil(
 
-    caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(cache => {
 
-  );
+      return cache.addAll(ASSETS);
 
-});
-
-self.addEventListener('activate', e => {
-
-  clients.claim();
-
-  e.waitUntil(
-
-    caches.keys().then(keys =>
-
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE)
-          .map(key => caches.delete(key))
-      )
-
-    )
+    })
 
   );
 
 });
 
+self.addEventListener('activate', event => {
+
+  event.waitUntil(
+
+    caches.keys().then(keys => {
+
+      return Promise.all(
+
+        keys.map(key => {
+
+          if (key !== CACHE) {
+
+            return caches.delete(key);
+
+          }
+
+        })
+
+      );
+
+    })
+
+  );
+
+  self.clients.claim();
+
+});
 self.addEventListener('fetch', e => {
 
   e.respondWith(
