@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v21';
+const CACHE_VERSION = 'v22';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -6,18 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('version')
     .textContent = CACHE_VERSION;
 
-  // UPDATE INFO
-  const updateLabel =
-    document.getElementById(
-      'update-label'
-    );
-
+  // UPDATE TEXT
   const lastUpdateElement =
     document.getElementById(
       'last-update'
     );
 
-  // LAST UPDATE
+  // LAST UPDATE LADEN
   let savedUpdate =
     localStorage.getItem(
       'offlinearcade-last-update'
@@ -35,11 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
-  updateLabel.textContent =
-    'Last Update:';
-
   lastUpdateElement.textContent =
-    savedUpdate;
+    'Last Update: ' + savedUpdate;
 
   // ONLINE STATUS
   const statusDot =
@@ -101,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .then(registration => {
 
-      // Prüfen auf Updates
       registration.update();
 
       registration.addEventListener(
@@ -111,13 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const newWorker =
             registration.installing;
 
-          // Nur anzeigen wenn wirklich neue Version
+          // Nur bei echter neuer Version
           if (
             navigator.serviceWorker.controller
           ) {
-
-            updateLabel.textContent =
-              'Status:';
 
             lastUpdateElement.textContent =
               'Downloading...';
@@ -128,12 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
             'statechange',
             () => {
 
-              // Fertig installiert
               if (
                 newWorker.state === 'installed'
               ) {
 
-                // Nur bei echter neuer Version
                 if (
                   navigator.serviceWorker.controller
                 ) {
@@ -146,11 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     now
                   );
 
-                  updateLabel.textContent =
-                    'Last Update:';
-
                   lastUpdateElement.textContent =
-                    now;
+                    'Last Update: ' + now;
 
                   newWorker.postMessage({
                     type: 'SKIP_WAITING'
