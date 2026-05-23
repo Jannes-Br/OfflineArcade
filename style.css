@@ -1,69 +1,26 @@
-:root {
-  --bg: #181921;
-  --card: #232336;
-  --text: #ffffff;
-  --accent: #4cc9f0;
-}
+#app-info {
+  position: fixed;
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
+  right: 10px;
+  bottom: 10px;
 
-header {
-  text-align: center;
-  padding: 20px;
-}
+  background: rgba(0,0,0,0.7);
 
-.version {
-  color: var(--accent);
-}
-
-main {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
-
-h2 {
-  text-align: center;
-}
-
-.game-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-  gap: 20px;
-}
-
-.game-card {
-  background: var(--card);
-  border-radius: 20px;
-  padding: 25px;
-  text-decoration: none;
   color: white;
-  text-align: center;
-  transition: 0.2s;
-}
 
-.game-card:hover {
-  transform: scale(1.03);
-  background: var(--accent);
-}
+  padding: 8px 12px;
 
-.game-icon {
-  font-size: 50px;
-  margin-bottom: 10px;
-}
+  border-radius: 12px;
 
-.game-title {
-  font-size: 20px;
-  font-weight: bold;
-}
+  font-size: 12px;
 
-footer {
-  text-align: center;
-  margin-top: 40px;
-  opacity: 0.7;
+  line-height: 1.5;
+
+  z-index: 9999;
+
+  font-family: Arial, sans-serif;
+
+  backdrop-filter: blur(6px);
+
+  opacity: 0.85;
 }
