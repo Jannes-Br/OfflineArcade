@@ -1,6 +1,3 @@
-# games/2048/index.html
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,8 +78,24 @@ body {
   justify-content: center;
   font-weight: bold;
   font-size: 34px;
-  transition: 0.15s ease;
+  transition:
+    transform 0.12s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+
+  animation: pop 0.12s ease;
 }
+
+@keyframes pop {
+  0% {
+    transform: scale(0.88);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 
 .tile-0 {
   color: transparent;
@@ -386,75 +399,3 @@ Füge in deiner `index.html` unter den anderen Spielen das hier ein:
   </div>
 
 </a>
-```
-
-# Thumbnail
-
-Lege dein Thumbnail hier ab:
-
-```text
-assets/thumbnails/2048.png
-```
-
-# Service Worker
-
-Füge in deiner `sw.js` noch die neue Datei hinzu:
-
-```js
-'/OfflineArcade/games/2048/index.html',
-'/OfflineArcade/games/pong/index.html',
-```
-
-Und erhöhe wieder:
-
-```js
-const CACHE_VERSION = 'v31';
-```
-
-# 2048 Animation Upgrade
-
-Ersetze in der CSS Sektion von 2048 diese Klasse:
-
-```css
-.cell {
-  aspect-ratio: 1;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 34px;
-  transition: 0.15s ease;
-}
-```
-
-mit:
-
-```css
-.cell {
-  aspect-ratio: 1;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 34px;
-  transition:
-    transform 0.12s ease,
-    background 0.2s ease,
-    color 0.2s ease;
-
-  animation: pop 0.12s ease;
-}
-
-@keyframes pop {
-  0% {
-    transform: scale(0.88);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
