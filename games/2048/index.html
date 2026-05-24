@@ -1,3 +1,6 @@
+# games/2048/index.html
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -352,3 +355,106 @@ init();
 
 </body>
 </html>
+```
+
+# Hauptseite hinzufügen
+
+Füge in deiner `index.html` unter den anderen Spielen das hier ein:
+
+```html
+<a
+  class="game-card"
+  href="games/2048/index.html"
+>
+
+  <img
+    class="game-thumb"
+    src="assets/thumbnails/2048.png"
+    alt="2048"
+  >
+
+  <div class="game-content">
+
+    <div class="game-title">
+      2048
+    </div>
+
+    <div class="game-description">
+      Merge numbers and reach 2048.
+    </div>
+
+  </div>
+
+</a>
+```
+
+# Thumbnail
+
+Lege dein Thumbnail hier ab:
+
+```text
+assets/thumbnails/2048.png
+```
+
+# Service Worker
+
+Füge in deiner `sw.js` noch die neue Datei hinzu:
+
+```js
+'/OfflineArcade/games/2048/index.html',
+'/OfflineArcade/games/pong/index.html',
+```
+
+Und erhöhe wieder:
+
+```js
+const CACHE_VERSION = 'v31';
+```
+
+# 2048 Animation Upgrade
+
+Ersetze in der CSS Sektion von 2048 diese Klasse:
+
+```css
+.cell {
+  aspect-ratio: 1;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 34px;
+  transition: 0.15s ease;
+}
+```
+
+mit:
+
+```css
+.cell {
+  aspect-ratio: 1;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 34px;
+  transition:
+    transform 0.12s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+
+  animation: pop 0.12s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.88);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
