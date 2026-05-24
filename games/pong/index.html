@@ -24,36 +24,37 @@ body{
   width:100vw;
   height:100vh;
   overflow:hidden;
-  font-family:Inter,Arial,sans-serif;
+  font-family:Arial,sans-serif;
 
   background:
     radial-gradient(circle at top left,
-      rgba(139,92,246,0.18),
-      transparent 35%),
+    rgba(99,102,241,0.22),
+    transparent 35%),
 
     radial-gradient(circle at bottom right,
-      rgba(6,182,212,0.18),
-      transparent 35%),
+    rgba(16,185,129,0.18),
+    transparent 35%),
 
     linear-gradient(
       180deg,
       #020617,
-      #08111f,
+      #050816,
       #020617
     );
 
   display:flex;
   justify-content:center;
   align-items:center;
+  color:white;
 }
 
-.wrapper{
+.app{
   width:100%;
   height:100%;
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:14px;
+  padding:16px;
   gap:14px;
 }
 
@@ -63,72 +64,77 @@ body{
   flex-wrap:wrap;
   justify-content:center;
   gap:12px;
-  z-index:10;
+  z-index:20;
 }
 
 .group{
   display:flex;
-  gap:8px;
-  padding:8px;
+  gap:10px;
+  padding:10px;
   border-radius:20px;
 
   background:rgba(255,255,255,0.05);
 
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(12px);
 
-  border:1px solid rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
 }
 
 button{
   border:none;
   background:transparent;
   color:white;
+
   padding:12px 18px;
+
   border-radius:14px;
+
   font-size:15px;
-  font-weight:600;
+  font-weight:700;
+
   cursor:pointer;
-  transition:0.2s;
+
+  transition:0.25s;
 }
 
 button.active{
-  background:rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.12);
 }
 
 button:hover{
   background:rgba(255,255,255,0.08);
 }
 
-.icon-btn{
-  width:50px;
+.pause-btn{
+  width:54px;
   display:flex;
-  justify-content:center;
   align-items:center;
-  font-size:20px;
+  justify-content:center;
+  font-size:22px;
 }
 
 .game-container{
   position:relative;
 
   width:min(1200px,100%);
-  height:calc(100vh - 155px);
+  height:calc(100vh - 150px);
 
-  border-radius:30px;
+  border-radius:34px;
 
   overflow:hidden;
+
+  border:1px solid rgba(255,255,255,0.08);
 
   background:
     linear-gradient(
       135deg,
-      rgba(139,92,246,0.08),
-      rgba(6,182,212,0.08)
+      rgba(99,102,241,0.12),
+      rgba(16,185,129,0.08)
     );
 
-  border:1px solid rgba(255,255,255,0.08);
-
   box-shadow:
-    0 0 60px rgba(0,0,0,0.45),
-    inset 0 0 80px rgba(255,255,255,0.02);
+    0 0 50px rgba(0,0,0,0.4),
+    inset 0 0 80px rgba(255,255,255,0.03);
 }
 
 canvas{
@@ -142,80 +148,52 @@ canvas{
   inset:0;
 
   display:flex;
-  flex-direction:column;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
 
-  gap:18px;
+  z-index:30;
 
-  background:rgba(2,6,23,0.45);
+  background:rgba(0,0,0,0.35);
+
   backdrop-filter:blur(8px);
-
-  z-index:20;
-}
-
-.overlay.hidden{
-  display:none;
 }
 
 .play-btn{
   border:none;
 
-  width:110px;
-  height:110px;
+  width:130px;
+  height:130px;
 
   border-radius:999px;
 
   background:
     linear-gradient(
       135deg,
-      #8b5cf6,
-      #06b6d4
+      #6366f1,
+      #10b981
     );
 
   color:white;
-  font-size:42px;
+
+  font-size:34px;
+  font-weight:900;
+
   cursor:pointer;
 
   box-shadow:
-    0 0 30px rgba(139,92,246,0.45);
+    0 0 40px rgba(99,102,241,0.45);
 
-  transition:0.2s;
+  transition:0.25s;
 }
 
 .play-btn:active{
   transform:scale(0.95);
 }
-
-.title{
-  color:white;
-  font-size:42px;
-  font-weight:800;
-  letter-spacing:1px;
-}
-
-.subtitle{
-  color:rgba(255,255,255,0.65);
-  font-size:15px;
-}
-
-@media(max-width:800px){
-
-  .game-container{
-    height:calc(100vh - 190px);
-  }
-
-  button{
-    padding:10px 14px;
-    font-size:14px;
-  }
-
-}
 </style>
 </head>
 <body>
 
-<div class="wrapper">
+<div class="app">
 
   <div class="topbar">
 
@@ -237,49 +215,22 @@ canvas{
     <div class="group">
 
       <button
-        class="speedBtn active"
-        data-speed="7"
+        id="slowBtn"
+      >
+        Slow
+      </button>
+
+      <button
+        id="normalBtn"
+        class="active"
       >
         Normal
       </button>
 
       <button
-        class="speedBtn"
-        data-speed="10"
+        id="fastBtn"
       >
         Fast
-      </button>
-
-      <button
-        class="speedBtn"
-        data-speed="14"
-      >
-        Extreme
-      </button>
-
-    </div>
-
-    <div class="group">
-
-      <button
-        class="shapeBtn active"
-        data-shape="normal"
-      >
-        Paddle
-      </button>
-
-      <button
-        class="shapeBtn"
-        data-shape="curve"
-      >
-        Curve
-      </button>
-
-      <button
-        class="shapeBtn"
-        data-shape="diamond"
-      >
-        Diamond
       </button>
 
     </div>
@@ -288,9 +239,9 @@ canvas{
 
       <button
         id="pauseBtn"
-        class="icon-btn"
+        class="pause-btn"
       >
-        ⏸
+        ❚❚
       </button>
 
     </div>
@@ -302,21 +253,13 @@ canvas{
     <canvas id="game"></canvas>
 
     <div
-      class="overlay"
       id="overlay"
+      class="overlay"
     >
 
-      <div class="title">
-        Pong
-      </div>
-
-      <div class="subtitle">
-        Tap Play To Start
-      </div>
-
       <button
-        class="play-btn"
         id="playBtn"
+        class="play-btn"
       >
         ▶
       </button>
@@ -349,39 +292,43 @@ const vsBtn =
 const botBtn =
   document.getElementById('botBtn');
 
-const speedBtns =
-  document.querySelectorAll('.speedBtn');
+const slowBtn =
+  document.getElementById('slowBtn');
 
-const shapeBtns =
-  document.querySelectorAll('.shapeBtn');
+const normalBtn =
+  document.getElementById('normalBtn');
+
+const fastBtn =
+  document.getElementById('fastBtn');
+
+let running = false;
+let paused = false;
 
 let mode = 'vs';
 
-let running = false;
+let baseSpeed = 8;
 
-let ballSpeed = 7;
+function resize() {
 
-let paddleShape = 'normal';
+  const rect =
+    canvas.parentElement.getBoundingClientRect();
 
-function resize(){
-
-  canvas.width =
-    canvas.clientWidth;
-
-  canvas.height =
-    canvas.clientHeight;
+  canvas.width = rect.width;
+  canvas.height = rect.height;
 
 }
+
+resize();
 
 window.addEventListener(
   'resize',
   resize
 );
 
-resize();
-
-const paddleWidth = 26;
-const paddleHeight = 170;
+const paddle = {
+  width:20,
+  height:150
+};
 
 const left = {
   x:40,
@@ -406,56 +353,361 @@ const ball = {
   trail:[]
 };
 
-function resetBall(){
+function resetBall() {
 
   ball.x = canvas.width / 2;
   ball.y = canvas.height / 2;
 
+  ball.trail = [];
+
   const dir =
-    Math.random() > 0.5
-    ? 1
-    : -1;
+    Math.random() > 0.5 ? 1 : -1;
 
-  const angle =
-    (Math.random()*1.1)-0.55;
-
-  ball.vx =
-    Math.cos(angle)
-    * ballSpeed
-    * dir;
+  ball.vx = baseSpeed * dir;
 
   ball.vy =
-    Math.sin(angle)
-    * ballSpeed;
+    (Math.random() * 6) - 3;
 
 }
 
-function resetGame(){
+function resetGame() {
 
   left.score = 0;
   right.score = 0;
 
   left.y =
-    canvas.height/2
-    - paddleHeight/2;
+    canvas.height/2 -
+    paddle.height/2;
 
   right.y =
-    canvas.height/2
-    - paddleHeight/2;
+    canvas.height/2 -
+    paddle.height/2;
 
   resetBall();
 
   running = false;
+  paused = false;
 
-  overlay.classList.remove(
-    'hidden'
-  );
+  overlay.style.display = 'flex';
 
-  pauseBtn.textContent = '⏸';
+  pauseBtn.innerHTML = '❚❚';
 
 }
 
 resetGame();
+
+function activate(button,list){
+
+  list.forEach(btn=>{
+    btn.classList.remove('active');
+  });
+
+  button.classList.add('active');
+
+}
+
+vsBtn.onclick = () => {
+
+  mode = 'vs';
+
+  activate(
+    vsBtn,
+    [vsBtn,botBtn]
+  );
+
+  resetGame();
+
+};
+
+botBtn.onclick = () => {
+
+  mode = 'bot';
+
+  activate(
+    botBtn,
+    [vsBtn,botBtn]
+  );
+
+  resetGame();
+
+};
+
+slowBtn.onclick = () => {
+
+  baseSpeed = 6;
+
+  activate(
+    slowBtn,
+    [slowBtn,normalBtn,fastBtn]
+  );
+
+  resetGame();
+
+};
+
+normalBtn.onclick = () => {
+
+  baseSpeed = 8;
+
+  activate(
+    normalBtn,
+    [slowBtn,normalBtn,fastBtn]
+  );
+
+  resetGame();
+
+};
+
+fastBtn.onclick = () => {
+
+  baseSpeed = 11;
+
+  activate(
+    fastBtn,
+    [slowBtn,normalBtn,fastBtn]
+  );
+
+  resetGame();
+
+};
+
+playBtn.onclick = () => {
+
+  running = true;
+  paused = false;
+
+  overlay.style.display = 'none';
+
+};
+
+pauseBtn.onclick = () => {
+
+  if (!running) return;
+
+  paused = !paused;
+
+  if (paused) {
+
+    pauseBtn.innerHTML = '▶';
+
+  } else {
+
+    pauseBtn.innerHTML = '❚❚';
+
+  }
+
+};
+
+function clampPaddles(){
+
+  left.y = Math.max(
+    0,
+    Math.min(
+      canvas.height - paddle.height,
+      left.y
+    )
+  );
+
+  right.y = Math.max(
+    0,
+    Math.min(
+      canvas.height - paddle.height,
+      right.y
+    )
+  );
+
+}
+
+const keys = {};
+
+window.addEventListener(
+  'keydown',
+  e => {
+
+    keys[e.key] = true;
+
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  e => {
+
+    keys[e.key] = false;
+
+  }
+);
+
+window.addEventListener(
+  'touchmove',
+  e => {
+
+    e.preventDefault();
+
+    for (const touch of e.touches){
+
+      if (
+        touch.clientX <
+        window.innerWidth / 2
+      ) {
+
+        left.y =
+          touch.clientY -
+          paddle.height / 2;
+
+      }
+
+      else if (mode === 'vs') {
+
+        right.y =
+          touch.clientY -
+          paddle.height / 2;
+
+      }
+
+    }
+
+    clampPaddles();
+
+  },
+  {passive:false}
+);
+
+function update(){
+
+  if (!running || paused) return;
+
+  right.x =
+    canvas.width - 60;
+
+  if (keys['w']) {
+    left.y -= 10;
+  }
+
+  if (keys['s']) {
+    left.y += 10;
+  }
+
+  if (mode === 'vs') {
+
+    if (keys['ArrowUp']) {
+      right.y -= 10;
+    }
+
+    if (keys['ArrowDown']) {
+      right.y += 10;
+    }
+
+  }
+
+  if (mode === 'bot') {
+
+    const target =
+      ball.y - paddle.height/2;
+
+    right.y +=
+      (target - right.y) * 0.24;
+
+  }
+
+  clampPaddles();
+
+  left.glow *= 0.9;
+  right.glow *= 0.9;
+
+  ball.trail.push({
+    x:ball.x,
+    y:ball.y
+  });
+
+  if (ball.trail.length > 10){
+    ball.trail.shift();
+  }
+
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  if (
+    ball.y < ball.size ||
+    ball.y >
+    canvas.height - ball.size
+  ) {
+
+    ball.vy *= -1;
+
+  }
+
+  if (
+    ball.x - ball.size <
+    left.x + paddle.width &&
+
+    ball.y >
+    left.y &&
+
+    ball.y <
+    left.y + paddle.height
+  ) {
+
+    const hit =
+      (
+        ball.y -
+        (left.y + paddle.height/2)
+      ) / (paddle.height/2);
+
+    ball.vx =
+      Math.abs(ball.vx);
+
+    ball.vy =
+      hit * 10;
+
+    left.glow = 1;
+
+  }
+
+  if (
+    ball.x + ball.size >
+    right.x &&
+
+    ball.y >
+    right.y &&
+
+    ball.y <
+    right.y + paddle.height
+  ) {
+
+    const hit =
+      (
+        ball.y -
+        (right.y + paddle.height/2)
+      ) / (paddle.height/2);
+
+    ball.vx =
+      -Math.abs(ball.vx);
+
+    ball.vy =
+      hit * 10;
+
+    right.glow = 1;
+
+  }
+
+  if (ball.x < 0){
+
+    right.score++;
+
+    resetBall();
+
+  }
+
+  if (ball.x > canvas.width){
+
+    left.score++;
+
+    resetBall();
+
+  }
+
+}
 
 function drawBackground(){
 
@@ -471,9 +723,7 @@ function drawBackground(){
   ctx.strokeStyle =
     'rgba(255,255,255,0.08)';
 
-  ctx.lineWidth = 5;
-
-  ctx.setLineDash([20,20]);
+  ctx.setLineDash([14,14]);
 
   ctx.beginPath();
 
@@ -493,159 +743,67 @@ function drawBackground(){
 
 }
 
-function drawPaddle(p,color){
+function drawPaddle(player,color){
 
-  ctx.save();
+  ctx.shadowBlur =
+    25 * player.glow;
 
-  ctx.shadowBlur = 18 + p.glow;
   ctx.shadowColor = color;
 
   ctx.fillStyle = color;
 
-  if(
-    paddleShape === 'normal'
-  ){
+  ctx.beginPath();
 
-    ctx.beginPath();
+  ctx.roundRect(
+    player.x,
+    player.y,
+    paddle.width,
+    paddle.height,
+    14
+  );
 
-    ctx.roundRect(
-      p.x,
-      p.y,
-      paddleWidth,
-      paddleHeight,
-      20
-    );
+  ctx.fill();
 
-    ctx.fill();
-
-  }
-
-  else if(
-    paddleShape === 'curve'
-  ){
-
-    ctx.beginPath();
-
-    if(p === left){
-
-      ctx.arc(
-        p.x,
-        p.y + paddleHeight/2,
-        paddleHeight/2,
-        -Math.PI/2,
-        Math.PI/2
-      );
-
-    }
-
-    else{
-
-      ctx.arc(
-        p.x + paddleWidth,
-        p.y + paddleHeight/2,
-        paddleHeight/2,
-        Math.PI/2,
-        -Math.PI/2
-      );
-
-    }
-
-    ctx.closePath();
-    ctx.fill();
-
-  }
-
-  else{
-
-    ctx.beginPath();
-
-    if(p === left){
-
-      ctx.moveTo(
-        p.x + paddleWidth,
-        p.y + paddleHeight/2
-      );
-
-      ctx.quadraticCurveTo(
-        p.x + 4,
-        p.y + 8,
-        p.x,
-        p.y + paddleHeight/2
-      );
-
-      ctx.quadraticCurveTo(
-        p.x + 4,
-        p.y + paddleHeight - 8,
-        p.x + paddleWidth,
-        p.y + paddleHeight/2
-      );
-
-    }
-
-    else{
-
-      ctx.moveTo(
-        p.x,
-        p.y + paddleHeight/2
-      );
-
-      ctx.quadraticCurveTo(
-        p.x + paddleWidth - 4,
-        p.y + 8,
-        p.x + paddleWidth,
-        p.y + paddleHeight/2
-      );
-
-      ctx.quadraticCurveTo(
-        p.x + paddleWidth - 4,
-        p.y + paddleHeight - 8,
-        p.x,
-        p.y + paddleHeight/2
-      );
-
-    }
-
-    ctx.closePath();
-
-    ctx.fill();
-
-  }
-
-  ctx.restore();
+  ctx.shadowBlur = 0;
 
 }
 
 function drawBall(){
 
-  for(let i=0;i<ball.trail.length;i++){
+  for (
+    let i = 0;
+    i < ball.trail.length;
+    i++
+  ){
 
-    const t = ball.trail[i];
+    const t =
+      ball.trail[i];
+
+    ctx.globalAlpha =
+      i / ball.trail.length * 0.5;
 
     ctx.beginPath();
-
-    ctx.fillStyle =
-      `rgba(255,255,255,${
-        i / ball.trail.length * 0.25
-      })`;
 
     ctx.arc(
       t.x,
       t.y,
-      ball.size*(i/ball.trail.length),
+      ball.size,
       0,
       Math.PI*2
     );
+
+    ctx.fillStyle =
+      '#ffffff';
 
     ctx.fill();
 
   }
 
-  ctx.save();
+  ctx.globalAlpha = 1;
 
   ctx.shadowBlur = 20;
-  ctx.shadowColor = '#ffffff';
 
-  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#ffffff';
 
   ctx.beginPath();
 
@@ -657,221 +815,33 @@ function drawBall(){
     Math.PI*2
   );
 
+  ctx.fillStyle = '#ffffff';
+
   ctx.fill();
 
-  ctx.restore();
+  ctx.shadowBlur = 0;
 
 }
 
 function drawScores(){
 
-  ctx.fillStyle =
-    'rgba(255,255,255,0.10)';
-
   ctx.font =
-    'bold 90px Arial';
+    'bold 72px Arial';
+
+  ctx.fillStyle =
+    'rgba(255,255,255,0.12)';
 
   ctx.fillText(
     left.score,
-    canvas.width*0.25,
-    95
+    canvas.width * 0.25,
+    90
   );
 
   ctx.fillText(
     right.score,
-    canvas.width*0.75,
-    95
+    canvas.width * 0.75,
+    90
   );
-
-}
-
-function clampPaddle(p){
-
-  if(p.y < 0){
-    p.y = 0;
-  }
-
-  if(
-    p.y + paddleHeight
-    > canvas.height
-  ){
-    p.y =
-      canvas.height
-      - paddleHeight;
-  }
-
-}
-
-function paddlePhysics(p,isLeft){
-
-  const hitPos =
-    (
-      ball.y
-      - (p.y + paddleHeight/2)
-    )
-    / (paddleHeight/2);
-
-  const clamped =
-    Math.max(
-      -1,
-      Math.min(1, hitPos)
-    );
-
-  const maxBounce =
-    Math.PI / 3;
-
-  const bounceAngle =
-    clamped * maxBounce;
-
-  const speed =
-    Math.min(
-      22,
-      Math.sqrt(
-        ball.vx * ball.vx +
-        ball.vy * ball.vy
-      ) + 0.35
-    );
-
-  if(isLeft){
-
-    ball.vx =
-      speed *
-      Math.cos(bounceAngle);
-
-  } else {
-
-    ball.vx =
-      -speed *
-      Math.cos(bounceAngle);
-
-  }
-
-  ball.vy =
-    speed *
-    Math.sin(bounceAngle);
-
-}
-
-function update(){
-
-  if(!running){
-    return;
-  }
-
-  right.x =
-    canvas.width - 66;
-
-  ball.x += ball.vx;
-  ball.y += ball.vy;
-
-  ball.trail.push({
-    x:ball.x,
-    y:ball.y
-  });
-
-  if(ball.trail.length > 14){
-    ball.trail.shift();
-  }
-
-  if(
-    ball.y < ball.size
-  ){
-
-    ball.y = ball.size;
-    ball.vy *= -1;
-
-  }
-
-  if(
-    ball.y >
-    canvas.height - ball.size
-  ){
-
-    ball.y =
-      canvas.height
-      - ball.size;
-
-    ball.vy *= -1;
-
-  }
-
-  if(
-    ball.x - ball.size
-    < left.x + paddleWidth
-    &&
-    ball.y > left.y
-    &&
-    ball.y <
-    left.y + paddleHeight
-  ){
-
-    ball.x =
-      left.x
-      + paddleWidth
-      + ball.size;
-
-    paddlePhysics(
-      left,
-      true
-    );
-
-    left.glow = 35;
-
-  }
-
-  if(
-    ball.x + ball.size
-    > right.x
-    &&
-    ball.y > right.y
-    &&
-    ball.y <
-    right.y + paddleHeight
-  ){
-
-    ball.x =
-      right.x
-      - ball.size;
-
-    paddlePhysics(
-      right,
-      false
-    );
-
-    right.glow = 35;
-
-  }
-
-  if(ball.x < -30){
-
-    right.score++;
-    resetBall();
-
-  }
-
-  if(ball.x > canvas.width + 30){
-
-    left.score++;
-    resetBall();
-
-  }
-
-  left.glow *= 0.9;
-  right.glow *= 0.9;
-
-  if(mode === 'bot'){
-
-    const target =
-      ball.y
-      - paddleHeight/2;
-
-    right.y +=
-      (target - right.y)
-      * 0.24;
-
-    clampPaddle(right);
-
-  }
 
 }
 
@@ -883,12 +853,12 @@ function draw(){
 
   drawPaddle(
     left,
-    '#8b5cf6'
+    '#6366f1'
   );
 
   drawPaddle(
     right,
-    '#06b6d4'
+    '#10b981'
   );
 
   drawBall();
@@ -905,207 +875,6 @@ function loop(){
 }
 
 loop();
-
-const keys = {};
-
-window.addEventListener(
-  'keydown',
-  e => {
-    keys[e.key] = true;
-  }
-);
-
-window.addEventListener(
-  'keyup',
-  e => {
-    keys[e.key] = false;
-  }
-);
-
-function controls(){
-
-  if(keys['w']){
-    left.y -= 9;
-  }
-
-  if(keys['s']){
-    left.y += 9;
-  }
-
-  if(mode === 'vs'){
-
-    if(keys['ArrowUp']){
-      right.y -= 9;
-    }
-
-    if(keys['ArrowDown']){
-      right.y += 9;
-    }
-
-  }
-
-  clampPaddle(left);
-  clampPaddle(right);
-
-  requestAnimationFrame(
-    controls
-  );
-
-}
-
-controls();
-
-window.addEventListener(
-  'touchmove',
-  e => {
-
-    for(const touch of e.touches){
-
-      if(
-        touch.clientX
-        < window.innerWidth/2
-      ){
-
-        left.y =
-          touch.clientY
-          - paddleHeight/2;
-
-      }
-
-      else if(mode === 'vs'){
-
-        right.y =
-          touch.clientY
-          - paddleHeight/2;
-
-      }
-
-    }
-
-    clampPaddle(left);
-    clampPaddle(right);
-
-  },
-  {passive:false}
-);
-
-playBtn.onclick = () => {
-
-  running = true;
-
-  overlay.classList.add(
-    'hidden'
-  );
-
-};
-
-pauseBtn.onclick = () => {
-
-  if(!running){
-
-    running = true;
-
-    overlay.classList.add(
-      'hidden'
-    );
-
-    pauseBtn.textContent = '⏸';
-
-  }
-
-  else{
-
-    running = false;
-
-    overlay.classList.remove(
-      'hidden'
-    );
-
-    pauseBtn.textContent = '▶';
-
-  }
-
-};
-
-vsBtn.onclick = () => {
-
-  mode = 'vs';
-
-  vsBtn.classList.add(
-    'active'
-  );
-
-  botBtn.classList.remove(
-    'active'
-  );
-
-  resetGame();
-
-};
-
-botBtn.onclick = () => {
-
-  mode = 'bot';
-
-  botBtn.classList.add(
-    'active'
-  );
-
-  vsBtn.classList.remove(
-    'active'
-  );
-
-  resetGame();
-
-};
-
-speedBtns.forEach(btn => {
-
-  btn.onclick = () => {
-
-    speedBtns.forEach(
-      b => b.classList.remove(
-        'active'
-      )
-    );
-
-    btn.classList.add(
-      'active'
-    );
-
-    ballSpeed =
-      Number(
-        btn.dataset.speed
-      );
-
-    resetGame();
-
-  };
-
-});
-
-shapeBtns.forEach(btn => {
-
-  btn.onclick = () => {
-
-    shapeBtns.forEach(
-      b => b.classList.remove(
-        'active'
-      )
-    );
-
-    btn.classList.add(
-      'active'
-    );
-
-    paddleShape =
-      btn.dataset.shape;
-
-    resetGame();
-
-  };
-
-});
 </script>
 
 </body>
