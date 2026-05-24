@@ -1,44 +1,59 @@
-const CACHE_VERSION = 'v29';
+const CACHE_VERSION = 'v30';
 
 document.addEventListener('DOMContentLoaded', () => {
 
   // VERSION
-  document.getElementById('version')
-    .textContent = CACHE_VERSION;
+  const versionElement =
+    document.getElementById(
+      'version'
+    );
+
+  versionElement.textContent =
+    CACHE_VERSION;
 
   // ONLINE / OFFLINE
   const statusDot =
-    document.getElementById('status-dot');
+    document.getElementById(
+      'status-dot'
+    );
+
+  const onlineStatus =
+    document.getElementById(
+      'online-status'
+    );
 
   function updateOnlineStatus() {
 
-  if (navigator.onLine) {
+    if (navigator.onLine) {
 
-    statusDot.style.background =
-      '#22c55e';
+      statusDot.style.background =
+        '#22c55e';
 
-    statusDot.style.boxShadow =
-      '0 0 10px #22c55e';
+      statusDot.style.boxShadow =
+        '0 0 10px #22c55e';
 
-    onlineStatus.textContent =
-      'Online';
+      onlineStatus.textContent =
+        'Online';
 
-  } else {
+    } else {
 
-    statusDot.style.background =
-      '#ef4444';
+      statusDot.style.background =
+        '#ef4444';
 
-    statusDot.style.boxShadow =
-      '0 0 10px #ef4444';
+      statusDot.style.boxShadow =
+        '0 0 10px #ef4444';
 
-    onlineStatus.textContent =
-      'Offline';
+      onlineStatus.textContent =
+        'Offline';
+
+    }
 
   }
 
-}
+  // Beim Start prüfen
   updateOnlineStatus();
 
+  // Änderungen erkennen
   window.addEventListener(
     'online',
     updateOnlineStatus
