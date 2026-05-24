@@ -12,26 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateOnlineStatus() {
 
-    if (navigator.onLine) {
+  if (navigator.onLine) {
 
-      statusDot.style.background =
-        '#22c55e';
+    statusDot.style.background =
+      '#22c55e';
 
-      statusDot.style.boxShadow =
-        '0 0 10px #22c55e';
+    statusDot.style.boxShadow =
+      '0 0 10px #22c55e';
 
-    } else {
+    onlineStatus.textContent =
+      'Online';
 
-      statusDot.style.background =
-        '#ef4444';
+  } else {
 
-      statusDot.style.boxShadow =
-        '0 0 10px #ef4444';
+    statusDot.style.background =
+      '#ef4444';
 
-    }
+    statusDot.style.boxShadow =
+      '0 0 10px #ef4444';
+
+    onlineStatus.textContent =
+      'Offline';
 
   }
 
+}
   updateOnlineStatus();
 
   window.addEventListener(
