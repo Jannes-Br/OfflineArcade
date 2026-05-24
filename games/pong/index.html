@@ -2,261 +2,778 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+
 <meta
   name="viewport"
   content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
+
 <title>Pong</title>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  touch-action: none;
-  user-select: none;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  touch-action:none;
+  user-select:none;
 }
 
-body {
-  background: linear-gradient(180deg,#020617,#0f172a);
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  font-family: Arial, sans-serif;
-  color: white;
+body{
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+  background:
+    radial-gradient(circle at top,#1e293b,#020617 70%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
 }
 
-canvas {
-  width: 100vw;
-  height: 100vh;
-  display: block;
+#game-container{
+  position:relative;
+  width:94vw;
+  height:88vh;
+  max-width:1700px;
+  max-height:950px;
+  border-radius:28px;
+  overflow:hidden;
+  background:#020617;
+  border:2px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 0 50px rgba(0,0,0,0.45),
+    inset 0 0 40px rgba(255,255,255,0.03);
 }
 
-.ui {
-  position: fixed;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  gap: 12px;
+canvas{
+  width:100%;
+  height:100%;
+  display:block;
 }
 
-button {
-  border: none;
-  background: rgba(255,255,255,0.08);
-  color: white;
-  padding: 12px 18px;
-  border-radius: 14px;
-  font-size: 16px;
+.top-ui{
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:12px;
+  z-index:20;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
-button.active {
-  background: rgba(255,255,255,0.18);
+button,
+select{
+  border:none;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  padding:12px 18px;
+  border-radius:14px;
+  font-size:15px;
+  backdrop-filter:blur(10px);
+}
+
+button.active{
+  background:rgba(255,255,255,0.18);
+}
+
+#overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  gap:18px;
+  z-index:30;
+  background:rgba(2,6,23,0.45);
+  backdrop-filter:blur(8px);
+}
+
+#play-button{
+  font-size:26px;
+  padding:18px 34px;
+  border-radius:20px;
+  background:white;
+  color:black;
+  font-weight:bold;
+}
+
+#overlay-title{
+  font-size:42px;
+  font-weight:bold;
+}
+
+.settings{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.pause-btn{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  z-index:20;
+}
+
+.info{
+  position:absolute;
+  left:18px;
+  bottom:18px;
+  z-index:20;
+  font-size:15px;
+  color:rgba(255,255,255,0.75);
 }
 </style>
 </head>
+
 <body>
 
-<div class="ui">
-  <button id="vsBtn" class="active">
-    2 Players
+<div id="game-container">
+
+  <div class="top-ui">
+
+    <button id="vsBtn" class="active">
+      2 Players
+    </button>
+
+    <button id="botBtn">
+      Impossible Bot
+    </button>
+
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <div class="info">
+    First to 10 wins
+  </div>
+
+  <button
+    id="pauseBtn"
+    class="pause-btn"
+  >
+    Pause
   </button>
 
-  <button id="botBtn">
-    Impossible Bot
-  </button>
+  <div id="overlay">
+
+    <div id="overlay-title">
+      Pong
+    </div>
+
+    <div class="settings">
+
+      <select id="speedSelect">
+
+        <option value="6">
+          Slow Ball
+        </option>
+
+        <option value="9" selected>
+          Normal Ball
+        </option>
+
+        <option value="13">
+          Fast Ball
+        </option>
+
+      </select>
+
+      <select id="paddleSelect">
+
+        <option value="classic">
+          Classic Paddle
+        </option>
+
+        <option value="rounded">
+          Rounded Paddle
+        </option>
+
+        <option value="sharp">
+          Sharp Paddle
+        </option>
+
+      </select>
+
+    </div>
+
+    <button id="play-button">
+      Play
+    </button>
+
+  </div>
+
 </div>
 
-<canvas id="game"></canvas>
-
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const container =
+  document.getElementById('game-container');
 
-const vsBtn = document.getElementById('vsBtn');
-const botBtn = document.getElementById('botBtn');
+const canvas =
+  document.getElementById('game');
+
+const ctx =
+  canvas.getContext('2d');
+
+const overlay =
+  document.getElementById('overlay');
+
+const playButton =
+  document.getElementById('play-button');
+
+const pauseBtn =
+  document.getElementById('pauseBtn');
+
+const speedSelect =
+  document.getElementById('speedSelect');
+
+const paddleSelect =
+  document.getElementById('paddleSelect');
+
+const vsBtn =
+  document.getElementById('vsBtn');
+
+const botBtn =
+  document.getElementById('botBtn');
 
 let mode = 'vs';
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+let running = false;
+let paused = false;
+
+function resize(){
+
+  canvas.width =
+    container.clientWidth;
+
+  canvas.height =
+    container.clientHeight;
+
+  right.x =
+    canvas.width - 60;
 }
 
 resize();
-window.addEventListener('resize', resize);
 
-const paddleWidth = 18;
-const paddleHeight = 180;
+window.addEventListener(
+  'resize',
+  resize
+);
 
 const left = {
-  x: 40,
-  y: 200,
-  score: 0
+  x:40,
+  y:200,
+  score:0
 };
 
 const right = {
-  x: 0,
-  y: 200,
-  score: 0
+  x:0,
+  y:200,
+  score:0
 };
+
+let paddleWidth = 20;
+let paddleHeight = 170;
 
 const ball = {
-  x: 0,
-  y: 0,
-  vx: 8,
-  vy: 6,
-  size: 16
+  x:0,
+  y:0,
+  vx:0,
+  vy:0,
+  size:14
 };
 
-function resetBall() {
-  ball.x = canvas.width / 2;
-  ball.y = canvas.height / 2;
+function resetBall(){
 
-  const dir = Math.random() > 0.5 ? 1 : -1;
+  const speed =
+    Number(speedSelect.value);
 
-  ball.vx = 8 * dir;
-  ball.vy = (Math.random() * 8 - 4);
+  ball.x =
+    canvas.width / 2;
+
+  ball.y =
+    canvas.height / 2;
+
+  const dir =
+    Math.random() > 0.5
+    ? 1
+    : -1;
+
+  ball.vx =
+    speed * dir;
+
+  ball.vy =
+    (Math.random() * speed)
+    - speed / 2;
 }
 
-resetBall();
+function resetGame(){
 
-function drawBackground() {
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  left.score = 0;
+  right.score = 0;
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  left.y =
+    canvas.height/2
+    - paddleHeight/2;
+
+  right.y =
+    canvas.height/2
+    - paddleHeight/2;
+
+  resetBall();
+
+  running = false;
+  paused = false;
+
+  pauseBtn.textContent =
+    'Pause';
+
+  overlay.style.display =
+    'flex';
+}
+
+function startGame(){
+
+  overlay.style.display =
+    'none';
+
+  running = true;
+  paused = false;
+
+  resetBall();
+}
+
+playButton.addEventListener(
+  'click',
+  startGame
+);
+
+pauseBtn.addEventListener(
+  'click',
+  () => {
+
+    if (!running) {
+      return;
+    }
+
+    paused = !paused;
+
+    if (paused){
+
+      overlay.style.display =
+        'flex';
+
+      playButton.textContent =
+        'Resume';
+
+      pauseBtn.textContent =
+        'Resume';
+
+    } else {
+
+      overlay.style.display =
+        'none';
+
+      playButton.textContent =
+        'Play';
+
+      pauseBtn.textContent =
+        'Pause';
+    }
+
+  }
+);
+
+function drawBackground(){
+
+  ctx.fillStyle =
+    '#020617';
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.strokeStyle =
+    'rgba(255,255,255,0.08)';
+
   ctx.setLineDash([18,18]);
 
   ctx.beginPath();
-  ctx.moveTo(canvas.width/2,0);
-  ctx.lineTo(canvas.width/2,canvas.height);
+
+  ctx.moveTo(
+    canvas.width/2,
+    0
+  );
+
+  ctx.lineTo(
+    canvas.width/2,
+    canvas.height
+  );
+
   ctx.stroke();
 
   ctx.setLineDash([]);
 }
 
-function drawPaddle(x,y) {
-  ctx.fillStyle = 'white';
+function drawPaddle(x,y){
+
+  ctx.fillStyle =
+    'white';
+
+  if (
+    paddleSelect.value
+    === 'sharp'
+  ){
+
+    ctx.fillRect(
+      x,
+      y,
+      paddleWidth,
+      paddleHeight
+    );
+
+    return;
+  }
 
   ctx.beginPath();
-  ctx.roundRect(x,y,paddleWidth,paddleHeight,14);
+
+  ctx.roundRect(
+    x,
+    y,
+    paddleWidth,
+    paddleHeight,
+
+    paddleSelect.value
+    === 'rounded'
+    ? 40
+    : 14
+  );
+
   ctx.fill();
 }
 
-function drawBall() {
-  ctx.fillStyle = 'white';
+function drawBall(){
 
   ctx.beginPath();
-  ctx.arc(ball.x,ball.y,ball.size,0,Math.PI*2);
+
+  ctx.arc(
+    ball.x,
+    ball.y,
+    ball.size,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    'white';
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = 'white';
+
   ctx.fill();
 
-  ctx.shadowBlur = 25;
-  ctx.shadowColor = 'white';
-  ctx.fill();
   ctx.shadowBlur = 0;
 }
 
-function drawScores() {
-  ctx.font = 'bold 70px Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+function drawScores(){
 
-  ctx.fillText(left.score,canvas.width*0.25,90);
-  ctx.fillText(right.score,canvas.width*0.75,90);
+  ctx.font =
+    'bold 80px Arial';
+
+  ctx.fillStyle =
+    'rgba(255,255,255,0.12)';
+
+  ctx.fillText(
+    left.score,
+    canvas.width * 0.25,
+    90
+  );
+
+  ctx.fillText(
+    right.score,
+    canvas.width * 0.75,
+    90
+  );
 }
 
-function update() {
-  right.x = canvas.width - 58;
+function update(){
+
+  if (
+    !running ||
+    paused
+  ){
+    return;
+  }
 
   ball.x += ball.vx;
   ball.y += ball.vy;
 
-  if (ball.y < ball.size || ball.y > canvas.height - ball.size) {
+  if (
+    ball.y < ball.size ||
+    ball.y >
+    canvas.height - ball.size
+  ){
     ball.vy *= -1;
   }
 
   if (
-    ball.x - ball.size < left.x + paddleWidth &&
+
+    ball.x - ball.size <
+    left.x + paddleWidth &&
+
     ball.y > left.y &&
-    ball.y < left.y + paddleHeight
-  ) {
-    ball.vx = Math.abs(ball.vx);
+    ball.y <
+    left.y + paddleHeight
+
+  ){
+
+    ball.vx =
+      Math.abs(ball.vx);
+
+    ball.vy +=
+      (ball.y -
+      (left.y +
+      paddleHeight/2))
+      * 0.05;
   }
 
   if (
-    ball.x + ball.size > right.x &&
+
+    ball.x + ball.size >
+    right.x &&
+
     ball.y > right.y &&
-    ball.y < right.y + paddleHeight
-  ) {
-    ball.vx = -Math.abs(ball.vx);
+    ball.y <
+    right.y + paddleHeight
+
+  ){
+
+    ball.vx =
+      -Math.abs(ball.vx);
+
+    ball.vy +=
+      (ball.y -
+      (right.y +
+      paddleHeight/2))
+      * 0.05;
   }
 
-  if (ball.x < 0) {
+  if (ball.x < 0){
+
     right.score++;
+
+    if (right.score >= 10){
+
+      endGame(
+        mode === 'bot'
+        ? 'Bot Wins'
+        : 'Right Player Wins'
+      );
+
+      return;
+    }
+
     resetBall();
   }
 
-  if (ball.x > canvas.width) {
+  if (
+    ball.x > canvas.width
+  ){
+
     left.score++;
+
+    if (left.score >= 10){
+
+      endGame(
+        'Left Player Wins'
+      );
+
+      return;
+    }
+
     resetBall();
   }
 
-  if (mode === 'bot') {
-    const target = ball.y - paddleHeight/2;
+  if (mode === 'bot'){
 
-    right.y += (target - right.y) * 0.22;
+    const target =
+      ball.y
+      - paddleHeight/2;
+
+    right.y +=
+      (target - right.y)
+      * 0.28;
   }
+
+  clampPaddles();
 }
 
-function draw() {
+function endGame(text){
+
+  running = false;
+
+  overlay.style.display =
+    'flex';
+
+  document.getElementById(
+    'overlay-title'
+  ).textContent = text;
+
+  playButton.textContent =
+    'Play Again';
+}
+
+function draw(){
+
   drawBackground();
+
   drawScores();
-  drawPaddle(left.x,left.y);
-  drawPaddle(right.x,right.y);
+
+  drawPaddle(
+    left.x,
+    left.y
+  );
+
+  drawPaddle(
+    right.x,
+    right.y
+  );
+
   drawBall();
 }
 
-function loop() {
+function loop(){
+
   update();
+
   draw();
+
   requestAnimationFrame(loop);
 }
 
 loop();
 
-function clampPaddles() {
-  left.y = Math.max(0,Math.min(canvas.height-paddleHeight,left.y));
-  right.y = Math.max(0,Math.min(canvas.height-paddleHeight,right.y));
+function clampPaddles(){
+
+  left.y =
+    Math.max(
+      0,
+      Math.min(
+        canvas.height
+        - paddleHeight,
+        left.y
+      )
+    );
+
+  right.y =
+    Math.max(
+      0,
+      Math.min(
+        canvas.height
+        - paddleHeight,
+        right.y
+      )
+    );
 }
 
-window.addEventListener('touchmove', e => {
-  for (const touch of e.touches) {
+window.addEventListener(
+  'touchmove',
+  e => {
 
-    if (touch.clientX < canvas.width / 2) {
-      left.y = touch.clientY - paddleHeight/2;
+    for (const touch of e.touches){
+
+      const rect =
+        canvas.getBoundingClientRect();
+
+      const x =
+        touch.clientX
+        - rect.left;
+
+      const y =
+        touch.clientY
+        - rect.top;
+
+      if (
+        x < canvas.width/2
+      ){
+
+        left.y =
+          y - paddleHeight/2;
+      }
+
+      else if (
+        mode === 'vs'
+      ){
+
+        right.y =
+          y - paddleHeight/2;
+      }
     }
-    else if (mode === 'vs') {
-      right.y = touch.clientY - paddleHeight/2;
-    }
+
+    clampPaddles();
+
+  },
+  {passive:false}
+);
+
+function switchMode(newMode){
+
+  mode = newMode;
+
+  vsBtn.classList.remove(
+    'active'
+  );
+
+  botBtn.classList.remove(
+    'active'
+  );
+
+  if (mode === 'vs'){
+
+    vsBtn.classList.add(
+      'active'
+    );
+
+  } else {
+
+    botBtn.classList.add(
+      'active'
+    );
   }
 
-  clampPaddles();
-},{passive:false});
+  document.getElementById(
+    'overlay-title'
+  ).textContent =
+    mode === 'vs'
+    ? '2 Players'
+    : 'Impossible Bot';
 
-vsBtn.addEventListener('click', () => {
-  mode = 'vs';
+  playButton.textContent =
+    'Play';
 
-  vsBtn.classList.add('active');
-  botBtn.classList.remove('active');
-});
+  resetGame();
+}
 
-botBtn.addEventListener('click', () => {
-  mode = 'bot';
+vsBtn.addEventListener(
+  'click',
+  () => switchMode('vs')
+);
 
-  botBtn.classList.add('active');
-  vsBtn.classList.remove('active');
-});
+botBtn.addEventListener(
+  'click',
+  () => switchMode('bot')
+);
+
+resetGame();
 </script>
 
 </body>
