@@ -16,21 +16,19 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
+  touch-action:none;
   user-select:none;
+  -webkit-user-select:none;
 }
 
-html,
-body{
+html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-
   font-family:Arial,sans-serif;
-
   background:
-    radial-gradient(circle at top,
-    #1e293b,
-    #020617 70%);
+    radial-gradient(circle at top,#1e293b 0%,#020617 55%);
+  color:white;
 }
 
 body{
@@ -39,220 +37,176 @@ body{
   align-items:center;
 }
 
-#app{
-
-  width:96vw;
-  height:94vh;
-
-  border-radius:30px;
-
+#game-wrapper{
+  position:relative;
+  width:100vw;
+  height:100vh;
   overflow:hidden;
+}
 
-  background:#020617;
-
-  border:
-    2px solid rgba(255,255,255,0.08);
-
-  box-shadow:
-    0 0 60px rgba(0,0,0,0.45),
-    inset 0 0 40px rgba(255,255,255,0.03);
+#top-ui{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  padding:16px;
+  z-index:20;
 
   display:flex;
   flex-direction:column;
+  gap:12px;
 
-  position:relative;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(2,6,23,.95),
+      rgba(2,6,23,.35),
+      transparent
+    );
 }
 
-#topbar{
-
-  width:100%;
-
-  padding:14px;
-
+.ui-row{
   display:flex;
   justify-content:center;
   align-items:center;
-  flex-wrap:wrap;
-
   gap:12px;
-
-  z-index:20;
-
-  background:
-    rgba(255,255,255,0.04);
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.05);
+  flex-wrap:wrap;
 }
 
-.group{
+.segment{
   display:flex;
-  gap:8px;
+  gap:10px;
 }
 
-button{
-
+.segment button{
   border:none;
-
-  background:
-    rgba(255,255,255,0.07);
-
+  background:rgba(255,255,255,.08);
   color:white;
-
   padding:12px 18px;
-
-  border-radius:14px;
-
+  border-radius:16px;
   font-size:15px;
-
-  transition:0.15s;
-
-  cursor:pointer;
-}
-
-button.active{
-  background:white;
-  color:black;
-  font-weight:bold;
-}
-
-button:active{
-  transform:scale(0.96);
-}
-
-#playBtn{
   min-width:110px;
+  transition:.18s;
+}
+
+.segment button.active{
+  background:rgba(255,255,255,.2);
+  transform:scale(1.04);
+}
+
+.segment button.blue.active{
+  background:#2563eb;
+  box-shadow:0 0 18px rgba(37,99,235,.7);
+}
+
+.segment button.orange.active{
+  background:#f97316;
+  box-shadow:0 0 18px rgba(249,115,22,.7);
 }
 
 #pauseBtn{
-  min-width:110px;
+  min-width:90px;
 }
 
-#game{
-
-  flex:1;
-
-  width:100%;
-  height:100%;
-
-  display:block;
-
-  touch-action:none;
-}
-
-#message{
-
+#playOverlay{
   position:absolute;
-
   inset:0;
+  z-index:30;
 
   display:flex;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
 
-  pointer-events:none;
-
-  z-index:5;
+  background:rgba(2,6,23,.35);
+  backdrop-filter:blur(3px);
 }
 
-#title{
+#playBtn{
+  border:none;
+  color:white;
+  font-size:26px;
+  padding:24px 50px;
+  border-radius:26px;
 
-  font-size:58px;
-  font-weight:bold;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #f97316
+    );
 
-  opacity:0.08;
+  box-shadow:
+    0 0 35px rgba(37,99,235,.5),
+    0 0 35px rgba(249,115,22,.35);
+
+  transition:.2s;
 }
 
-#subtitle{
+#playBtn:active{
+  transform:scale(.95);
+}
 
-  margin-top:12px;
+#game-container{
+  position:absolute;
+  left:50%;
+  top:108px;
 
-  font-size:24px;
+  transform:translateX(-50%);
 
-  color:
-    rgba(255,255,255,0.75);
+  width:96vw;
+  height:calc(100vh - 124px);
+
+  border-radius:28px;
+
+  overflow:hidden;
+
+  border:2px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.96),
+      rgba(2,6,23,.98)
+    );
+
+  box-shadow:
+    inset 0 0 80px rgba(255,255,255,.03),
+    0 0 60px rgba(0,0,0,.5);
+}
+
+canvas{
+  width:100%;
+  height:100%;
+  display:block;
 }
 
 </style>
 </head>
-
 <body>
 
-<div id="app">
+<div id="game-wrapper">
 
-  <div id="topbar">
+  <div id="top-ui">
 
-    <div class="group">
+    <div class="ui-row">
 
-      <button
-        id="vsBtn"
-        class="active"
-      >
-        2 Players
-      </button>
+      <div class="segment">
 
-      <button id="botBtn">
-        Impossible Bot
-      </button>
+        <button
+          id="vsBtn"
+          class="active blue"
+        >
+          2 Players
+        </button>
 
-    </div>
+        <button
+          id="botBtn"
+          class="orange"
+        >
+          Impossible Bot
+        </button>
 
-    <div class="group">
-
-      <button
-        class="speedBtn active"
-        data-speed="7"
-      >
-        Slow
-      </button>
-
-      <button
-        class="speedBtn"
-        data-speed="10"
-      >
-        Normal
-      </button>
-
-      <button
-        class="speedBtn"
-        data-speed="14"
-      >
-        Fast
-      </button>
-
-    </div>
-
-    <div class="group">
-
-      <button
-        class="shapeBtn active"
-        data-shape="classic"
-      >
-        Classic
-      </button>
-
-      <button
-        class="shapeBtn"
-        data-shape="round"
-      >
-        Round
-      </button>
-
-      <button
-        class="shapeBtn"
-        data-shape="sharp"
-      >
-        Sharp
-      </button>
-
-    </div>
-
-    <div class="group">
-
-      <button id="playBtn">
-        Play
-      </button>
+      </div>
 
       <button id="pauseBtn">
         Pause
@@ -260,20 +214,70 @@ button:active{
 
     </div>
 
+    <div class="ui-row">
+
+      <div class="segment">
+
+        <button
+          class="speedBtn active"
+          data-speed="1"
+        >
+          Normal
+        </button>
+
+        <button
+          class="speedBtn"
+          data-speed="1.45"
+        >
+          Fast
+        </button>
+
+        <button
+          class="speedBtn"
+          data-speed="1.9"
+        >
+          Chaos
+        </button>
+
+      </div>
+
+      <div class="segment">
+
+        <button
+          class="shapeBtn active"
+          data-shape="normal"
+        >
+          Paddle
+        </button>
+
+        <button
+          class="shapeBtn"
+          data-shape="curve"
+        >
+          Curve
+        </button>
+
+        <button
+          class="shapeBtn"
+          data-shape="triangle"
+        >
+          Triangle
+        </button>
+
+      </div>
+
+    </div>
+
   </div>
 
-  <canvas id="game"></canvas>
+  <div id="playOverlay">
+    <button id="playBtn">
+      PLAY
+    </button>
+  </div>
 
-  <div id="message">
-
-    <div id="title">
-      PONG
-    </div>
-
-    <div id="subtitle">
-      Press Play
-    </div>
-
+  <div id="game-container">
+    <canvas id="game"></canvas>
   </div>
 
 </div>
@@ -285,6 +289,12 @@ const canvas =
 
 const ctx =
   canvas.getContext('2d');
+
+const container =
+  document.getElementById('game-container');
+
+const playOverlay =
+  document.getElementById('playOverlay');
 
 const playBtn =
   document.getElementById('playBtn');
@@ -298,38 +308,53 @@ const vsBtn =
 const botBtn =
   document.getElementById('botBtn');
 
-const subtitle =
-  document.getElementById('subtitle');
-
 const speedBtns =
   document.querySelectorAll('.speedBtn');
 
 const shapeBtns =
   document.querySelectorAll('.shapeBtn');
 
-let mode = 'vs';
-
 let running = false;
-
 let paused = false;
 
-let ballSpeed = 7;
+let mode = 'vs';
 
-let paddleShape = 'classic';
+let speedMultiplier = 1;
 
-const paddleWidth = 18;
-const paddleHeight = 170;
+let paddleShape = 'normal';
+
+function resize(){
+
+  canvas.width =
+    container.clientWidth;
+
+  canvas.height =
+    container.clientHeight;
+
+}
+
+resize();
+
+window.addEventListener(
+  'resize',
+  resize
+);
+
+const paddleWidth = 22;
+const paddleHeight = 180;
 
 const left = {
   x:40,
-  y:100,
-  score:0
+  y:200,
+  score:0,
+  flash:0
 };
 
 const right = {
   x:0,
-  y:100,
-  score:0
+  y:200,
+  score:0,
+  flash:0
 };
 
 const ball = {
@@ -337,46 +362,31 @@ const ball = {
   y:0,
   vx:0,
   vy:0,
-  size:14
+  size:14,
+  flash:0
 };
-
-function resize(){
-
-  canvas.width =
-    canvas.clientWidth;
-
-  canvas.height =
-    canvas.clientHeight;
-
-  right.x =
-    canvas.width - 58;
-}
-
-window.addEventListener(
-  'resize',
-  resize
-);
-
-resize();
 
 function resetBall(){
 
   ball.x =
-    canvas.width / 2;
+    canvas.width/2;
 
   ball.y =
-    canvas.height / 2;
+    canvas.height/2;
 
   const dir =
-    Math.random() > 0.5
-    ? 1
-    : -1;
+    Math.random() > .5 ? 1 : -1;
+
+  const base =
+    8 * speedMultiplier;
 
   ball.vx =
-    ballSpeed * dir;
+    base * dir;
 
   ball.vy =
-    (Math.random() * 8 - 4);
+    (Math.random()*6-3)
+    * speedMultiplier;
+
 }
 
 function resetGame(){
@@ -392,65 +402,46 @@ function resetGame(){
     canvas.height/2
     - paddleHeight/2;
 
+  resetBall();
+
   running = false;
   paused = false;
 
   pauseBtn.textContent =
     'Pause';
 
-  subtitle.textContent =
-    'Press Play';
+  playOverlay.style.display =
+    'flex';
 
-  resetBall();
 }
+
+resetGame();
 
 function startGame(){
 
   running = true;
-
   paused = false;
 
-  subtitle.textContent =
-    '';
+  playOverlay.style.display =
+    'none';
+
 }
 
 playBtn.addEventListener(
   'click',
-  () => {
-
-    resetBall();
-
-    startGame();
-
-  }
+  startGame
 );
 
 pauseBtn.addEventListener(
   'click',
   () => {
 
-    if (!running){
-      return;
-    }
+    if(!running) return;
 
     paused = !paused;
 
-    if (paused){
-
-      pauseBtn.textContent =
-        'Resume';
-
-      subtitle.textContent =
-        'Paused';
-
-    } else {
-
-      pauseBtn.textContent =
-        'Pause';
-
-      subtitle.textContent =
-        '';
-    }
+    pauseBtn.textContent =
+      paused ? 'Resume' : 'Pause';
 
   }
 );
@@ -467,84 +458,96 @@ function setMode(newMode){
     'active'
   );
 
-  if (mode === 'vs'){
+  if(mode === 'vs'){
 
     vsBtn.classList.add(
       'active'
     );
 
-  } else {
+  }else{
 
     botBtn.classList.add(
       'active'
     );
+
   }
 
   resetGame();
+
 }
 
-vsBtn.addEventListener(
-  'click',
-  () => setMode('vs')
-);
+vsBtn.onclick =
+  () => setMode('vs');
 
-botBtn.addEventListener(
-  'click',
-  () => setMode('bot')
-);
+botBtn.onclick =
+  () => setMode('bot');
 
 speedBtns.forEach(btn => {
 
-  btn.addEventListener(
-    'click',
-    () => {
+  btn.onclick = () => {
 
-      speedBtns.forEach(
-        b => b.classList.remove('active')
-      );
-
-      btn.classList.add(
+    speedBtns.forEach(
+      b => b.classList.remove(
         'active'
+      )
+    );
+
+    btn.classList.add(
+      'active'
+    );
+
+    speedMultiplier =
+      Number(
+        btn.dataset.speed
       );
 
-      ballSpeed =
-        Number(
-          btn.dataset.speed
-        );
+    resetGame();
 
-      resetGame();
-    }
-  );
+  };
 
 });
 
 shapeBtns.forEach(btn => {
 
-  btn.addEventListener(
-    'click',
-    () => {
+  btn.onclick = () => {
 
-      shapeBtns.forEach(
-        b => b.classList.remove('active')
-      );
-
-      btn.classList.add(
+    shapeBtns.forEach(
+      b => b.classList.remove(
         'active'
-      );
+      )
+    );
 
-      paddleShape =
-        btn.dataset.shape;
+    btn.classList.add(
+      'active'
+    );
 
-      resetGame();
-    }
-  );
+    paddleShape =
+      btn.dataset.shape;
+
+    resetGame();
+
+  };
 
 });
 
 function drawBackground(){
 
-  ctx.fillStyle =
-    '#020617';
+  const grad =
+    ctx.createLinearGradient(
+      0,0,0,canvas.height
+    );
+
+  grad.addColorStop(
+    0,
+    '#0f172a'
+  );
+
+  grad.addColorStop(
+    1,
+    '#020617'
+  );
+
+  ctx.fillStyle = grad;
 
   ctx.fillRect(
     0,
@@ -554,9 +557,9 @@ function drawBackground(){
   );
 
   ctx.strokeStyle =
-    'rgba(255,255,255,0.08)';
+    'rgba(255,255,255,.08)';
 
-  ctx.setLineDash([18,18]);
+  ctx.setLineDash([16,16]);
 
   ctx.beginPath();
 
@@ -573,42 +576,145 @@ function drawBackground(){
   ctx.stroke();
 
   ctx.setLineDash([]);
+
 }
 
-function drawPaddle(x,y){
+function drawPaddle(
+  p,
+  color
+){
 
-  ctx.fillStyle =
-    'white';
+  ctx.save();
 
-  if (paddleShape === 'sharp'){
+  if(p.flash > 0){
 
-    ctx.fillRect(
-      x,
-      y,
-      paddleWidth,
-      paddleHeight
-    );
+    ctx.shadowBlur = 34;
+    ctx.shadowColor = color;
 
-    return;
   }
 
-  ctx.beginPath();
+  ctx.fillStyle = color;
 
-  ctx.roundRect(
-    x,
-    y,
-    paddleWidth,
-    paddleHeight,
+  if(
+    paddleShape === 'normal'
+  ){
 
-    paddleShape === 'round'
-    ? 40
-    : 14
-  );
+    ctx.beginPath();
 
-  ctx.fill();
+    ctx.roundRect(
+      p.x,
+      p.y,
+      paddleWidth,
+      paddleHeight,
+      16
+    );
+
+    ctx.fill();
+
+  }
+
+  else if(
+    paddleShape === 'curve'
+  ){
+
+    ctx.beginPath();
+
+    if(color === '#3b82f6'){
+
+      ctx.moveTo(
+        p.x + paddleWidth,
+        p.y
+      );
+
+      ctx.quadraticCurveTo(
+        p.x - 42,
+        p.y + paddleHeight/2,
+        p.x + paddleWidth,
+        p.y + paddleHeight
+      );
+
+    }else{
+
+      ctx.moveTo(
+        p.x,
+        p.y
+      );
+
+      ctx.quadraticCurveTo(
+        p.x + 64,
+        p.y + paddleHeight/2,
+        p.x,
+        p.y + paddleHeight
+      );
+
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+  }
+
+  else{
+
+    ctx.beginPath();
+
+    if(color === '#3b82f6'){
+
+      ctx.moveTo(
+        p.x,
+        p.y
+      );
+
+      ctx.lineTo(
+        p.x + paddleWidth,
+        p.y + paddleHeight/2
+      );
+
+      ctx.lineTo(
+        p.x,
+        p.y + paddleHeight
+      );
+
+    }else{
+
+      ctx.moveTo(
+        p.x + paddleWidth,
+        p.y
+      );
+
+      ctx.lineTo(
+        p.x,
+        p.y + paddleHeight/2
+      );
+
+      ctx.lineTo(
+        p.x + paddleWidth,
+        p.y + paddleHeight
+      );
+
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+  }
+
+  ctx.restore();
+
 }
 
 function drawBall(){
+
+  ctx.save();
+
+  ctx.fillStyle = 'white';
+
+  if(ball.flash > 0){
+
+    ctx.shadowBlur = 34;
+    ctx.shadowColor = 'white';
+
+  }
 
   ctx.beginPath();
 
@@ -617,70 +723,85 @@ function drawBall(){
     ball.y,
     ball.size,
     0,
-    Math.PI * 2
+    Math.PI*2
   );
-
-  ctx.fillStyle =
-    'white';
-
-  ctx.shadowBlur = 20;
-  ctx.shadowColor = 'white';
 
   ctx.fill();
 
-  ctx.shadowBlur = 0;
+  ctx.restore();
+
 }
 
 function drawScores(){
 
   ctx.font =
-    'bold 72px Arial';
+    'bold 70px Arial';
 
   ctx.fillStyle =
-    'rgba(255,255,255,0.12)';
+    'rgba(255,255,255,.08)';
 
   ctx.fillText(
     left.score,
-    canvas.width * 0.25,
-    90
+    canvas.width*.25,
+    88
   );
 
   ctx.fillText(
     right.score,
-    canvas.width * 0.75,
-    90
+    canvas.width*.75,
+    88
   );
+
+}
+
+function flashHit(side){
+
+  ball.flash = 10;
+
+  if(side === 'left'){
+
+    left.flash = 10;
+
+  }else{
+
+    right.flash = 10;
+
+  }
+
 }
 
 function update(){
 
-  if (!running || paused){
-    return;
-  }
+  if(
+    !running ||
+    paused
+  ) return;
+
+  right.x =
+    canvas.width - 62;
 
   ball.x += ball.vx;
   ball.y += ball.vy;
 
-  if (
-
+  if(
     ball.y < ball.size ||
-
     ball.y >
     canvas.height - ball.size
-
   ){
+
     ball.vy *= -1;
+
   }
 
-  if (
-
+  if(
     ball.x - ball.size <
     left.x + paddleWidth &&
 
-    ball.y > left.y &&
+    ball.y >
+    left.y &&
+
     ball.y <
     left.y + paddleHeight
-
   ){
 
     ball.vx =
@@ -688,20 +809,22 @@ function update(){
 
     ball.vy +=
       (ball.y -
-      (left.y +
-      paddleHeight/2))
-      * 0.05;
+      (left.y + paddleHeight/2))
+      * .03;
+
+    flashHit('left');
+
   }
 
-  if (
-
+  if(
     ball.x + ball.size >
     right.x &&
 
-    ball.y > right.y &&
+    ball.y >
+    right.y &&
+
     ball.y <
     right.y + paddleHeight
-
   ){
 
     ball.vx =
@@ -709,55 +832,42 @@ function update(){
 
     ball.vy +=
       (ball.y -
-      (right.y +
-      paddleHeight/2))
-      * 0.05;
+      (right.y + paddleHeight/2))
+      * .03;
+
+    flashHit('right');
+
   }
 
-  if (ball.x < 0){
+  if(ball.x < -40){
 
     right.score++;
-
-    if (right.score >= 10){
-
-      running = false;
-
-      subtitle.textContent =
-        mode === 'bot'
-        ? 'Bot Wins'
-        : 'Right Player Wins';
-    }
-
     resetBall();
+
   }
 
-  if (ball.x > canvas.width){
+  if(ball.x > canvas.width+40){
 
     left.score++;
-
-    if (left.score >= 10){
-
-      running = false;
-
-      subtitle.textContent =
-        'Left Player Wins';
-    }
-
     resetBall();
+
   }
 
-  if (mode === 'bot'){
+  if(mode === 'bot'){
 
     const target =
-      ball.y -
-      paddleHeight/2;
+      ball.y - paddleHeight/2;
 
     right.y +=
       (target - right.y)
-      * 0.30;
+      * .42;
+
   }
 
-  clampPaddles();
+  left.flash *= .9;
+  right.flash *= .9;
+  ball.flash *= .9;
+
 }
 
 function draw(){
@@ -767,99 +877,152 @@ function draw(){
   drawScores();
 
   drawPaddle(
-    left.x,
-    left.y
+    left,
+    '#3b82f6'
   );
 
   drawPaddle(
-    right.x,
-    right.y
+    right,
+    '#f97316'
   );
 
   drawBall();
+
 }
 
 function loop(){
 
   update();
-
   draw();
 
-  requestAnimationFrame(loop);
+  requestAnimationFrame(
+    loop
+  );
+
 }
 
 loop();
 
-function clampPaddles(){
+function clamp(){
 
-  left.y =
-    Math.max(
-      0,
-      Math.min(
-        canvas.height -
-        paddleHeight,
-        left.y
-      )
-    );
+  left.y = Math.max(
+    0,
+    Math.min(
+      canvas.height -
+      paddleHeight,
+      left.y
+    )
+  );
 
-  right.y =
-    Math.max(
-      0,
-      Math.min(
-        canvas.height -
-        paddleHeight,
-        right.y
-      )
-    );
+  right.y = Math.max(
+    0,
+    Math.min(
+      canvas.height -
+      paddleHeight,
+      right.y
+    )
+  );
+
 }
 
 window.addEventListener(
   'touchmove',
   e => {
 
-    if (!running){
-      return;
-    }
+    for(const t of e.touches){
 
-    for (const touch of e.touches){
-
-      const rect =
-        canvas.getBoundingClientRect();
-
-      const x =
-        touch.clientX -
-        rect.left;
-
-      const y =
-        touch.clientY -
-        rect.top;
-
-      if (
-        x < canvas.width / 2
+      if(
+        t.clientX <
+        window.innerWidth/2
       ){
 
         left.y =
-          y -
+          t.clientY -
           paddleHeight/2;
+
       }
 
-      else if (
+      else if(
         mode === 'vs'
       ){
 
         right.y =
-          y -
+          t.clientY -
           paddleHeight/2;
+
       }
+
     }
 
-    clampPaddles();
+    clamp();
 
   },
   {passive:false}
 );
 
-resetGame();
+const keys = {};
+
+window.addEventListener(
+  'keydown',
+  e => {
+
+    keys[e.key.toLowerCase()] =
+      true;
+
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  e => {
+
+    keys[e.key.toLowerCase()] =
+      false;
+
+  }
+);
+
+function keyboardLoop(){
+
+  if(keys['w']){
+
+    left.y -= 10;
+
+  }
+
+  if(keys['s']){
+
+    left.y += 10;
+
+  }
+
+  if(
+    mode === 'vs'
+  ){
+
+    if(keys['arrowup']){
+
+      right.y -= 10;
+
+    }
+
+    if(keys['arrowdown']){
+
+      right.y += 10;
+
+    }
+
+  }
+
+  clamp();
+
+  requestAnimationFrame(
+    keyboardLoop
+  );
+
+}
+
+keyboardLoop();
 
 </script>
 
