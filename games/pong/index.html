@@ -28,11 +28,11 @@ body{
 
   background:
     radial-gradient(circle at top left,
-      rgba(99,102,241,0.18),
+      rgba(139,92,246,0.18),
       transparent 35%),
 
     radial-gradient(circle at bottom right,
-      rgba(20,184,166,0.18),
+      rgba(6,182,212,0.18),
       transparent 35%),
 
     linear-gradient(
@@ -111,7 +111,7 @@ button:hover{
   position:relative;
 
   width:min(1200px,100%);
-  height:calc(100vh - 150px);
+  height:calc(100vh - 155px);
 
   border-radius:30px;
 
@@ -120,8 +120,8 @@ button:hover{
   background:
     linear-gradient(
       135deg,
-      rgba(99,102,241,0.08),
-      rgba(20,184,166,0.08)
+      rgba(139,92,246,0.08),
+      rgba(6,182,212,0.08)
     );
 
   border:1px solid rgba(255,255,255,0.08);
@@ -169,8 +169,8 @@ canvas{
   background:
     linear-gradient(
       135deg,
-      #6366f1,
-      #14b8a6
+      #8b5cf6,
+      #06b6d4
     );
 
   color:white;
@@ -178,7 +178,7 @@ canvas{
   cursor:pointer;
 
   box-shadow:
-    0 0 30px rgba(99,102,241,0.45);
+    0 0 30px rgba(139,92,246,0.45);
 
   transition:0.2s;
 }
@@ -562,77 +562,59 @@ function drawPaddle(p,color){
     if(p === left){
 
       ctx.moveTo(
+        p.x + paddleWidth,
+        p.y + paddleHeight/2
+      );
+
+      ctx.quadraticCurveTo(
+        p.x + 4,
+        p.y + 8,
         p.x,
         p.y + paddleHeight/2
       );
 
-      ctx.lineTo(
+      ctx.quadraticCurveTo(
+        p.x + 4,
+        p.y + paddleHeight - 8,
         p.x + paddleWidth,
-        p.y + 18
-      );
-
-      ctx.lineTo(
-        p.x + paddleWidth,
-        p.y + paddleHeight - 18
+        p.y + paddleHeight/2
       );
 
     }
 
     else{
 
-  ctx.beginPath();
+      ctx.moveTo(
+        p.x,
+        p.y + paddleHeight/2
+      );
 
-  if(p === left){
+      ctx.quadraticCurveTo(
+        p.x + paddleWidth - 4,
+        p.y + 8,
+        p.x + paddleWidth,
+        p.y + paddleHeight/2
+      );
 
-    ctx.moveTo(
-      p.x + paddleWidth,
-      p.y + paddleHeight/2
-    );
+      ctx.quadraticCurveTo(
+        p.x + paddleWidth - 4,
+        p.y + paddleHeight - 8,
+        p.x,
+        p.y + paddleHeight/2
+      );
 
-    ctx.quadraticCurveTo(
-      p.x + 4,
-      p.y + 8,
-      p.x,
-      p.y + paddleHeight/2
-    );
+    }
 
-    ctx.quadraticCurveTo(
-      p.x + 4,
-      p.y + paddleHeight - 8,
-      p.x + paddleWidth,
-      p.y + paddleHeight/2
-    );
+    ctx.closePath();
 
-  }
-
-  else{
-
-    ctx.moveTo(
-      p.x,
-      p.y + paddleHeight/2
-    );
-
-    ctx.quadraticCurveTo(
-      p.x + paddleWidth - 4,
-      p.y + 8,
-      p.x + paddleWidth,
-      p.y + paddleHeight/2
-    );
-
-    ctx.quadraticCurveTo(
-      p.x + paddleWidth - 4,
-      p.y + paddleHeight - 8,
-      p.x,
-      p.y + paddleHeight/2
-    );
+    ctx.fill();
 
   }
 
-  ctx.closePath();
-
-  ctx.fill();
+  ctx.restore();
 
 }
+
 function drawBall(){
 
   for(let i=0;i<ball.trail.length;i++){
