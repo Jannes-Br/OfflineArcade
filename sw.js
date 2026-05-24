@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v40';
+const CACHE = 'offlinearcade-v41';
 
 const ASSETS = [
 
