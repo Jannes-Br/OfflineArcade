@@ -1,0 +1,539 @@
+# games/tic-tac-toe/index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tic Tac Toe</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+}
+
+.game-box {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 28px;
+  padding: 24px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.title {
+  text-align: center;
+  font-size: 34px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.mode-select,
+.difficulty-select {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+button {
+  border: none;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mode-btn,
+.diff-btn {
+  flex: 1;
+  background: #1e293b;
+  color: white;
+}
+
+.mode-btn.active,
+.diff-btn.active {
+  background: #3b82f6;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.06);
+  border-radius: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 56px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cell:hover {
+  transform: scale(1.03);
+  background: rgba(255,255,255,0.1);
+}
+
+.x {
+  color: #38bdf8;
+}
+
+.o {
+  color: #f43f5e;
+}
+
+.status {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.control-btn {
+  flex: 1;
+  background: #111827;
+  color: white;
+}
+
+.scoreboard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.score {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  padding: 14px;
+  border-radius: 18px;
+  text-align: center;
+}
+
+.score-title {
+  color: #94a3b8;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.score-value {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 28px;
+  }
+
+  .cell {
+    font-size: 48px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="game-box">
+
+    <div class="title">Tic Tac Toe</div>
+
+    <div class="subtitle">
+      Play against a friend or smart AI.
+    </div>
+
+    <div class="mode-select">
+      <button class="mode-btn active" id="pvpBtn">
+        2 Players
+      </button>
+
+      <button class="mode-btn" id="botBtn">
+        VS Bot
+      </button>
+    </div>
+
+    <div class="difficulty-select" id="difficultyBox" style="display:none;">
+      <button class="diff-btn active" data-diff="easy">
+        Easy
+      </button>
+
+      <button class="diff-btn" data-diff="medium">
+        Medium
+      </button>
+
+      <button class="diff-btn" data-diff="hard">
+        Hard
+      </button>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="status" id="status">
+      X Turn
+    </div>
+
+    <div class="scoreboard">
+
+      <div class="score">
+        <div class="score-title">X Wins</div>
+        <div class="score-value" id="xScore">0</div>
+      </div>
+
+      <div class="score">
+        <div class="score-title">Draws</div>
+        <div class="score-value" id="drawScore">0</div>
+      </div>
+
+      <div class="score">
+        <div class="score-title">O Wins</div>
+        <div class="score-value" id="oScore">0</div>
+      </div>
+
+    </div>
+
+    <div class="controls">
+
+      <button class="control-btn" id="restartBtn">
+        Restart
+      </button>
+
+      <button class="control-btn" id="resetBtn">
+        Reset Score
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+const board = document.getElementById('board');
+const statusText = document.getElementById('status');
+const pvpBtn = document.getElementById('pvpBtn');
+const botBtn = document.getElementById('botBtn');
+const difficultyBox = document.getElementById('difficultyBox');
+const restartBtn = document.getElementById('restartBtn');
+const resetBtn = document.getElementById('resetBtn');
+const diffButtons = document.querySelectorAll('.diff-btn');
+
+const xScoreEl = document.getElementById('xScore');
+const oScoreEl = document.getElementById('oScore');
+const drawScoreEl = document.getElementById('drawScore');
+
+let cells = [];
+let currentPlayer = 'X';
+let gameActive = true;
+let gameMode = 'pvp';
+let difficulty = 'easy';
+
+let scores = {
+  X: 0,
+  O: 0,
+  draw: 0
+};
+
+const winPatterns = [
+  [0,1,2],
+  [3,4,5],
+  [6,7,8],
+  [0,3,6],
+  [1,4,7],
+  [2,5,8],
+  [0,4,8],
+  [2,4,6]
+];
+
+function createBoard() {
+  board.innerHTML = '';
+  cells = [];
+
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.index = i;
+
+    cell.addEventListener('click', () => handleMove(i));
+
+    board.appendChild(cell);
+    cells.push(cell);
+  }
+}
+
+function handleMove(index) {
+  if (!gameActive) return;
+
+  if (cells[index].textContent !== '') return;
+
+  makeMove(index, currentPlayer);
+
+  if (checkWinner(currentPlayer)) {
+    statusText.textContent = currentPlayer + ' Wins!';
+    scores[currentPlayer]++;
+    updateScores();
+    gameActive = false;
+    return;
+  }
+
+  if (isDraw()) {
+    statusText.textContent = 'Draw!';
+    scores.draw++;
+    updateScores();
+    gameActive = false;
+    return;
+  }
+
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+  statusText.textContent = currentPlayer + ' Turn';
+
+  if (
+    gameMode === 'bot' &&
+    currentPlayer === 'O'
+  ) {
+    setTimeout(botMove, 400);
+  }
+}
+
+function makeMove(index, player) {
+  cells[index].textContent = player;
+  cells[index].classList.add(player.toLowerCase());
+}
+
+function botMove() {
+  if (!gameActive) return;
+
+  let move;
+
+  if (difficulty === 'easy') {
+    move = randomMove();
+  }
+
+  if (difficulty === 'medium') {
+    move = Math.random() < 0.5
+      ? bestMove()
+      : randomMove();
+  }
+
+  if (difficulty === 'hard') {
+    move = bestMove();
+  }
+
+  handleMove(move);
+}
+
+function randomMove() {
+  const empty = cells
+    .map((cell, index) =>
+      cell.textContent === '' ? index : null
+    )
+    .filter(v => v !== null);
+
+  return empty[
+    Math.floor(Math.random() * empty.length)
+  ];
+}
+
+function bestMove() {
+  for (const pattern of winPatterns) {
+    const values = pattern.map(i => cells[i].textContent);
+
+    if (
+      values.filter(v => v === 'O').length === 2 &&
+      values.includes('')
+    ) {
+      return pattern[values.indexOf('')];
+    }
+  }
+
+  for (const pattern of winPatterns) {
+    const values = pattern.map(i => cells[i].textContent);
+
+    if (
+      values.filter(v => v === 'X').length === 2 &&
+      values.includes('')
+    ) {
+      return pattern[values.indexOf('')];
+    }
+  }
+
+  if (cells[4].textContent === '') {
+    return 4;
+  }
+
+  return randomMove();
+}
+
+function checkWinner(player) {
+  return winPatterns.some(pattern => {
+    return pattern.every(index => {
+      return cells[index].textContent === player;
+    });
+  });
+}
+
+function isDraw() {
+  return cells.every(cell => cell.textContent !== '');
+}
+
+function restartGame() {
+  currentPlayer = 'X';
+  gameActive = true;
+  statusText.textContent = 'X Turn';
+  createBoard();
+}
+
+function updateScores() {
+  xScoreEl.textContent = scores.X;
+  oScoreEl.textContent = scores.O;
+  drawScoreEl.textContent = scores.draw;
+}
+
+restartBtn.addEventListener('click', restartGame);
+
+resetBtn.addEventListener('click', () => {
+  scores = {
+    X: 0,
+    O: 0,
+    draw: 0
+  };
+
+  updateScores();
+  restartGame();
+});
+
+pvpBtn.addEventListener('click', () => {
+  gameMode = 'pvp';
+
+  pvpBtn.classList.add('active');
+  botBtn.classList.remove('active');
+
+  difficultyBox.style.display = 'none';
+
+  restartGame();
+});
+
+botBtn.addEventListener('click', () => {
+  gameMode = 'bot';
+
+  botBtn.classList.add('active');
+  pvpBtn.classList.remove('active');
+
+  difficultyBox.style.display = 'flex';
+
+  restartGame();
+});
+
+diffButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+
+    diffButtons.forEach(b =>
+      b.classList.remove('active')
+    );
+
+    btn.classList.add('active');
+
+    difficulty = btn.dataset.diff;
+
+    restartGame();
+
+  });
+});
+
+createBoard();
+</script>
+
+</body>
+</html>
+```
+
+# Zur Hauptseite hinzufügen
+
+In deine `index.html` bei den anderen Spielen einfügen:
+
+```html
+<a
+  class="game-card"
+  href="games/tic-tac-toe/index.html"
+>
+
+  <img
+    class="game-thumb"
+    src="assets/thumbnails/tic-tac-toe.png"
+    alt="Tic Tac Toe"
+  >
+
+  <div class="game-content">
+
+    <div class="game-title">
+      Tic Tac Toe
+    </div>
+
+    <div class="game-description">
+      Play against friends or a smart AI bot.
+    </div>
+
+  </div>
+
+</a>
+```
+
+# sw.js erweitern
+
+Einfügen:
+
+```js
+'/games/tic-tac-toe/index.html',
+'/assets/thumbnails/tic-tac-toe.png',
+```
+
+# Version erhöhen
+
+In `main.js` und `sw.js`:
+
+```js
+const CACHE_VERSION = 'v30';
+```
+
+oder höher.
