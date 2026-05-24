@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v36';
+const CACHE = 'offlinearcade-v37';
 
 const ASSETS = [
 
@@ -47,6 +47,13 @@ const ASSETS = [
   '/games/2048/index.html',
     
   '/assets/thumbnails/2048.png',
+
+
+
+    
+  '/OfflineArcade/games/pong/index.html',
+    
+  '/assets/thumbnails/pong.png',
 ];
 
 self.addEventListener('install', event => {
