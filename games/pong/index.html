@@ -580,36 +580,59 @@ function drawPaddle(p,color){
 
     else{
 
-      ctx.moveTo(
-        p.x + paddleWidth,
-        p.y + paddleHeight/2
-      );
+  ctx.beginPath();
 
-      ctx.lineTo(
-        p.x,
-        p.y + 18
-      );
+  if(p === left){
 
-      ctx.lineTo(
-        p.x,
-        p.y + paddleHeight - 18
-      );
+    ctx.moveTo(
+      p.x + paddleWidth,
+      p.y + paddleHeight/2
+    );
 
-    }
+    ctx.quadraticCurveTo(
+      p.x + 4,
+      p.y + 8,
+      p.x,
+      p.y + paddleHeight/2
+    );
 
-    ctx.closePath();
-
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-
-    ctx.fill();
+    ctx.quadraticCurveTo(
+      p.x + 4,
+      p.y + paddleHeight - 8,
+      p.x + paddleWidth,
+      p.y + paddleHeight/2
+    );
 
   }
 
-  ctx.restore();
+  else{
+
+    ctx.moveTo(
+      p.x,
+      p.y + paddleHeight/2
+    );
+
+    ctx.quadraticCurveTo(
+      p.x + paddleWidth - 4,
+      p.y + 8,
+      p.x + paddleWidth,
+      p.y + paddleHeight/2
+    );
+
+    ctx.quadraticCurveTo(
+      p.x + paddleWidth - 4,
+      p.y + paddleHeight - 8,
+      p.x,
+      p.y + paddleHeight/2
+    );
+
+  }
+
+  ctx.closePath();
+
+  ctx.fill();
 
 }
-
 function drawBall(){
 
   for(let i=0;i<ball.trail.length;i++){
@@ -699,42 +722,51 @@ function clampPaddle(p){
 
 function paddlePhysics(p,isLeft){
 
-  const relative =
+  const hitPos =
     (
       ball.y
       - (p.y + paddleHeight/2)
     )
     / (paddleHeight/2);
 
-  const maxAngle =
+  const clamped =
+    Math.max(
+      -1,
+      Math.min(1, hitPos)
+    );
+
+  const maxBounce =
     Math.PI / 3;
 
-  const angle =
-    relative * maxAngle;
+  const bounceAngle =
+    clamped * maxBounce;
 
   const speed =
-    Math.sqrt(
-      ball.vx*ball.vx
-      + ball.vy*ball.vy
-    ) + 0.25;
+    Math.min(
+      22,
+      Math.sqrt(
+        ball.vx * ball.vx +
+        ball.vy * ball.vy
+      ) + 0.35
+    );
 
   if(isLeft){
 
     ball.vx =
-      Math.cos(angle)
-      * speed;
+      speed *
+      Math.cos(bounceAngle);
 
-  }else{
+  } else {
 
     ball.vx =
-      -Math.cos(angle)
-      * speed;
+      -speed *
+      Math.cos(bounceAngle);
 
   }
 
   ball.vy =
-    Math.sin(angle)
-    * speed;
+    speed *
+    Math.sin(bounceAngle);
 
 }
 
