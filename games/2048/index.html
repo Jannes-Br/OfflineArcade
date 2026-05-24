@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2048</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: linear-gradient(180deg, #0f172a, #111827);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: white;
+}
+
+.game-container {
+  width: min(92vw, 520px);
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 56px;
+  font-weight: bold;
+}
+
+.score-box {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 14px 22px;
+  text-align: center;
+  min-width: 110px;
+}
+
+.score-label {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.score {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.board {
+  background: rgba(255,255,255,0.08);
+  padding: 12px;
+  border-radius: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  touch-action: none;
+  user-select: none;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 34px;
+  transition: 0.15s ease;
+}
+
+.tile-0 {
+  color: transparent;
+}
+
+.tile-2 { background: #eee4da; color: #776e65; }
+.tile-4 { background: #ede0c8; color: #776e65; }
+.tile-8 { background: #f2b179; }
+.tile-16 { background: #f59563; }
+.tile-32 { background: #f67c5f; }
+.tile-64 { background: #f65e3b; }
+.tile-128 { background: #edcf72; color: #222; }
+.tile-256 { background: #edcc61; color: #222; }
+.tile-512 { background: #edc850; color: #222; }
+.tile-1024 { background: #edc53f; }
+.tile-2048 { background: #edc22e; }
+
+.controls {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+button {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+.message {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 18px;
+  min-height: 24px;
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 42px;
+  }
+
+  .cell {
+    font-size: 26px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container">
+
+  <div class="top-bar">
+    <div class="title">2048</div>
+
+    <div class="score-box">
+      <div class="score-label">SCORE</div>
+      <div class="score" id="score">0</div>
+    </div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="controls">
+    <button id="restartBtn">Restart</button>
+  </div>
+
+  <div class="message" id="message"></div>
+
+</div>
+
+<script>
+const board = document.getElementById('board');
+const scoreElement = document.getElementById('score');
+const messageElement = document.getElementById('message');
+const restartBtn = document.getElementById('restartBtn');
+
+let grid = [];
+let score = 0;
+
+function init() {
+  grid = [
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0]
+  ];
+
+  score = 0;
+  addRandomTile();
+  addRandomTile();
+  updateBoard();
+  messageElement.textContent = '';
+}
+
+function addRandomTile() {
+  const empty = [];
+
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if (grid[r][c] === 0) {
+        empty.push({r, c});
+      }
+    }
+  }
+
+  if (empty.length === 0) return;
+
+  const spot = empty[Math.floor(Math.random() * empty.length)];
+  grid[spot.r][spot.c] = Math.random() < 0.9 ? 2 : 4;
+}
+
+function updateBoard() {
+  board.innerHTML = '';
+
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      const value = grid[r][c];
+
+      const cell = document.createElement('div');
+      cell.className = `cell tile-${value}`;
+      cell.textContent = value === 0 ? '' : value;
+
+      board.appendChild(cell);
+    }
+  }
+
+  scoreElement.textContent = score;
+
+  if (hasWon()) {
+    messageElement.textContent = 'You reached 2048!';
+  } else if (!canMove()) {
+    messageElement.textContent = 'Game Over';
+  }
+}
+
+function slide(row) {
+  row = row.filter(v => v);
+
+  for (let i = 0; i < row.length - 1; i++) {
+    if (row[i] === row[i + 1]) {
+      row[i] *= 2;
+      score += row[i];
+      row[i + 1] = 0;
+    }
+  }
+
+  row = row.filter(v => v);
+
+  while (row.length < 4) {
+    row.push(0);
+  }
+
+  return row;
+}
+
+function rotateClockwise(matrix) {
+  return matrix[0].map((_, i) =>
+    matrix.map(row => row[i]).reverse()
+  );
+}
+
+function move(direction) {
+  const oldGrid = JSON.stringify(grid);
+
+  if (direction === 'up') {
+    grid = rotateClockwise(grid);
+    grid = rotateClockwise(grid);
+    grid = rotateClockwise(grid);
+  }
+
+  if (direction === 'right') {
+    grid = grid.map(row => row.reverse());
+  }
+
+  if (direction === 'down') {
+    grid = rotateClockwise(grid);
+  }
+
+  grid = grid.map(slide);
+
+  if (direction === 'up') {
+    grid = rotateClockwise(grid);
+  }
+
+  if (direction === 'right') {
+    grid = grid.map(row => row.reverse());
+  }
+
+  if (direction === 'down') {
+    grid = rotateClockwise(grid);
+    grid = rotateClockwise(grid);
+    grid = rotateClockwise(grid);
+  }
+
+  if (JSON.stringify(grid) !== oldGrid) {
+    addRandomTile();
+    updateBoard();
+  }
+}
+
+function hasWon() {
+  return grid.flat().includes(2048);
+}
+
+function canMove() {
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if (grid[r][c] === 0) return true;
+
+      if (c < 3 && grid[r][c] === grid[r][c+1]) return true;
+      if (r < 3 && grid[r][c] === grid[r+1][c]) return true;
+    }
+  }
+
+  return false;
+}
+
+window.addEventListener('keydown', e => {
+  switch(e.key) {
+    case 'ArrowLeft':
+      move('left');
+      break;
+    case 'ArrowRight':
+      move('right');
+      break;
+    case 'ArrowUp':
+      move('up');
+      break;
+    case 'ArrowDown':
+      move('down');
+      break;
+  }
+});
+
+let startX = 0;
+let startY = 0;
+
+board.addEventListener('touchstart', e => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+board.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - startX;
+  const dy = e.changedTouches[0].clientY - startY;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 40) move('right');
+    else if (dx < -40) move('left');
+  } else {
+    if (dy > 40) move('down');
+    else if (dy < -40) move('up');
+  }
+});
+
+restartBtn.addEventListener('click', init);
+
+init();
+</script>
+
+</body>
+</html>
