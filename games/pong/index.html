@@ -11,6 +11,7 @@
 <title>Pong</title>
 
 <style>
+
 *{
   margin:0;
   padding:0;
@@ -24,196 +25,236 @@ body{
   height:100vh;
   overflow:hidden;
   font-family:Arial,sans-serif;
+
   background:
-    radial-gradient(circle at top,#1e293b,#020617 70%);
+    radial-gradient(circle at top,
+    #1e293b,
+    #020617 70%);
+
   display:flex;
   justify-content:center;
   align-items:center;
+
   color:white;
 }
 
-#game-container{
-  position:relative;
-  width:94vw;
-  height:88vh;
-  max-width:1700px;
-  max-height:950px;
+#game-wrapper{
+  width:96vw;
+  height:94vh;
+
+  max-width:1800px;
+  max-height:1000px;
+
   border-radius:28px;
+
   overflow:hidden;
+
   background:#020617;
+
   border:2px solid rgba(255,255,255,0.08);
+
   box-shadow:
     0 0 50px rgba(0,0,0,0.45),
     inset 0 0 40px rgba(255,255,255,0.03);
-}
 
-canvas{
-  width:100%;
-  height:100%;
-  display:block;
-}
+  position:relative;
 
-.top-ui{
-  position:absolute;
-  top:18px;
-  left:50%;
-  transform:translateX(-50%);
   display:flex;
-  gap:12px;
-  z-index:20;
-  flex-wrap:wrap;
-  justify-content:center;
+  flex-direction:column;
 }
 
-button,
-select{
-  border:none;
-  background:rgba(255,255,255,0.08);
-  color:white;
-  padding:12px 18px;
-  border-radius:14px;
-  font-size:15px;
-  backdrop-filter:blur(10px);
-}
+#topbar{
+  width:100%;
+  padding:14px;
 
-button.active{
-  background:rgba(255,255,255,0.18);
-}
-
-#overlay{
-  position:absolute;
-  inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
-  gap:18px;
-  z-index:30;
-  background:rgba(2,6,23,0.45);
-  backdrop-filter:blur(8px);
+  gap:12px;
+  flex-wrap:wrap;
+
+  z-index:10;
+
+  background:
+    rgba(255,255,255,0.03);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.05);
 }
 
-#play-button{
-  font-size:26px;
-  padding:18px 34px;
-  border-radius:20px;
+.segment{
+  display:flex;
+  gap:8px;
+}
+
+.segment button{
+  border:none;
+
+  background:
+    rgba(255,255,255,0.07);
+
+  color:white;
+
+  padding:12px 18px;
+
+  border-radius:14px;
+
+  font-size:15px;
+
+  transition:0.15s;
+}
+
+.segment button.active{
   background:white;
   color:black;
   font-weight:bold;
 }
 
-#overlay-title{
-  font-size:42px;
-  font-weight:bold;
+#pauseBtn{
+  min-width:110px;
 }
 
-.settings{
+#playBtn{
+  min-width:110px;
+}
+
+canvas{
+  flex:1;
+  width:100%;
+  display:block;
+}
+
+#start-message{
+  position:absolute;
+
+  inset:0;
+
   display:flex;
-  gap:12px;
-  flex-wrap:wrap;
   justify-content:center;
+  align-items:center;
+  flex-direction:column;
+
+  pointer-events:none;
 }
 
-.pause-btn{
-  position:absolute;
-  right:18px;
-  bottom:18px;
-  z-index:20;
+#start-text{
+  font-size:52px;
+  font-weight:bold;
+
+  opacity:0.08;
 }
 
-.info{
-  position:absolute;
-  left:18px;
-  bottom:18px;
-  z-index:20;
-  font-size:15px;
-  color:rgba(255,255,255,0.75);
+#winner-text{
+  margin-top:12px;
+  font-size:24px;
+  opacity:0.7;
 }
+
 </style>
 </head>
 
 <body>
 
-<div id="game-container">
+<div id="game-wrapper">
 
-  <div class="top-ui">
+  <div id="topbar">
 
-    <button id="vsBtn" class="active">
-      2 Players
-    </button>
+    <div class="segment">
 
-    <button id="botBtn">
-      Impossible Bot
-    </button>
+      <button
+        id="vsBtn"
+        class="active"
+      >
+        2 Players
+      </button>
+
+      <button id="botBtn">
+        Impossible Bot
+      </button>
+
+    </div>
+
+    <div class="segment">
+
+      <button
+        class="speedBtn active"
+        data-speed="7"
+      >
+        Slow
+      </button>
+
+      <button
+        class="speedBtn"
+        data-speed="10"
+      >
+        Normal
+      </button>
+
+      <button
+        class="speedBtn"
+        data-speed="14"
+      >
+        Fast
+      </button>
+
+    </div>
+
+    <div class="segment">
+
+      <button
+        class="shapeBtn active"
+        data-shape="classic"
+      >
+        Classic
+      </button>
+
+      <button
+        class="shapeBtn"
+        data-shape="round"
+      >
+        Round
+      </button>
+
+      <button
+        class="shapeBtn"
+        data-shape="sharp"
+      >
+        Sharp
+      </button>
+
+    </div>
+
+    <div class="segment">
+
+      <button id="playBtn">
+        Play
+      </button>
+
+      <button id="pauseBtn">
+        Pause
+      </button>
+
+    </div>
 
   </div>
 
   <canvas id="game"></canvas>
 
-  <div class="info">
-    First to 10 wins
-  </div>
+  <div id="start-message">
 
-  <button
-    id="pauseBtn"
-    class="pause-btn"
-  >
-    Pause
-  </button>
-
-  <div id="overlay">
-
-    <div id="overlay-title">
-      Pong
+    <div id="start-text">
+      PONG
     </div>
 
-    <div class="settings">
-
-      <select id="speedSelect">
-
-        <option value="6">
-          Slow Ball
-        </option>
-
-        <option value="9" selected>
-          Normal Ball
-        </option>
-
-        <option value="13">
-          Fast Ball
-        </option>
-
-      </select>
-
-      <select id="paddleSelect">
-
-        <option value="classic">
-          Classic Paddle
-        </option>
-
-        <option value="rounded">
-          Rounded Paddle
-        </option>
-
-        <option value="sharp">
-          Sharp Paddle
-        </option>
-
-      </select>
-
+    <div id="winner-text">
+      Press Play
     </div>
-
-    <button id="play-button">
-      Play
-    </button>
 
   </div>
 
 </div>
 
 <script>
-const container =
-  document.getElementById('game-container');
 
 const canvas =
   document.getElementById('game');
@@ -221,20 +262,11 @@ const canvas =
 const ctx =
   canvas.getContext('2d');
 
-const overlay =
-  document.getElementById('overlay');
-
-const playButton =
-  document.getElementById('play-button');
+const playBtn =
+  document.getElementById('playBtn');
 
 const pauseBtn =
   document.getElementById('pauseBtn');
-
-const speedSelect =
-  document.getElementById('speedSelect');
-
-const paddleSelect =
-  document.getElementById('paddleSelect');
 
 const vsBtn =
   document.getElementById('vsBtn');
@@ -242,44 +274,57 @@ const vsBtn =
 const botBtn =
   document.getElementById('botBtn');
 
+const winnerText =
+  document.getElementById('winner-text');
+
+const speedButtons =
+  document.querySelectorAll('.speedBtn');
+
+const shapeButtons =
+  document.querySelectorAll('.shapeBtn');
+
 let mode = 'vs';
 
 let running = false;
 let paused = false;
 
+let ballSpeed = 7;
+
+let paddleShape = 'classic';
+
 function resize(){
 
   canvas.width =
-    container.clientWidth;
+    canvas.clientWidth;
 
   canvas.height =
-    container.clientHeight;
+    canvas.clientHeight;
 
   right.x =
-    canvas.width - 60;
+    canvas.width - 55;
 }
-
-resize();
 
 window.addEventListener(
   'resize',
   resize
 );
 
+resize();
+
+const paddleWidth = 18;
+const paddleHeight = 170;
+
 const left = {
-  x:40,
-  y:200,
+  x:35,
+  y:100,
   score:0
 };
 
 const right = {
   x:0,
-  y:200,
+  y:100,
   score:0
 };
-
-let paddleWidth = 20;
-let paddleHeight = 170;
 
 const ball = {
   x:0,
@@ -290,9 +335,6 @@ const ball = {
 };
 
 function resetBall(){
-
-  const speed =
-    Number(speedSelect.value);
 
   ball.x =
     canvas.width / 2;
@@ -306,11 +348,10 @@ function resetBall(){
     : -1;
 
   ball.vx =
-    speed * dir;
+    ballSpeed * dir;
 
   ball.vy =
-    (Math.random() * speed)
-    - speed / 2;
+    (Math.random() * 8 - 4);
 }
 
 function resetGame(){
@@ -319,46 +360,53 @@ function resetGame(){
   right.score = 0;
 
   left.y =
-    canvas.height/2
-    - paddleHeight/2;
+    canvas.height / 2
+    - paddleHeight / 2;
 
   right.y =
-    canvas.height/2
-    - paddleHeight/2;
+    canvas.height / 2
+    - paddleHeight / 2;
 
   resetBall();
 
   running = false;
   paused = false;
 
+  playBtn.textContent =
+    'Play';
+
   pauseBtn.textContent =
     'Pause';
 
-  overlay.style.display =
-    'flex';
+  winnerText.textContent =
+    'Press Play';
 }
 
 function startGame(){
 
-  overlay.style.display =
-    'none';
-
   running = true;
   paused = false;
 
-  resetBall();
+  winnerText.textContent =
+    '';
 }
 
-playButton.addEventListener(
+playBtn.addEventListener(
   'click',
-  startGame
+  () => {
+
+    resetBall();
+
+    startGame();
+
+  }
 );
 
 pauseBtn.addEventListener(
   'click',
   () => {
 
-    if (!running) {
+    if (!running){
       return;
     }
 
@@ -366,29 +414,109 @@ pauseBtn.addEventListener(
 
     if (paused){
 
-      overlay.style.display =
-        'flex';
-
-      playButton.textContent =
-        'Resume';
-
       pauseBtn.textContent =
         'Resume';
+
+      winnerText.textContent =
+        'Paused';
 
     } else {
 
-      overlay.style.display =
-        'none';
-
-      playButton.textContent =
-        'Play';
-
       pauseBtn.textContent =
         'Pause';
+
+      winnerText.textContent =
+        '';
     }
 
   }
 );
+
+function setMode(newMode){
+
+  mode = newMode;
+
+  vsBtn.classList.remove(
+    'active'
+  );
+
+  botBtn.classList.remove(
+    'active'
+  );
+
+  if (mode === 'vs'){
+
+    vsBtn.classList.add(
+      'active'
+    );
+
+  } else {
+
+    botBtn.classList.add(
+      'active'
+    );
+  }
+
+  resetGame();
+}
+
+vsBtn.addEventListener(
+  'click',
+  () => setMode('vs')
+);
+
+botBtn.addEventListener(
+  'click',
+  () => setMode('bot')
+);
+
+speedButtons.forEach(btn => {
+
+  btn.addEventListener(
+    'click',
+    () => {
+
+      speedButtons.forEach(
+        b => b.classList.remove('active')
+      );
+
+      btn.classList.add(
+        'active'
+      );
+
+      ballSpeed =
+        Number(
+          btn.dataset.speed
+        );
+
+      resetGame();
+    }
+  );
+
+});
+
+shapeButtons.forEach(btn => {
+
+  btn.addEventListener(
+    'click',
+    () => {
+
+      shapeButtons.forEach(
+        b => b.classList.remove('active')
+      );
+
+      btn.classList.add(
+        'active'
+      );
+
+      paddleShape =
+        btn.dataset.shape;
+
+      resetGame();
+    }
+  );
+
+});
 
 function drawBackground(){
 
@@ -405,7 +533,7 @@ function drawBackground(){
   ctx.strokeStyle =
     'rgba(255,255,255,0.08)';
 
-  ctx.setLineDash([18,18]);
+  ctx.setLineDash([16,16]);
 
   ctx.beginPath();
 
@@ -429,10 +557,7 @@ function drawPaddle(x,y){
   ctx.fillStyle =
     'white';
 
-  if (
-    paddleSelect.value
-    === 'sharp'
-  ){
+  if (paddleShape === 'sharp'){
 
     ctx.fillRect(
       x,
@@ -452,8 +577,7 @@ function drawPaddle(x,y){
     paddleWidth,
     paddleHeight,
 
-    paddleSelect.value
-    === 'rounded'
+    paddleShape === 'round'
     ? 40
     : 14
   );
@@ -487,7 +611,7 @@ function drawBall(){
 function drawScores(){
 
   ctx.font =
-    'bold 80px Arial';
+    'bold 72px Arial';
 
   ctx.fillStyle =
     'rgba(255,255,255,0.12)';
@@ -507,12 +631,12 @@ function drawScores(){
 
 function update(){
 
-  if (
-    !running ||
-    paused
-  ){
+  if (!running || paused){
     return;
   }
+
+  right.x =
+    canvas.width - 55;
 
   ball.x += ball.vx;
   ball.y += ball.vy;
@@ -573,31 +697,27 @@ function update(){
 
     if (right.score >= 10){
 
-      endGame(
+      running = false;
+
+      winnerText.textContent =
         mode === 'bot'
         ? 'Bot Wins'
-        : 'Right Player Wins'
-      );
-
-      return;
+        : 'Right Player Wins';
     }
 
     resetBall();
   }
 
-  if (
-    ball.x > canvas.width
-  ){
+  if (ball.x > canvas.width){
 
     left.score++;
 
     if (left.score >= 10){
 
-      endGame(
-        'Left Player Wins'
-      );
+      running = false;
 
-      return;
+      winnerText.textContent =
+        'Left Player Wins';
     }
 
     resetBall();
@@ -606,30 +726,15 @@ function update(){
   if (mode === 'bot'){
 
     const target =
-      ball.y
-      - paddleHeight/2;
+      ball.y -
+      paddleHeight/2;
 
     right.y +=
       (target - right.y)
-      * 0.28;
+      * 0.30;
   }
 
   clampPaddles();
-}
-
-function endGame(text){
-
-  running = false;
-
-  overlay.style.display =
-    'flex';
-
-  document.getElementById(
-    'overlay-title'
-  ).textContent = text;
-
-  playButton.textContent =
-    'Play Again';
 }
 
 function draw(){
@@ -668,8 +773,8 @@ function clampPaddles(){
     Math.max(
       0,
       Math.min(
-        canvas.height
-        - paddleHeight,
+        canvas.height -
+        paddleHeight,
         left.y
       )
     );
@@ -678,8 +783,8 @@ function clampPaddles(){
     Math.max(
       0,
       Math.min(
-        canvas.height
-        - paddleHeight,
+        canvas.height -
+        paddleHeight,
         right.y
       )
     );
@@ -695,19 +800,20 @@ window.addEventListener(
         canvas.getBoundingClientRect();
 
       const x =
-        touch.clientX
-        - rect.left;
+        touch.clientX -
+        rect.left;
 
       const y =
-        touch.clientY
-        - rect.top;
+        touch.clientY -
+        rect.top;
 
       if (
-        x < canvas.width/2
+        x < canvas.width / 2
       ){
 
         left.y =
-          y - paddleHeight/2;
+          y -
+          paddleHeight/2;
       }
 
       else if (
@@ -715,7 +821,8 @@ window.addEventListener(
       ){
 
         right.y =
-          y - paddleHeight/2;
+          y -
+          paddleHeight/2;
       }
     }
 
@@ -725,55 +832,8 @@ window.addEventListener(
   {passive:false}
 );
 
-function switchMode(newMode){
-
-  mode = newMode;
-
-  vsBtn.classList.remove(
-    'active'
-  );
-
-  botBtn.classList.remove(
-    'active'
-  );
-
-  if (mode === 'vs'){
-
-    vsBtn.classList.add(
-      'active'
-    );
-
-  } else {
-
-    botBtn.classList.add(
-      'active'
-    );
-  }
-
-  document.getElementById(
-    'overlay-title'
-  ).textContent =
-    mode === 'vs'
-    ? '2 Players'
-    : 'Impossible Bot';
-
-  playButton.textContent =
-    'Play';
-
-  resetGame();
-}
-
-vsBtn.addEventListener(
-  'click',
-  () => switchMode('vs')
-);
-
-botBtn.addEventListener(
-  'click',
-  () => switchMode('bot')
-);
-
 resetGame();
+
 </script>
 
 </body>
