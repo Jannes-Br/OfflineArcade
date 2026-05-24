@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v32';
+const CACHE = 'offlinearcade-v33';
 
 const ASSETS = [
 
@@ -33,6 +33,13 @@ const ASSETS = [
   '/games/block-smasher/index.html',
   
   '/assets/thumbnails/block-smasher.png',
+
+
+
+
+  '/games/tic-tac-toe/index.html',
+    
+  '/assets/thumbnails/tic-tac-toe.png',
 ];
 
 self.addEventListener('install', event => {
