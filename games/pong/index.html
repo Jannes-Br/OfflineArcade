@@ -18,7 +18,6 @@
   box-sizing:border-box;
   touch-action:none;
   user-select:none;
-  -webkit-user-select:none;
 }
 
 html,body{
@@ -26,8 +25,26 @@ html,body{
   height:100%;
   overflow:hidden;
   font-family:Arial,sans-serif;
+
   background:
-    radial-gradient(circle at top,#1e293b 0%,#020617 55%);
+    radial-gradient(
+      circle at top left,
+      rgba(0,255,200,.12),
+      transparent 30%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(255,120,0,.14),
+      transparent 35%
+    ),
+
+    linear-gradient(
+      180deg,
+      #07111f,
+      #020617
+    );
+
   color:white;
 }
 
@@ -38,140 +55,205 @@ body{
 }
 
 #game-wrapper{
-  position:relative;
   width:100vw;
   height:100vh;
+  position:relative;
   overflow:hidden;
 }
 
 #top-ui{
+
   position:absolute;
   top:0;
   left:0;
   width:100%;
-  padding:16px;
+
   z-index:20;
+
+  padding:
+    14px
+    16px
+    0
+    16px;
 
   display:flex;
   flex-direction:column;
   gap:12px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(2,6,23,.95),
-      rgba(2,6,23,.35),
-      transparent
-    );
 }
 
-.ui-row{
+.ui-card{
+
+  background:
+    rgba(255,255,255,.05);
+
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+
+  backdrop-filter:blur(10px);
+
+  border-radius:24px;
+
+  padding:12px;
+
   display:flex;
-  justify-content:center;
+  justify-content:space-between;
   align-items:center;
+  flex-wrap:wrap;
   gap:12px;
+}
+
+.group{
+  display:flex;
+  gap:10px;
   flex-wrap:wrap;
 }
 
-.segment{
-  display:flex;
-  gap:10px;
-}
+button{
 
-.segment button{
   border:none;
-  background:rgba(255,255,255,.08);
+  outline:none;
+
   color:white;
-  padding:12px 18px;
+
+  background:
+    rgba(255,255,255,.06);
+
   border-radius:16px;
-  font-size:15px;
+
+  padding:
+    12px
+    18px;
+
   min-width:110px;
-  transition:.18s;
+
+  font-size:15px;
+
+  transition:
+    .18s;
 }
 
-.segment button.active{
-  background:rgba(255,255,255,.2);
+button:active{
+  transform:scale(.95);
+}
+
+button.active{
+
+  background:
+    rgba(255,255,255,.15);
+
   transform:scale(1.04);
 }
 
-.segment button.blue.active{
-  background:#2563eb;
-  box-shadow:0 0 18px rgba(37,99,235,.7);
+.mode-blue.active{
+
+  background:#00c2ff;
+
+  box-shadow:
+    0 0 24px
+    rgba(0,194,255,.55);
 }
 
-.segment button.orange.active{
-  background:#f97316;
-  box-shadow:0 0 18px rgba(249,115,22,.7);
+.mode-orange.active{
+
+  background:#ff7b00;
+
+  box-shadow:
+    0 0 24px
+    rgba(255,123,0,.45);
 }
 
 #pauseBtn{
-  min-width:90px;
+
+  width:58px;
+  min-width:58px;
+
+  padding:12px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  font-size:20px;
 }
 
 #playOverlay{
+
   position:absolute;
   inset:0;
+
   z-index:30;
 
   display:flex;
   justify-content:center;
   align-items:center;
 
-  background:rgba(2,6,23,.35);
-  backdrop-filter:blur(3px);
+  background:
+    rgba(2,6,23,.25);
+
+  backdrop-filter:blur(4px);
 }
 
 #playBtn{
+
   border:none;
+
   color:white;
-  font-size:26px;
-  padding:24px 50px;
+
+  font-size:28px;
+
+  padding:
+    24px
+    52px;
+
   border-radius:26px;
 
   background:
     linear-gradient(
       135deg,
-      #2563eb,
-      #f97316
+      #00c2ff,
+      #ff7b00
     );
 
   box-shadow:
-    0 0 35px rgba(37,99,235,.5),
-    0 0 35px rgba(249,115,22,.35);
+    0 0 50px
+    rgba(0,194,255,.25),
 
-  transition:.2s;
-}
-
-#playBtn:active{
-  transform:scale(.95);
+    0 0 50px
+    rgba(255,123,0,.22);
 }
 
 #game-container{
+
   position:absolute;
+
   left:50%;
-  top:108px;
+  top:162px;
 
   transform:translateX(-50%);
 
-  width:96vw;
-  height:calc(100vh - 124px);
+  width:95vw;
 
-  border-radius:28px;
+  height:calc(100vh - 180px);
+
+  border-radius:30px;
 
   overflow:hidden;
 
-  border:2px solid rgba(255,255,255,.08);
+  border:
+    2px solid
+    rgba(255,255,255,.08);
 
   background:
     linear-gradient(
       180deg,
-      rgba(15,23,42,.96),
+      rgba(7,17,31,.97),
       rgba(2,6,23,.98)
     );
 
   box-shadow:
-    inset 0 0 80px rgba(255,255,255,.03),
-    0 0 60px rgba(0,0,0,.5);
+    inset 0 0 90px rgba(255,255,255,.03),
+    0 0 80px rgba(0,0,0,.45);
 }
 
 canvas{
@@ -188,20 +270,20 @@ canvas{
 
   <div id="top-ui">
 
-    <div class="ui-row">
+    <div class="ui-card">
 
-      <div class="segment">
+      <div class="group">
 
         <button
           id="vsBtn"
-          class="active blue"
+          class="active mode-blue"
         >
           2 Players
         </button>
 
         <button
           id="botBtn"
-          class="orange"
+          class="mode-orange"
         >
           Impossible Bot
         </button>
@@ -209,14 +291,14 @@ canvas{
       </div>
 
       <button id="pauseBtn">
-        Pause
+        ⏸
       </button>
 
     </div>
 
-    <div class="ui-row">
+    <div class="ui-card">
 
-      <div class="segment">
+      <div class="group">
 
         <button
           class="speedBtn active"
@@ -241,7 +323,7 @@ canvas{
 
       </div>
 
-      <div class="segment">
+      <div class="group">
 
         <button
           class="shapeBtn active"
@@ -261,7 +343,7 @@ canvas{
           class="shapeBtn"
           data-shape="triangle"
         >
-          Triangle
+          Spike
         </button>
 
       </div>
@@ -271,13 +353,17 @@ canvas{
   </div>
 
   <div id="playOverlay">
+
     <button id="playBtn">
       PLAY
     </button>
+
   </div>
 
   <div id="game-container">
+
     <canvas id="game"></canvas>
+
   </div>
 
 </div>
@@ -291,28 +377,44 @@ const ctx =
   canvas.getContext('2d');
 
 const container =
-  document.getElementById('game-container');
+  document.getElementById(
+    'game-container'
+  );
 
 const playOverlay =
-  document.getElementById('playOverlay');
+  document.getElementById(
+    'playOverlay'
+  );
 
 const playBtn =
-  document.getElementById('playBtn');
+  document.getElementById(
+    'playBtn'
+  );
 
 const pauseBtn =
-  document.getElementById('pauseBtn');
+  document.getElementById(
+    'pauseBtn'
+  );
 
 const vsBtn =
-  document.getElementById('vsBtn');
+  document.getElementById(
+    'vsBtn'
+  );
 
 const botBtn =
-  document.getElementById('botBtn');
+  document.getElementById(
+    'botBtn'
+  );
 
 const speedBtns =
-  document.querySelectorAll('.speedBtn');
+  document.querySelectorAll(
+    '.speedBtn'
+  );
 
 const shapeBtns =
-  document.querySelectorAll('.shapeBtn');
+  document.querySelectorAll(
+    '.shapeBtn'
+  );
 
 let running = false;
 let paused = false;
@@ -347,14 +449,14 @@ const left = {
   x:40,
   y:200,
   score:0,
-  flash:0
+  glow:0
 };
 
 const right = {
   x:0,
   y:200,
   score:0,
-  flash:0
+  glow:0
 };
 
 const ball = {
@@ -363,7 +465,7 @@ const ball = {
   vx:0,
   vy:0,
   size:14,
-  flash:0
+  trail:[]
 };
 
 function resetBall(){
@@ -374,14 +476,16 @@ function resetBall(){
   ball.y =
     canvas.height/2;
 
+  ball.trail = [];
+
   const dir =
     Math.random() > .5 ? 1 : -1;
 
-  const base =
+  const speed =
     8 * speedMultiplier;
 
   ball.vx =
-    base * dir;
+    speed * dir;
 
   ball.vy =
     (Math.random()*6-3)
@@ -408,7 +512,7 @@ function resetGame(){
   paused = false;
 
   pauseBtn.textContent =
-    'Pause';
+    '⏸';
 
   playOverlay.style.display =
     'flex';
@@ -420,6 +524,7 @@ resetGame();
 function startGame(){
 
   running = true;
+
   paused = false;
 
   playOverlay.style.display =
@@ -427,24 +532,19 @@ function startGame(){
 
 }
 
-playBtn.addEventListener(
-  'click',
-  startGame
-);
+playBtn.onclick =
+  startGame;
 
-pauseBtn.addEventListener(
-  'click',
-  () => {
+pauseBtn.onclick = () => {
 
-    if(!running) return;
+  if(!running) return;
 
-    paused = !paused;
+  paused = !paused;
 
-    pauseBtn.textContent =
-      paused ? 'Resume' : 'Pause';
+  pauseBtn.textContent =
+    paused ? '▶' : '⏸';
 
-  }
-);
+};
 
 function setMode(newMode){
 
@@ -539,7 +639,7 @@ function drawBackground(){
 
   grad.addColorStop(
     0,
-    '#0f172a'
+    '#08111f'
   );
 
   grad.addColorStop(
@@ -559,7 +659,7 @@ function drawBackground(){
   ctx.strokeStyle =
     'rgba(255,255,255,.08)';
 
-  ctx.setLineDash([16,16]);
+  ctx.setLineDash([18,18]);
 
   ctx.beginPath();
 
@@ -581,15 +681,19 @@ function drawBackground(){
 
 function drawPaddle(
   p,
-  color
+  color,
+  side
 ){
 
   ctx.save();
 
-  if(p.flash > 0){
+  if(p.glow > 0){
 
-    ctx.shadowBlur = 34;
-    ctx.shadowColor = color;
+    ctx.shadowBlur =
+      34 * p.glow;
+
+    ctx.shadowColor =
+      color;
 
   }
 
@@ -619,31 +723,31 @@ function drawPaddle(
 
     ctx.beginPath();
 
-    if(color === '#3b82f6'){
+    if(side === 'left'){
 
       ctx.moveTo(
-        p.x + paddleWidth,
+        p.x,
         p.y
       );
 
       ctx.quadraticCurveTo(
-        p.x - 42,
+        p.x + 60,
         p.y + paddleHeight/2,
-        p.x + paddleWidth,
+        p.x,
         p.y + paddleHeight
       );
 
     }else{
 
       ctx.moveTo(
-        p.x,
+        p.x + paddleWidth,
         p.y
       );
 
       ctx.quadraticCurveTo(
-        p.x + 64,
+        p.x - 60,
         p.y + paddleHeight/2,
-        p.x,
+        p.x + paddleWidth,
         p.y + paddleHeight
       );
 
@@ -658,7 +762,7 @@ function drawPaddle(
 
     ctx.beginPath();
 
-    if(color === '#3b82f6'){
+    if(side === 'left'){
 
       ctx.moveTo(
         p.x,
@@ -666,7 +770,7 @@ function drawPaddle(
       );
 
       ctx.lineTo(
-        p.x + paddleWidth,
+        p.x + 42,
         p.y + paddleHeight/2
       );
 
@@ -683,7 +787,7 @@ function drawPaddle(
       );
 
       ctx.lineTo(
-        p.x,
+        p.x - 20,
         p.y + paddleHeight/2
       );
 
@@ -705,16 +809,48 @@ function drawPaddle(
 
 function drawBall(){
 
-  ctx.save();
+  ball.trail.push({
+    x:ball.x,
+    y:ball.y
+  });
 
-  ctx.fillStyle = 'white';
+  if(ball.trail.length > 12){
 
-  if(ball.flash > 0){
-
-    ctx.shadowBlur = 34;
-    ctx.shadowColor = 'white';
+    ball.trail.shift();
 
   }
+
+  for(let i=0;i<ball.trail.length;i++){
+
+    const t =
+      ball.trail[i];
+
+    const alpha =
+      i / ball.trail.length;
+
+    ctx.beginPath();
+
+    ctx.fillStyle =
+      `rgba(255,255,255,${alpha*.18})`;
+
+    ctx.arc(
+      t.x,
+      t.y,
+      ball.size * alpha,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.save();
+
+  ctx.shadowBlur = 22;
+  ctx.shadowColor = 'white';
+
+  ctx.fillStyle = 'white';
 
   ctx.beginPath();
 
@@ -735,7 +871,7 @@ function drawBall(){
 function drawScores(){
 
   ctx.font =
-    'bold 70px Arial';
+    'bold 72px Arial';
 
   ctx.fillStyle =
     'rgba(255,255,255,.08)';
@@ -743,28 +879,26 @@ function drawScores(){
   ctx.fillText(
     left.score,
     canvas.width*.25,
-    88
+    90
   );
 
   ctx.fillText(
     right.score,
     canvas.width*.75,
-    88
+    90
   );
 
 }
 
-function flashHit(side){
-
-  ball.flash = 10;
+function flash(side){
 
   if(side === 'left'){
 
-    left.flash = 10;
+    left.glow = 1;
 
   }else{
 
-    right.flash = 10;
+    right.glow = 1;
 
   }
 
@@ -812,7 +946,7 @@ function update(){
       (left.y + paddleHeight/2))
       * .03;
 
-    flashHit('left');
+    flash('left');
 
   }
 
@@ -835,13 +969,14 @@ function update(){
       (right.y + paddleHeight/2))
       * .03;
 
-    flashHit('right');
+    flash('right');
 
   }
 
   if(ball.x < -40){
 
     right.score++;
+
     resetBall();
 
   }
@@ -849,6 +984,7 @@ function update(){
   if(ball.x > canvas.width+40){
 
     left.score++;
+
     resetBall();
 
   }
@@ -856,17 +992,17 @@ function update(){
   if(mode === 'bot'){
 
     const target =
-      ball.y - paddleHeight/2;
+      ball.y -
+      paddleHeight/2;
 
     right.y +=
-      (target - right.y)
+      (target-right.y)
       * .42;
 
   }
 
-  left.flash *= .9;
-  right.flash *= .9;
-  ball.flash *= .9;
+  left.glow *= .9;
+  right.glow *= .9;
 
 }
 
@@ -878,12 +1014,14 @@ function draw(){
 
   drawPaddle(
     left,
-    '#3b82f6'
+    '#00c2ff',
+    'left'
   );
 
   drawPaddle(
     right,
-    '#f97316'
+    '#ff7b00',
+    'right'
   );
 
   drawBall();
@@ -931,14 +1069,19 @@ window.addEventListener(
 
     for(const t of e.touches){
 
+      const rect =
+        canvas.getBoundingClientRect();
+
+      const y =
+        t.clientY - rect.top;
+
       if(
         t.clientX <
         window.innerWidth/2
       ){
 
         left.y =
-          t.clientY -
-          paddleHeight/2;
+          y - paddleHeight/2;
 
       }
 
@@ -947,8 +1090,7 @@ window.addEventListener(
       ){
 
         right.y =
-          t.clientY -
-          paddleHeight/2;
+          y - paddleHeight/2;
 
       }
 
