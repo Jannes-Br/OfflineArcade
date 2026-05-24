@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v26';
+const CACHE = 'offlinearcade-v27';
 
 const ASSETS = [
 
@@ -16,6 +16,9 @@ const ASSETS = [
   '/OfflineArcade/games/escape-road/icon-512.png',
   '/OfflineArcade/games/escape-road/icon.png',
    '/OfflineArcade/assets/thumbnails/escape-road.png'
+
+
+  '/OfflineArcade/games/drive-mad/index..html',
 ];
 
 self.addEventListener('install', event => {
