@@ -11,249 +11,124 @@
 <title>Pong</title>
 
 <style>
-
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
   touch-action:none;
   user-select:none;
-}
-
-html,body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  font-family:Arial,sans-serif;
-
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(0,255,200,.12),
-      transparent 30%
-    ),
-
-    radial-gradient(
-      circle at bottom right,
-      rgba(255,120,0,.14),
-      transparent 35%
-    ),
-
-    linear-gradient(
-      180deg,
-      #07111f,
-      #020617
-    );
-
-  color:white;
+  -webkit-user-select:none;
 }
 
 body{
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  font-family:Inter,Arial,sans-serif;
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(99,102,241,0.18),
+      transparent 35%),
+
+    radial-gradient(circle at bottom right,
+      rgba(20,184,166,0.18),
+      transparent 35%),
+
+    linear-gradient(
+      180deg,
+      #020617,
+      #08111f,
+      #020617
+    );
+
   display:flex;
   justify-content:center;
   align-items:center;
 }
 
-#game-wrapper{
-  width:100vw;
-  height:100vh;
-  position:relative;
-  overflow:hidden;
-}
-
-#top-ui{
-
-  position:absolute;
-  top:0;
-  left:0;
+.wrapper{
   width:100%;
-
-  z-index:20;
-
-  padding:
-    14px
-    16px
-    0
-    16px;
-
+  height:100%;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  align-items:center;
+  padding:14px;
+  gap:14px;
 }
 
-.ui-card{
-
-  background:
-    rgba(255,255,255,.05);
-
-  border:
-    1px solid
-    rgba(255,255,255,.08);
-
-  backdrop-filter:blur(10px);
-
-  border-radius:24px;
-
-  padding:12px;
-
+.topbar{
+  width:min(1200px,100%);
   display:flex;
-  justify-content:space-between;
-  align-items:center;
   flex-wrap:wrap;
+  justify-content:center;
   gap:12px;
+  z-index:10;
 }
 
 .group{
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+  gap:8px;
+  padding:8px;
+  border-radius:20px;
+
+  background:rgba(255,255,255,0.05);
+
+  backdrop-filter:blur(10px);
+
+  border:1px solid rgba(255,255,255,0.06);
 }
 
 button{
-
   border:none;
-  outline:none;
-
+  background:transparent;
   color:white;
-
-  background:
-    rgba(255,255,255,.06);
-
-  border-radius:16px;
-
-  padding:
-    12px
-    18px;
-
-  min-width:110px;
-
+  padding:12px 18px;
+  border-radius:14px;
   font-size:15px;
-
-  transition:
-    .18s;
-}
-
-button:active{
-  transform:scale(.95);
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
 }
 
 button.active{
-
-  background:
-    rgba(255,255,255,.15);
-
-  transform:scale(1.04);
+  background:rgba(255,255,255,0.14);
 }
 
-.mode-blue.active{
-
-  background:#00c2ff;
-
-  box-shadow:
-    0 0 24px
-    rgba(0,194,255,.55);
+button:hover{
+  background:rgba(255,255,255,0.08);
 }
 
-.mode-orange.active{
-
-  background:#ff7b00;
-
-  box-shadow:
-    0 0 24px
-    rgba(255,123,0,.45);
-}
-
-#pauseBtn{
-
-  width:58px;
-  min-width:58px;
-
-  padding:12px;
-
+.icon-btn{
+  width:50px;
   display:flex;
   justify-content:center;
   align-items:center;
-
   font-size:20px;
 }
 
-#playOverlay{
+.game-container{
+  position:relative;
 
-  position:absolute;
-  inset:0;
-
-  z-index:30;
-
-  display:flex;
-  justify-content:center;
-  align-items:center;
-
-  background:
-    rgba(2,6,23,.25);
-
-  backdrop-filter:blur(4px);
-}
-
-#playBtn{
-
-  border:none;
-
-  color:white;
-
-  font-size:28px;
-
-  padding:
-    24px
-    52px;
-
-  border-radius:26px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #00c2ff,
-      #ff7b00
-    );
-
-  box-shadow:
-    0 0 50px
-    rgba(0,194,255,.25),
-
-    0 0 50px
-    rgba(255,123,0,.22);
-}
-
-#game-container{
-
-  position:absolute;
-
-  left:50%;
-  top:162px;
-
-  transform:translateX(-50%);
-
-  width:95vw;
-
-  height:calc(100vh - 180px);
+  width:min(1200px,100%);
+  height:calc(100vh - 150px);
 
   border-radius:30px;
 
   overflow:hidden;
 
-  border:
-    2px solid
-    rgba(255,255,255,.08);
-
   background:
     linear-gradient(
-      180deg,
-      rgba(7,17,31,.97),
-      rgba(2,6,23,.98)
+      135deg,
+      rgba(99,102,241,0.08),
+      rgba(20,184,166,0.08)
     );
 
+  border:1px solid rgba(255,255,255,0.08);
+
   box-shadow:
-    inset 0 0 90px rgba(255,255,255,.03),
-    0 0 80px rgba(0,0,0,.45);
+    0 0 60px rgba(0,0,0,0.45),
+    inset 0 0 80px rgba(255,255,255,0.02);
 }
 
 canvas{
@@ -262,188 +137,251 @@ canvas{
   display:block;
 }
 
+.overlay{
+  position:absolute;
+  inset:0;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+
+  gap:18px;
+
+  background:rgba(2,6,23,0.45);
+  backdrop-filter:blur(8px);
+
+  z-index:20;
+}
+
+.overlay.hidden{
+  display:none;
+}
+
+.play-btn{
+  border:none;
+
+  width:110px;
+  height:110px;
+
+  border-radius:999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6366f1,
+      #14b8a6
+    );
+
+  color:white;
+  font-size:42px;
+  cursor:pointer;
+
+  box-shadow:
+    0 0 30px rgba(99,102,241,0.45);
+
+  transition:0.2s;
+}
+
+.play-btn:active{
+  transform:scale(0.95);
+}
+
+.title{
+  color:white;
+  font-size:42px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+
+.subtitle{
+  color:rgba(255,255,255,0.65);
+  font-size:15px;
+}
+
+@media(max-width:800px){
+
+  .game-container{
+    height:calc(100vh - 190px);
+  }
+
+  button{
+    padding:10px 14px;
+    font-size:14px;
+  }
+
+}
 </style>
 </head>
 <body>
 
-<div id="game-wrapper">
+<div class="wrapper">
 
-  <div id="top-ui">
+  <div class="topbar">
 
-    <div class="ui-card">
+    <div class="group">
 
-      <div class="group">
+      <button
+        id="vsBtn"
+        class="active"
+      >
+        2 Players
+      </button>
 
-        <button
-          id="vsBtn"
-          class="active mode-blue"
-        >
-          2 Players
-        </button>
+      <button id="botBtn">
+        Impossible Bot
+      </button>
 
-        <button
-          id="botBtn"
-          class="mode-orange"
-        >
-          Impossible Bot
-        </button>
+    </div>
 
-      </div>
+    <div class="group">
 
-      <button id="pauseBtn">
+      <button
+        class="speedBtn active"
+        data-speed="7"
+      >
+        Normal
+      </button>
+
+      <button
+        class="speedBtn"
+        data-speed="10"
+      >
+        Fast
+      </button>
+
+      <button
+        class="speedBtn"
+        data-speed="14"
+      >
+        Extreme
+      </button>
+
+    </div>
+
+    <div class="group">
+
+      <button
+        class="shapeBtn active"
+        data-shape="normal"
+      >
+        Paddle
+      </button>
+
+      <button
+        class="shapeBtn"
+        data-shape="curve"
+      >
+        Curve
+      </button>
+
+      <button
+        class="shapeBtn"
+        data-shape="diamond"
+      >
+        Diamond
+      </button>
+
+    </div>
+
+    <div class="group">
+
+      <button
+        id="pauseBtn"
+        class="icon-btn"
+      >
         ⏸
       </button>
 
     </div>
 
-    <div class="ui-card">
-
-      <div class="group">
-
-        <button
-          class="speedBtn active"
-          data-speed="1"
-        >
-          Normal
-        </button>
-
-        <button
-          class="speedBtn"
-          data-speed="1.45"
-        >
-          Fast
-        </button>
-
-        <button
-          class="speedBtn"
-          data-speed="1.9"
-        >
-          Chaos
-        </button>
-
-      </div>
-
-      <div class="group">
-
-        <button
-          class="shapeBtn active"
-          data-shape="normal"
-        >
-          Paddle
-        </button>
-
-        <button
-          class="shapeBtn"
-          data-shape="curve"
-        >
-          Curve
-        </button>
-
-        <button
-          class="shapeBtn"
-          data-shape="triangle"
-        >
-          Spike
-        </button>
-
-      </div>
-
-    </div>
-
   </div>
 
-  <div id="playOverlay">
-
-    <button id="playBtn">
-      PLAY
-    </button>
-
-  </div>
-
-  <div id="game-container">
+  <div class="game-container">
 
     <canvas id="game"></canvas>
+
+    <div
+      class="overlay"
+      id="overlay"
+    >
+
+      <div class="title">
+        Pong
+      </div>
+
+      <div class="subtitle">
+        Tap Play To Start
+      </div>
+
+      <button
+        class="play-btn"
+        id="playBtn"
+      >
+        ▶
+      </button>
+
+    </div>
 
   </div>
 
 </div>
 
 <script>
-
 const canvas =
   document.getElementById('game');
 
 const ctx =
   canvas.getContext('2d');
 
-const container =
-  document.getElementById(
-    'game-container'
-  );
-
-const playOverlay =
-  document.getElementById(
-    'playOverlay'
-  );
+const overlay =
+  document.getElementById('overlay');
 
 const playBtn =
-  document.getElementById(
-    'playBtn'
-  );
+  document.getElementById('playBtn');
 
 const pauseBtn =
-  document.getElementById(
-    'pauseBtn'
-  );
+  document.getElementById('pauseBtn');
 
 const vsBtn =
-  document.getElementById(
-    'vsBtn'
-  );
+  document.getElementById('vsBtn');
 
 const botBtn =
-  document.getElementById(
-    'botBtn'
-  );
+  document.getElementById('botBtn');
 
 const speedBtns =
-  document.querySelectorAll(
-    '.speedBtn'
-  );
+  document.querySelectorAll('.speedBtn');
 
 const shapeBtns =
-  document.querySelectorAll(
-    '.shapeBtn'
-  );
-
-let running = false;
-let paused = false;
+  document.querySelectorAll('.shapeBtn');
 
 let mode = 'vs';
 
-let speedMultiplier = 1;
+let running = false;
+
+let ballSpeed = 7;
 
 let paddleShape = 'normal';
 
 function resize(){
 
   canvas.width =
-    container.clientWidth;
+    canvas.clientWidth;
 
   canvas.height =
-    container.clientHeight;
+    canvas.clientHeight;
 
 }
-
-resize();
 
 window.addEventListener(
   'resize',
   resize
 );
 
-const paddleWidth = 22;
-const paddleHeight = 180;
+resize();
+
+const paddleWidth = 26;
+const paddleHeight = 170;
 
 const left = {
   x:40,
@@ -470,26 +408,25 @@ const ball = {
 
 function resetBall(){
 
-  ball.x =
-    canvas.width/2;
-
-  ball.y =
-    canvas.height/2;
-
-  ball.trail = [];
+  ball.x = canvas.width / 2;
+  ball.y = canvas.height / 2;
 
   const dir =
-    Math.random() > .5 ? 1 : -1;
+    Math.random() > 0.5
+    ? 1
+    : -1;
 
-  const speed =
-    8 * speedMultiplier;
+  const angle =
+    (Math.random()*1.1)-0.55;
 
   ball.vx =
-    speed * dir;
+    Math.cos(angle)
+    * ballSpeed
+    * dir;
 
   ball.vy =
-    (Math.random()*6-3)
-    * speedMultiplier;
+    Math.sin(angle)
+    * ballSpeed;
 
 }
 
@@ -509,48 +446,578 @@ function resetGame(){
   resetBall();
 
   running = false;
-  paused = false;
 
-  pauseBtn.textContent =
-    '⏸';
+  overlay.classList.remove(
+    'hidden'
+  );
 
-  playOverlay.style.display =
-    'flex';
+  pauseBtn.textContent = '⏸';
 
 }
 
 resetGame();
 
-function startGame(){
+function drawBackground(){
 
-  running = true;
+  ctx.fillStyle = '#020617';
 
-  paused = false;
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
-  playOverlay.style.display =
-    'none';
+  ctx.strokeStyle =
+    'rgba(255,255,255,0.08)';
+
+  ctx.lineWidth = 5;
+
+  ctx.setLineDash([20,20]);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    canvas.width/2,
+    0
+  );
+
+  ctx.lineTo(
+    canvas.width/2,
+    canvas.height
+  );
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
 
 }
 
-playBtn.onclick =
-  startGame;
+function drawPaddle(p,color){
 
-pauseBtn.onclick = () => {
+  ctx.save();
 
-  if(!running) return;
+  ctx.shadowBlur = 18 + p.glow;
+  ctx.shadowColor = color;
 
-  paused = !paused;
+  ctx.fillStyle = color;
 
-  pauseBtn.textContent =
-    paused ? '▶' : '⏸';
+  if(
+    paddleShape === 'normal'
+  ){
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+      p.x,
+      p.y,
+      paddleWidth,
+      paddleHeight,
+      20
+    );
+
+    ctx.fill();
+
+  }
+
+  else if(
+    paddleShape === 'curve'
+  ){
+
+    ctx.beginPath();
+
+    if(p === left){
+
+      ctx.arc(
+        p.x,
+        p.y + paddleHeight/2,
+        paddleHeight/2,
+        -Math.PI/2,
+        Math.PI/2
+      );
+
+    }
+
+    else{
+
+      ctx.arc(
+        p.x + paddleWidth,
+        p.y + paddleHeight/2,
+        paddleHeight/2,
+        Math.PI/2,
+        -Math.PI/2
+      );
+
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+  }
+
+  else{
+
+    ctx.beginPath();
+
+    if(p === left){
+
+      ctx.moveTo(
+        p.x,
+        p.y + paddleHeight/2
+      );
+
+      ctx.lineTo(
+        p.x + paddleWidth,
+        p.y + 18
+      );
+
+      ctx.lineTo(
+        p.x + paddleWidth,
+        p.y + paddleHeight - 18
+      );
+
+    }
+
+    else{
+
+      ctx.moveTo(
+        p.x + paddleWidth,
+        p.y + paddleHeight/2
+      );
+
+      ctx.lineTo(
+        p.x,
+        p.y + 18
+      );
+
+      ctx.lineTo(
+        p.x,
+        p.y + paddleHeight - 18
+      );
+
+    }
+
+    ctx.closePath();
+
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    ctx.fill();
+
+  }
+
+  ctx.restore();
+
+}
+
+function drawBall(){
+
+  for(let i=0;i<ball.trail.length;i++){
+
+    const t = ball.trail[i];
+
+    ctx.beginPath();
+
+    ctx.fillStyle =
+      `rgba(255,255,255,${
+        i / ball.trail.length * 0.25
+      })`;
+
+    ctx.arc(
+      t.x,
+      t.y,
+      ball.size*(i/ball.trail.length),
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.save();
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = '#ffffff';
+
+  ctx.fillStyle = '#ffffff';
+
+  ctx.beginPath();
+
+  ctx.arc(
+    ball.x,
+    ball.y,
+    ball.size,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+
+}
+
+function drawScores(){
+
+  ctx.fillStyle =
+    'rgba(255,255,255,0.10)';
+
+  ctx.font =
+    'bold 90px Arial';
+
+  ctx.fillText(
+    left.score,
+    canvas.width*0.25,
+    95
+  );
+
+  ctx.fillText(
+    right.score,
+    canvas.width*0.75,
+    95
+  );
+
+}
+
+function clampPaddle(p){
+
+  if(p.y < 0){
+    p.y = 0;
+  }
+
+  if(
+    p.y + paddleHeight
+    > canvas.height
+  ){
+    p.y =
+      canvas.height
+      - paddleHeight;
+  }
+
+}
+
+function paddlePhysics(p,isLeft){
+
+  const relative =
+    (
+      ball.y
+      - (p.y + paddleHeight/2)
+    )
+    / (paddleHeight/2);
+
+  const maxAngle =
+    Math.PI / 3;
+
+  const angle =
+    relative * maxAngle;
+
+  const speed =
+    Math.sqrt(
+      ball.vx*ball.vx
+      + ball.vy*ball.vy
+    ) + 0.25;
+
+  if(isLeft){
+
+    ball.vx =
+      Math.cos(angle)
+      * speed;
+
+  }else{
+
+    ball.vx =
+      -Math.cos(angle)
+      * speed;
+
+  }
+
+  ball.vy =
+    Math.sin(angle)
+    * speed;
+
+}
+
+function update(){
+
+  if(!running){
+    return;
+  }
+
+  right.x =
+    canvas.width - 66;
+
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  ball.trail.push({
+    x:ball.x,
+    y:ball.y
+  });
+
+  if(ball.trail.length > 14){
+    ball.trail.shift();
+  }
+
+  if(
+    ball.y < ball.size
+  ){
+
+    ball.y = ball.size;
+    ball.vy *= -1;
+
+  }
+
+  if(
+    ball.y >
+    canvas.height - ball.size
+  ){
+
+    ball.y =
+      canvas.height
+      - ball.size;
+
+    ball.vy *= -1;
+
+  }
+
+  if(
+    ball.x - ball.size
+    < left.x + paddleWidth
+    &&
+    ball.y > left.y
+    &&
+    ball.y <
+    left.y + paddleHeight
+  ){
+
+    ball.x =
+      left.x
+      + paddleWidth
+      + ball.size;
+
+    paddlePhysics(
+      left,
+      true
+    );
+
+    left.glow = 35;
+
+  }
+
+  if(
+    ball.x + ball.size
+    > right.x
+    &&
+    ball.y > right.y
+    &&
+    ball.y <
+    right.y + paddleHeight
+  ){
+
+    ball.x =
+      right.x
+      - ball.size;
+
+    paddlePhysics(
+      right,
+      false
+    );
+
+    right.glow = 35;
+
+  }
+
+  if(ball.x < -30){
+
+    right.score++;
+    resetBall();
+
+  }
+
+  if(ball.x > canvas.width + 30){
+
+    left.score++;
+    resetBall();
+
+  }
+
+  left.glow *= 0.9;
+  right.glow *= 0.9;
+
+  if(mode === 'bot'){
+
+    const target =
+      ball.y
+      - paddleHeight/2;
+
+    right.y +=
+      (target - right.y)
+      * 0.24;
+
+    clampPaddle(right);
+
+  }
+
+}
+
+function draw(){
+
+  drawBackground();
+
+  drawScores();
+
+  drawPaddle(
+    left,
+    '#8b5cf6'
+  );
+
+  drawPaddle(
+    right,
+    '#06b6d4'
+  );
+
+  drawBall();
+
+}
+
+function loop(){
+
+  update();
+  draw();
+
+  requestAnimationFrame(loop);
+
+}
+
+loop();
+
+const keys = {};
+
+window.addEventListener(
+  'keydown',
+  e => {
+    keys[e.key] = true;
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  e => {
+    keys[e.key] = false;
+  }
+);
+
+function controls(){
+
+  if(keys['w']){
+    left.y -= 9;
+  }
+
+  if(keys['s']){
+    left.y += 9;
+  }
+
+  if(mode === 'vs'){
+
+    if(keys['ArrowUp']){
+      right.y -= 9;
+    }
+
+    if(keys['ArrowDown']){
+      right.y += 9;
+    }
+
+  }
+
+  clampPaddle(left);
+  clampPaddle(right);
+
+  requestAnimationFrame(
+    controls
+  );
+
+}
+
+controls();
+
+window.addEventListener(
+  'touchmove',
+  e => {
+
+    for(const touch of e.touches){
+
+      if(
+        touch.clientX
+        < window.innerWidth/2
+      ){
+
+        left.y =
+          touch.clientY
+          - paddleHeight/2;
+
+      }
+
+      else if(mode === 'vs'){
+
+        right.y =
+          touch.clientY
+          - paddleHeight/2;
+
+      }
+
+    }
+
+    clampPaddle(left);
+    clampPaddle(right);
+
+  },
+  {passive:false}
+);
+
+playBtn.onclick = () => {
+
+  running = true;
+
+  overlay.classList.add(
+    'hidden'
+  );
 
 };
 
-function setMode(newMode){
+pauseBtn.onclick = () => {
 
-  mode = newMode;
+  if(!running){
 
-  vsBtn.classList.remove(
+    running = true;
+
+    overlay.classList.add(
+      'hidden'
+    );
+
+    pauseBtn.textContent = '⏸';
+
+  }
+
+  else{
+
+    running = false;
+
+    overlay.classList.remove(
+      'hidden'
+    );
+
+    pauseBtn.textContent = '▶';
+
+  }
+
+};
+
+vsBtn.onclick = () => {
+
+  mode = 'vs';
+
+  vsBtn.classList.add(
     'active'
   );
 
@@ -558,29 +1025,25 @@ function setMode(newMode){
     'active'
   );
 
-  if(mode === 'vs'){
+  resetGame();
 
-    vsBtn.classList.add(
-      'active'
-    );
+};
 
-  }else{
+botBtn.onclick = () => {
 
-    botBtn.classList.add(
-      'active'
-    );
+  mode = 'bot';
 
-  }
+  botBtn.classList.add(
+    'active'
+  );
+
+  vsBtn.classList.remove(
+    'active'
+  );
 
   resetGame();
 
-}
-
-vsBtn.onclick =
-  () => setMode('vs');
-
-botBtn.onclick =
-  () => setMode('bot');
+};
 
 speedBtns.forEach(btn => {
 
@@ -596,7 +1059,7 @@ speedBtns.forEach(btn => {
       'active'
     );
 
-    speedMultiplier =
+    ballSpeed =
       Number(
         btn.dataset.speed
       );
@@ -629,543 +1092,6 @@ shapeBtns.forEach(btn => {
   };
 
 });
-
-function drawBackground(){
-
-  const grad =
-    ctx.createLinearGradient(
-      0,0,0,canvas.height
-    );
-
-  grad.addColorStop(
-    0,
-    '#08111f'
-  );
-
-  grad.addColorStop(
-    1,
-    '#020617'
-  );
-
-  ctx.fillStyle = grad;
-
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  ctx.strokeStyle =
-    'rgba(255,255,255,.08)';
-
-  ctx.setLineDash([18,18]);
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    canvas.width/2,
-    0
-  );
-
-  ctx.lineTo(
-    canvas.width/2,
-    canvas.height
-  );
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-
-}
-
-function drawPaddle(
-  p,
-  color,
-  side
-){
-
-  ctx.save();
-
-  if(p.glow > 0){
-
-    ctx.shadowBlur =
-      34 * p.glow;
-
-    ctx.shadowColor =
-      color;
-
-  }
-
-  ctx.fillStyle = color;
-
-  if(
-    paddleShape === 'normal'
-  ){
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-      p.x,
-      p.y,
-      paddleWidth,
-      paddleHeight,
-      16
-    );
-
-    ctx.fill();
-
-  }
-
-  else if(
-    paddleShape === 'curve'
-  ){
-
-    ctx.beginPath();
-
-    if(side === 'left'){
-
-      ctx.moveTo(
-        p.x,
-        p.y
-      );
-
-      ctx.quadraticCurveTo(
-        p.x + 60,
-        p.y + paddleHeight/2,
-        p.x,
-        p.y + paddleHeight
-      );
-
-    }else{
-
-      ctx.moveTo(
-        p.x + paddleWidth,
-        p.y
-      );
-
-      ctx.quadraticCurveTo(
-        p.x - 60,
-        p.y + paddleHeight/2,
-        p.x + paddleWidth,
-        p.y + paddleHeight
-      );
-
-    }
-
-    ctx.closePath();
-    ctx.fill();
-
-  }
-
-  else{
-
-    ctx.beginPath();
-
-    if(side === 'left'){
-
-      ctx.moveTo(
-        p.x,
-        p.y
-      );
-
-      ctx.lineTo(
-        p.x + 42,
-        p.y + paddleHeight/2
-      );
-
-      ctx.lineTo(
-        p.x,
-        p.y + paddleHeight
-      );
-
-    }else{
-
-      ctx.moveTo(
-        p.x + paddleWidth,
-        p.y
-      );
-
-      ctx.lineTo(
-        p.x - 20,
-        p.y + paddleHeight/2
-      );
-
-      ctx.lineTo(
-        p.x + paddleWidth,
-        p.y + paddleHeight
-      );
-
-    }
-
-    ctx.closePath();
-    ctx.fill();
-
-  }
-
-  ctx.restore();
-
-}
-
-function drawBall(){
-
-  ball.trail.push({
-    x:ball.x,
-    y:ball.y
-  });
-
-  if(ball.trail.length > 12){
-
-    ball.trail.shift();
-
-  }
-
-  for(let i=0;i<ball.trail.length;i++){
-
-    const t =
-      ball.trail[i];
-
-    const alpha =
-      i / ball.trail.length;
-
-    ctx.beginPath();
-
-    ctx.fillStyle =
-      `rgba(255,255,255,${alpha*.18})`;
-
-    ctx.arc(
-      t.x,
-      t.y,
-      ball.size * alpha,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-  }
-
-  ctx.save();
-
-  ctx.shadowBlur = 22;
-  ctx.shadowColor = 'white';
-
-  ctx.fillStyle = 'white';
-
-  ctx.beginPath();
-
-  ctx.arc(
-    ball.x,
-    ball.y,
-    ball.size,
-    0,
-    Math.PI*2
-  );
-
-  ctx.fill();
-
-  ctx.restore();
-
-}
-
-function drawScores(){
-
-  ctx.font =
-    'bold 72px Arial';
-
-  ctx.fillStyle =
-    'rgba(255,255,255,.08)';
-
-  ctx.fillText(
-    left.score,
-    canvas.width*.25,
-    90
-  );
-
-  ctx.fillText(
-    right.score,
-    canvas.width*.75,
-    90
-  );
-
-}
-
-function flash(side){
-
-  if(side === 'left'){
-
-    left.glow = 1;
-
-  }else{
-
-    right.glow = 1;
-
-  }
-
-}
-
-function update(){
-
-  if(
-    !running ||
-    paused
-  ) return;
-
-  right.x =
-    canvas.width - 62;
-
-  ball.x += ball.vx;
-  ball.y += ball.vy;
-
-  if(
-    ball.y < ball.size ||
-    ball.y >
-    canvas.height - ball.size
-  ){
-
-    ball.vy *= -1;
-
-  }
-
-  if(
-    ball.x - ball.size <
-    left.x + paddleWidth &&
-
-    ball.y >
-    left.y &&
-
-    ball.y <
-    left.y + paddleHeight
-  ){
-
-    ball.vx =
-      Math.abs(ball.vx);
-
-    ball.vy +=
-      (ball.y -
-      (left.y + paddleHeight/2))
-      * .03;
-
-    flash('left');
-
-  }
-
-  if(
-    ball.x + ball.size >
-    right.x &&
-
-    ball.y >
-    right.y &&
-
-    ball.y <
-    right.y + paddleHeight
-  ){
-
-    ball.vx =
-      -Math.abs(ball.vx);
-
-    ball.vy +=
-      (ball.y -
-      (right.y + paddleHeight/2))
-      * .03;
-
-    flash('right');
-
-  }
-
-  if(ball.x < -40){
-
-    right.score++;
-
-    resetBall();
-
-  }
-
-  if(ball.x > canvas.width+40){
-
-    left.score++;
-
-    resetBall();
-
-  }
-
-  if(mode === 'bot'){
-
-    const target =
-      ball.y -
-      paddleHeight/2;
-
-    right.y +=
-      (target-right.y)
-      * .42;
-
-  }
-
-  left.glow *= .9;
-  right.glow *= .9;
-
-}
-
-function draw(){
-
-  drawBackground();
-
-  drawScores();
-
-  drawPaddle(
-    left,
-    '#00c2ff',
-    'left'
-  );
-
-  drawPaddle(
-    right,
-    '#ff7b00',
-    'right'
-  );
-
-  drawBall();
-
-}
-
-function loop(){
-
-  update();
-  draw();
-
-  requestAnimationFrame(
-    loop
-  );
-
-}
-
-loop();
-
-function clamp(){
-
-  left.y = Math.max(
-    0,
-    Math.min(
-      canvas.height -
-      paddleHeight,
-      left.y
-    )
-  );
-
-  right.y = Math.max(
-    0,
-    Math.min(
-      canvas.height -
-      paddleHeight,
-      right.y
-    )
-  );
-
-}
-
-window.addEventListener(
-  'touchmove',
-  e => {
-
-    for(const t of e.touches){
-
-      const rect =
-        canvas.getBoundingClientRect();
-
-      const y =
-        t.clientY - rect.top;
-
-      if(
-        t.clientX <
-        window.innerWidth/2
-      ){
-
-        left.y =
-          y - paddleHeight/2;
-
-      }
-
-      else if(
-        mode === 'vs'
-      ){
-
-        right.y =
-          y - paddleHeight/2;
-
-      }
-
-    }
-
-    clamp();
-
-  },
-  {passive:false}
-);
-
-const keys = {};
-
-window.addEventListener(
-  'keydown',
-  e => {
-
-    keys[e.key.toLowerCase()] =
-      true;
-
-  }
-);
-
-window.addEventListener(
-  'keyup',
-  e => {
-
-    keys[e.key.toLowerCase()] =
-      false;
-
-  }
-);
-
-function keyboardLoop(){
-
-  if(keys['w']){
-
-    left.y -= 10;
-
-  }
-
-  if(keys['s']){
-
-    left.y += 10;
-
-  }
-
-  if(
-    mode === 'vs'
-  ){
-
-    if(keys['arrowup']){
-
-      right.y -= 10;
-
-    }
-
-    if(keys['arrowdown']){
-
-      right.y += 10;
-
-    }
-
-  }
-
-  clamp();
-
-  requestAnimationFrame(
-    keyboardLoop
-  );
-
-}
-
-keyboardLoop();
-
 </script>
 
 </body>
