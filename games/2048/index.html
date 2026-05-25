@@ -83,6 +83,7 @@ body{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:12px;
+  touch-action:none;
 }
 
 .bg-cell{
@@ -93,7 +94,6 @@ body{
 .tiles-layer{
   position:absolute;
   inset:12px;
-  pointer-events:none;
 }
 
 .tile{
@@ -114,19 +114,21 @@ body{
   transition:
     left .14s ease,
     top .14s ease,
-    transform .12s ease;
+    transform .10s ease;
 
-  animation:pop .12s ease;
+  animation:pop .10s ease;
 }
 
 @keyframes pop{
+
   0%{
-    transform:scale(.82);
+    transform:scale(.94);
   }
 
   100%{
     transform:scale(1);
   }
+
 }
 
 .tile-2{
@@ -206,6 +208,15 @@ button:hover{
   background:rgba(255,255,255,0.14);
 }
 
+.special-active{
+  border:2px solid #8b5cf6 !important;
+  box-shadow:0 0 18px rgba(139,92,246,.45);
+}
+
+.special-disabled{
+  opacity:.35;
+}
+
 .message{
   margin-top:18px;
   text-align:center;
@@ -273,6 +284,14 @@ button:hover{
       Restart
     </button>
 
+    <button id="deleteBtn">
+      🗑 3
+    </button>
+
+    <button id="mergeBtn">
+      Merge 3
+    </button>
+
   </div>
 
   <div
@@ -298,15 +317,26 @@ const messageElement =
 const restartBtn =
   document.getElementById('restartBtn');
 
+const deleteBtn =
+  document.getElementById('deleteBtn');
+
+const mergeBtn =
+  document.getElementById('mergeBtn');
+
 let score = 0;
 let startX = 0;
 let startY = 0;
 let moving = false;
 let nextId = 1;
 
+let deleteUses = 3;
+let mergeUses = 3;
+
+let mode = null;
+
 let grid = [];
 
-function createEmptyGrid() {
+function createEmptyGrid(){
 
   return [
     [null,null,null,null],
@@ -317,11 +347,11 @@ function createEmptyGrid() {
 
 }
 
-function setupBoard() {
+function setupBoard(){
 
   board.innerHTML = '';
 
-  for(let i = 0; i < 16; i++) {
+  for(let i = 0; i < 16; i++){
 
     const cell =
       document.createElement('div');
@@ -335,7 +365,7 @@ function setupBoard() {
 
 }
 
-function createTile(value,row,col) {
+function createTile(value,row,col){
 
   return {
     id: nextId++,
@@ -346,30 +376,88 @@ function createTile(value,row,col) {
 
 }
 
-function init() {
+function init(){
 
   grid = createEmptyGrid();
 
   score = 0;
 
+  deleteUses = 3;
+  mergeUses = 3;
+
+  mode = null;
+
   addRandomTile();
   addRandomTile();
 
+  updateSpecialButtons();
   renderTiles();
 
   messageElement.textContent = '';
 
 }
 
-function addRandomTile() {
+function updateSpecialButtons(){
+
+  deleteBtn.textContent =
+    '🗑 ' + deleteUses;
+
+  mergeBtn.textContent =
+    'Merge ' + mergeUses;
+
+  deleteBtn.classList.remove(
+    'special-active',
+    'special-disabled'
+  );
+
+  mergeBtn.classList.remove(
+    'special-active',
+    'special-disabled'
+  );
+
+  if(mode === 'delete'){
+
+    deleteBtn.classList.add(
+      'special-active'
+    );
+
+  }
+
+  if(mode === 'merge'){
+
+    mergeBtn.classList.add(
+      'special-active'
+    );
+
+  }
+
+  if(deleteUses <= 0){
+
+    deleteBtn.classList.add(
+      'special-disabled'
+    );
+
+  }
+
+  if(mergeUses <= 0){
+
+    mergeBtn.classList.add(
+      'special-disabled'
+    );
+
+  }
+
+}
+
+function addRandomTile(){
 
   const empty = [];
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
-      if(!grid[r][c]) {
+      if(!grid[r][c]){
 
         empty.push({r,c});
 
@@ -393,7 +481,7 @@ function addRandomTile() {
 
 }
 
-function getPosition(index) {
+function getPosition(index){
 
   return `
     calc(${index} * (100% + 12px) / 4)
@@ -401,13 +489,13 @@ function getPosition(index) {
 
 }
 
-function renderTiles() {
+function renderTiles(){
 
   tilesLayer.innerHTML = '';
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
       const tile = grid[r][c];
 
@@ -428,6 +516,15 @@ function renderTiles() {
       element.style.top =
         getPosition(r);
 
+      element.addEventListener(
+        'click',
+        () => {
+
+          handleTileClick(r,c);
+
+        }
+      );
+
       tilesLayer.appendChild(element);
 
     }
@@ -436,13 +533,13 @@ function renderTiles() {
 
   scoreElement.textContent = score;
 
-  if(hasWon()) {
+  if(hasWon()){
 
     messageElement.textContent =
       'You reached 2048!';
 
   }
-  else if(!canMove()) {
+  else if(!canMove()){
 
     messageElement.textContent =
       'Game Over';
@@ -451,12 +548,103 @@ function renderTiles() {
 
 }
 
-function compress(row) {
+function highestPowerOfTwo(n){
+
+  let value = 2;
+
+  while(value * 2 <= n){
+
+    value *= 2;
+
+  }
+
+  return value;
+
+}
+
+function handleTileClick(row,col){
+
+  const tile = grid[row][col];
+
+  if(!tile) return;
+
+  // DELETE
+  if(mode === 'delete'){
+
+    if(deleteUses <= 0) return;
+
+    grid[row][col] = null;
+
+    deleteUses--;
+
+    mode = null;
+
+    updateSpecialButtons();
+    renderTiles();
+
+    return;
+
+  }
+
+  // MERGE
+  if(mode === 'merge'){
+
+    if(mergeUses <= 0) return;
+
+    const targetValue =
+      tile.value;
+
+    let total = 0;
+
+    for(let r = 0; r < 4; r++){
+
+      for(let c = 0; c < 4; c++){
+
+        const current =
+          grid[r][c];
+
+        if(
+          current &&
+          current.value === targetValue
+        ){
+
+          total += current.value;
+
+          grid[r][c] = null;
+
+        }
+
+      }
+
+    }
+
+    const finalValue =
+      highestPowerOfTwo(total);
+
+    grid[row][col] =
+      createTile(
+        finalValue,
+        row,
+        col
+      );
+
+    mergeUses--;
+
+    mode = null;
+
+    updateSpecialButtons();
+    renderTiles();
+
+  }
+
+}
+
+function compress(row){
 
   const filtered =
     row.filter(Boolean);
 
-  while(filtered.length < 4) {
+  while(filtered.length < 4){
 
     filtered.push(null);
 
@@ -466,9 +654,9 @@ function compress(row) {
 
 }
 
-function merge(row) {
+function merge(row){
 
-  for(let i = 0; i < 3; i++) {
+  for(let i = 0; i < 3; i++){
 
     const current = row[i];
     const next = row[i + 1];
@@ -477,7 +665,7 @@ function merge(row) {
       current &&
       next &&
       current.value === next.value
-    ) {
+    ){
 
       current.value *= 2;
 
@@ -493,11 +681,11 @@ function merge(row) {
 
 }
 
-function moveLeft() {
+function moveLeft(){
 
   let changed = false;
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
     let row = grid[r];
 
@@ -509,9 +697,9 @@ function moveLeft() {
     row = compress(row);
     row = merge(row);
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
-      if(row[c]) {
+      if(row[c]){
 
         row[c].row = r;
         row[c].col = c;
@@ -525,7 +713,7 @@ function moveLeft() {
         row.map(x => x ? x.value : 0)
       );
 
-    if(old !== now) {
+    if(old !== now){
 
       changed = true;
 
@@ -539,18 +727,18 @@ function moveLeft() {
 
 }
 
-function rotate() {
+function rotate(){
 
   const newGrid =
     createEmptyGrid();
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
       const tile = grid[r][c];
 
-      if(tile) {
+      if(tile){
 
         newGrid[c][3-r] = tile;
 
@@ -564,20 +752,15 @@ function rotate() {
 
 }
 
-async function move(direction) {
+async function move(direction){
 
   if(moving) return;
 
+  if(mode) return;
+
   moving = true;
 
-  const old =
-    JSON.stringify(
-      grid.map(row =>
-        row.map(x => x ? x.value : 0)
-      )
-    );
-
-  if(direction === 'up') {
+  if(direction === 'up'){
 
     rotate();
     rotate();
@@ -585,14 +768,14 @@ async function move(direction) {
 
   }
 
-  if(direction === 'right') {
+  if(direction === 'right'){
 
     rotate();
     rotate();
 
   }
 
-  if(direction === 'down') {
+  if(direction === 'down'){
 
     rotate();
 
@@ -601,20 +784,20 @@ async function move(direction) {
   const changed =
     moveLeft();
 
-  if(direction === 'up') {
+  if(direction === 'up'){
 
     rotate();
 
   }
 
-  if(direction === 'right') {
+  if(direction === 'right'){
 
     rotate();
     rotate();
 
   }
 
-  if(direction === 'down') {
+  if(direction === 'down'){
 
     rotate();
     rotate();
@@ -624,7 +807,7 @@ async function move(direction) {
 
   renderTiles();
 
-  if(changed) {
+  if(changed){
 
     await new Promise(resolve =>
       setTimeout(resolve,140)
@@ -640,16 +823,16 @@ async function move(direction) {
 
 }
 
-function hasWon() {
+function hasWon(){
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
       if(
         grid[r][c] &&
         grid[r][c].value === 2048
-      ) {
+      ){
 
         return true;
 
@@ -663,11 +846,11 @@ function hasWon() {
 
 }
 
-function canMove() {
+function canMove(){
 
-  for(let r = 0; r < 4; r++) {
+  for(let r = 0; r < 4; r++){
 
-    for(let c = 0; c < 4; c++) {
+    for(let c = 0; c < 4; c++){
 
       const tile = grid[r][c];
 
@@ -677,7 +860,7 @@ function canMove() {
         c < 3 &&
         grid[r][c+1] &&
         grid[r][c+1].value === tile.value
-      ) {
+      ){
         return true;
       }
 
@@ -685,7 +868,7 @@ function canMove() {
         r < 3 &&
         grid[r+1][c] &&
         grid[r+1][c].value === tile.value
-      ) {
+      ){
         return true;
       }
 
@@ -701,7 +884,7 @@ window.addEventListener('keydown', e => {
 
   if(moving) return;
 
-  switch(e.key) {
+  switch(e.key){
 
     case 'ArrowLeft':
       move('left');
@@ -741,28 +924,28 @@ board.addEventListener('touchend', e => {
   const dy =
     e.changedTouches[0].clientY - startY;
 
-  if(Math.abs(dx) > Math.abs(dy)) {
+  if(Math.abs(dx) > Math.abs(dy)){
 
-    if(dx > 40) {
+    if(dx > 40){
 
       move('right');
 
     }
-    else if(dx < -40) {
+    else if(dx < -40){
 
       move('left');
 
     }
 
   }
-  else {
+  else{
 
-    if(dy > 40) {
+    if(dy > 40){
 
       move('down');
 
     }
-    else if(dy < -40) {
+    else if(dy < -40){
 
       move('up');
 
@@ -775,6 +958,48 @@ board.addEventListener('touchend', e => {
 restartBtn.addEventListener(
   'click',
   init
+);
+
+deleteBtn.addEventListener(
+  'click',
+  () => {
+
+    if(deleteUses <= 0) return;
+
+    if(mode === 'delete'){
+
+      mode = null;
+
+    } else {
+
+      mode = 'delete';
+
+    }
+
+    updateSpecialButtons();
+
+  }
+);
+
+mergeBtn.addEventListener(
+  'click',
+  () => {
+
+    if(mergeUses <= 0) return;
+
+    if(mode === 'merge'){
+
+      mode = null;
+
+    } else {
+
+      mode = 'merge';
+
+    }
+
+    updateSpecialButtons();
+
+  }
 );
 
 setupBoard();
