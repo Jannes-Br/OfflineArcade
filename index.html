@@ -32,6 +32,332 @@
 
 <script defer src="main.js"></script>
 
+<style>
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  font-family: Arial, sans-serif;
+
+  color: white;
+
+  background: #0f172a;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+.background {
+
+  position: fixed;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(76,201,240,0.22),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(99,102,241,0.22),
+      transparent 35%
+    ),
+    linear-gradient(
+      180deg,
+      #111827 0%,
+      #0b1120 100%
+    );
+
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+
+  padding:
+    max(45px, env(safe-area-inset-top))
+    24px
+    10px;
+
+  flex-shrink: 0;
+}
+
+h1 {
+  margin: 0;
+
+  font-size: 42px;
+
+  font-weight: 800;
+}
+
+.subtitle {
+
+  margin-top: 8px;
+
+  opacity: 0.7;
+
+  font-size: 15px;
+}
+
+main {
+
+  flex: 1;
+
+  display: flex;
+
+  align-items: center;
+
+  overflow: hidden;
+}
+
+.games-wrapper {
+
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-snap-type: x mandatory;
+
+  -webkit-overflow-scrolling: touch;
+
+  padding: 10px 24px 40px;
+
+  scrollbar-width: none;
+}
+
+.games-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.game-grid {
+
+  display: flex;
+
+  gap: 22px;
+}
+
+.game-card {
+
+  width: 220px;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  border-radius: 24px;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  text-decoration: none;
+
+  color: white;
+
+  scroll-snap-align: center;
+
+  transition:
+    transform 0.2s,
+    border 0.2s,
+    box-shadow 0.2s;
+
+  backdrop-filter: blur(12px);
+}
+
+.game-card:hover {
+
+  transform:
+    translateY(-5px);
+
+  border:
+    1px solid rgba(76,201,240,0.55);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.3);
+}
+
+.game-thumb {
+
+  width: 100%;
+
+  height: 125px;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+.game-content {
+
+  padding: 14px;
+}
+
+.game-title {
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  margin-bottom: 7px;
+}
+
+.game-description {
+
+  opacity: 0.72;
+
+  font-size: 13px;
+
+  line-height: 1.4;
+}
+
+#app-info {
+
+  position: fixed;
+
+  right: 14px;
+  bottom: 14px;
+
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  width: 205px;
+
+  background:
+    rgba(0,0,0,0.45);
+
+  backdrop-filter: blur(12px);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  border-radius: 18px;
+
+  padding: 12px 14px;
+
+  font-size: 12px;
+
+  line-height: 1.7;
+}
+
+.info-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.version-row {
+  opacity: 0.85;
+}
+
+#status-dot {
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 10px #22c55e;
+}
+
+#reload-btn {
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  margin-left: auto;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background:
+    rgba(255,255,255,0.08);
+
+  color: white;
+
+  font-size: 18px;
+
+  cursor: pointer;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+#reload-btn:hover {
+
+  background:
+    rgba(255,255,255,0.14);
+
+  transform:
+    rotate(90deg);
+}
+
+@media (max-width: 700px) {
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .game-card {
+    width: 190px;
+  }
+
+}
+
+</style>
+
 </head>
 
 <body>
@@ -242,6 +568,92 @@
 </div>
 
 </div>
+
+<script>
+
+const CACHE_VERSION = 'v61';
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const versionElement =
+    document.getElementById(
+      'version'
+    );
+
+  versionElement.textContent =
+    CACHE_VERSION;
+
+  const statusDot =
+    document.getElementById(
+      'status-dot'
+    );
+
+  const onlineStatus =
+    document.getElementById(
+      'online-status'
+    );
+
+  const reloadBtn =
+    document.getElementById(
+      'reload-btn'
+    );
+
+  function updateOnlineStatus() {
+
+    if (navigator.onLine) {
+
+      statusDot.style.background =
+        '#22c55e';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #22c55e';
+
+      onlineStatus.textContent =
+        'Online';
+
+      reloadBtn.style.display =
+        'flex';
+
+    } else {
+
+      statusDot.style.background =
+        '#ef4444';
+
+      statusDot.style.boxShadow =
+        '0 0 10px #ef4444';
+
+      onlineStatus.textContent =
+        'Offline';
+
+      reloadBtn.style.display =
+        'none';
+
+    }
+
+  }
+
+  reloadBtn.addEventListener(
+    'click',
+    () => {
+      location.reload();
+    }
+  );
+
+  updateOnlineStatus();
+
+  window.addEventListener(
+    'online',
+    updateOnlineStatus
+  );
+
+  window.addEventListener(
+    'offline',
+    updateOnlineStatus
+  );
+
+});
+
+</script>
 
 </body>
 </html>
