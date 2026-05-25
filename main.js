@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v61';
+const CACHE_VERSION = 'v62';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
       'online-status'
     );
 
+  const reloadBtn =
+    document.getElementById(
+      'reload-btn'
+    );
+
   function updateOnlineStatus() {
 
     if (navigator.onLine) {
@@ -35,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
       onlineStatus.textContent =
         'Online';
 
+      reloadBtn.style.display =
+        'flex';
+
     } else {
 
       statusDot.style.background =
@@ -46,9 +54,21 @@ document.addEventListener('DOMContentLoaded', () => {
       onlineStatus.textContent =
         'Offline';
 
+      reloadBtn.style.display =
+        'none';
+
     }
 
   }
+
+  reloadBtn.addEventListener(
+    'click',
+    () => {
+
+      window.location.reload();
+
+    }
+  );
 
   // Beim Start prüfen
   updateOnlineStatus();
