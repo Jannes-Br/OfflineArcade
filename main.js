@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v48';
+const CACHE_VERSION = 'v49';
 
 document.addEventListener('DOMContentLoaded', () => {
 
