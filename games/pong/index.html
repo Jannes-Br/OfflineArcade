@@ -28,11 +28,11 @@ body{
 
   background:
     radial-gradient(circle at top left,
-    rgba(99,102,241,0.22),
+    rgba(99,102,241,0.18),
     transparent 35%),
 
     radial-gradient(circle at bottom right,
-    rgba(16,185,129,0.18),
+    rgba(16,185,129,0.16),
     transparent 35%),
 
     linear-gradient(
@@ -51,33 +51,46 @@ body{
 .app{
   width:100%;
   height:100%;
+  padding:16px;
+
   display:flex;
   flex-direction:column;
-  align-items:center;
-  padding:16px;
   gap:14px;
 }
 
-.topbar{
-  width:min(1200px,100%);
+.header{
   display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
+  align-items:center;
+  justify-content:space-between;
+  width:min(1200px,100%);
+  margin:0 auto;
+}
+
+.title{
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.topbar{
+  display:flex;
   gap:12px;
-  z-index:20;
+  flex-wrap:wrap;
 }
 
 .group{
   display:flex;
   gap:10px;
+
   padding:10px;
-  border-radius:20px;
+
+  border-radius:18px;
 
   background:rgba(255,255,255,0.05);
 
-  backdrop-filter:blur(12px);
-
   border:1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter:blur(12px);
 }
 
 button{
@@ -94,22 +107,18 @@ button{
 
   cursor:pointer;
 
-  transition:0.25s;
+  transition:0.2s;
 }
 
 button.active{
   background:rgba(255,255,255,0.12);
 }
 
-button:hover{
-  background:rgba(255,255,255,0.08);
-}
-
 .pause-btn{
   width:54px;
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   font-size:22px;
 }
 
@@ -117,7 +126,9 @@ button:hover{
   position:relative;
 
   width:min(1200px,100%);
-  height:calc(100vh - 150px);
+  height:calc(100vh - 140px);
+
+  margin:0 auto;
 
   border-radius:34px;
 
@@ -128,8 +139,8 @@ button:hover{
   background:
     linear-gradient(
       135deg,
-      rgba(99,102,241,0.12),
-      rgba(16,185,129,0.08)
+      rgba(99,102,241,0.08),
+      rgba(16,185,129,0.06)
     );
 
   box-shadow:
@@ -143,51 +154,27 @@ canvas{
   display:block;
 }
 
-.overlay{
+.center-message{
   position:absolute;
   inset:0;
 
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
 
-  z-index:30;
+  pointer-events:none;
 
-  background:rgba(0,0,0,0.35);
-
-  backdrop-filter:blur(8px);
+  z-index:20;
 }
 
-.play-btn{
-  border:none;
-
-  width:130px;
-  height:130px;
-
-  border-radius:999px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #6366f1,
-      #10b981
-    );
-
-  color:white;
-
-  font-size:34px;
+.message{
+  font-size:48px;
   font-weight:900;
 
-  cursor:pointer;
+  text-align:center;
 
-  box-shadow:
-    0 0 40px rgba(99,102,241,0.45);
-
-  transition:0.25s;
-}
-
-.play-btn:active{
-  transform:scale(0.95);
+  text-shadow:
+    0 0 20px rgba(255,255,255,0.3);
 }
 </style>
 </head>
@@ -195,54 +182,51 @@ canvas{
 
 <div class="app">
 
-  <div class="topbar">
+  <div class="header">
 
-    <div class="group">
-
-      <button
-        id="vsBtn"
-        class="active"
-      >
-        2 Players
-      </button>
-
-      <button id="botBtn">
-        Impossible Bot
-      </button>
-
+    <div class="title">
+      Pong
     </div>
 
-    <div class="group">
+    <div class="topbar">
 
-      <button
-        id="slowBtn"
-      >
-        Slow
-      </button>
+      <div class="group">
 
-      <button
-        id="normalBtn"
-        class="active"
-      >
-        Normal
-      </button>
+        <button
+          id="vsBtn"
+          class="active"
+        >
+          2 Players
+        </button>
 
-      <button
-        id="fastBtn"
-      >
-        Fast
-      </button>
+        <button id="botBtn">
+          Impossible Bot
+        </button>
 
-    </div>
+      </div>
 
-    <div class="group">
+      <div class="group">
 
-      <button
-        id="pauseBtn"
-        class="pause-btn"
-      >
-        ❚❚
-      </button>
+        <button id="normalBtn" class="active">
+          Normal
+        </button>
+
+        <button id="fastBtn">
+          Fast
+        </button>
+
+      </div>
+
+      <div class="group">
+
+        <button
+          id="pauseBtn"
+          class="pause-btn"
+        >
+          ❚❚
+        </button>
+
+      </div>
 
     </div>
 
@@ -252,18 +236,13 @@ canvas{
 
     <canvas id="game"></canvas>
 
-    <div
-      id="overlay"
-      class="overlay"
-    >
-
-      <button
-        id="playBtn"
-        class="play-btn"
+    <div class="center-message">
+      <div
+        class="message"
+        id="message"
       >
-        ▶
-      </button>
-
+        Hold To Play
+      </div>
     </div>
 
   </div>
@@ -277,14 +256,8 @@ const canvas =
 const ctx =
   canvas.getContext('2d');
 
-const overlay =
-  document.getElementById('overlay');
-
-const playBtn =
-  document.getElementById('playBtn');
-
-const pauseBtn =
-  document.getElementById('pauseBtn');
+const message =
+  document.getElementById('message');
 
 const vsBtn =
   document.getElementById('vsBtn');
@@ -292,23 +265,27 @@ const vsBtn =
 const botBtn =
   document.getElementById('botBtn');
 
-const slowBtn =
-  document.getElementById('slowBtn');
-
 const normalBtn =
   document.getElementById('normalBtn');
 
 const fastBtn =
   document.getElementById('fastBtn');
 
-let running = false;
-let paused = false;
+const pauseBtn =
+  document.getElementById('pauseBtn');
 
 let mode = 'vs';
 
-let baseSpeed = 8;
+let baseSpeed = 12;
 
-function resize() {
+let running = false;
+let paused = false;
+
+let countdown = null;
+
+let launchDirection = 1;
+
+function resize(){
 
   const rect =
     canvas.parentElement.getBoundingClientRect();
@@ -331,7 +308,7 @@ const paddle = {
 };
 
 const left = {
-  x:40,
+  x:22,
   y:200,
   score:0,
   glow:0
@@ -353,24 +330,66 @@ const ball = {
   trail:[]
 };
 
-function resetBall() {
+function resetBall(dir){
 
   ball.x = canvas.width / 2;
   ball.y = canvas.height / 2;
 
   ball.trail = [];
 
-  const dir =
-    Math.random() > 0.5 ? 1 : -1;
+  launchDirection = dir;
 
-  ball.vx = baseSpeed * dir;
-
-  ball.vy =
-    (Math.random() * 6) - 3;
+  ball.vx = 0;
+  ball.vy = 0;
 
 }
 
-function resetGame() {
+function startCountdown(callback){
+
+  if (countdown) return;
+
+  let steps = ['3','2','1','GO!'];
+
+  let index = 0;
+
+  countdown = setInterval(()=>{
+
+    message.textContent =
+      steps[index];
+
+    index++;
+
+    if (index >= steps.length){
+
+      clearInterval(countdown);
+
+      countdown = null;
+
+      message.textContent = '';
+
+      callback();
+
+    }
+
+  },700);
+
+}
+
+function setReadyMessage(){
+
+  if (!running && !paused){
+
+    message.textContent =
+      'Hold To Play';
+
+  }
+
+}
+
+function resetGame(){
+
+  running = false;
+  paused = false;
 
   left.score = 0;
   right.score = 0;
@@ -383,14 +402,11 @@ function resetGame() {
     canvas.height/2 -
     paddle.height/2;
 
-  resetBall();
-
-  running = false;
-  paused = false;
-
-  overlay.style.display = 'flex';
+  resetBall(1);
 
   pauseBtn.innerHTML = '❚❚';
+
+  setReadyMessage();
 
 }
 
@@ -406,7 +422,7 @@ function activate(button,list){
 
 }
 
-vsBtn.onclick = () => {
+vsBtn.onclick = ()=>{
 
   mode = 'vs';
 
@@ -419,7 +435,7 @@ vsBtn.onclick = () => {
 
 };
 
-botBtn.onclick = () => {
+botBtn.onclick = ()=>{
 
   mode = 'bot';
 
@@ -432,71 +448,194 @@ botBtn.onclick = () => {
 
 };
 
-slowBtn.onclick = () => {
+normalBtn.onclick = ()=>{
 
-  baseSpeed = 6;
-
-  activate(
-    slowBtn,
-    [slowBtn,normalBtn,fastBtn]
-  );
-
-  resetGame();
-
-};
-
-normalBtn.onclick = () => {
-
-  baseSpeed = 8;
+  baseSpeed = 12;
 
   activate(
     normalBtn,
-    [slowBtn,normalBtn,fastBtn]
+    [normalBtn,fastBtn]
   );
 
   resetGame();
 
 };
 
-fastBtn.onclick = () => {
+fastBtn.onclick = ()=>{
 
-  baseSpeed = 11;
+  baseSpeed = 24;
 
   activate(
     fastBtn,
-    [slowBtn,normalBtn,fastBtn]
+    [normalBtn,fastBtn]
   );
 
   resetGame();
 
 };
 
-playBtn.onclick = () => {
-
-  running = true;
-  paused = false;
-
-  overlay.style.display = 'none';
-
-};
-
-pauseBtn.onclick = () => {
+pauseBtn.onclick = ()=>{
 
   if (!running) return;
 
   paused = !paused;
 
-  if (paused) {
+  if (paused){
+
+    message.textContent =
+      'Paused';
 
     pauseBtn.innerHTML = '▶';
 
-  } else {
+  }
+
+  else{
 
     pauseBtn.innerHTML = '❚❚';
+
+    startCountdown(()=>{
+
+      running = true;
+
+      ball.vx =
+        baseSpeed * launchDirection;
+
+    });
 
   }
 
 };
+
+const touches = {};
+
+window.addEventListener(
+  'touchstart',
+  e=>{
+
+    for (const touch of e.touches){
+
+      touches[touch.identifier] = touch;
+
+    }
+
+    checkStart();
+
+  },
+  {passive:false}
+);
+
+window.addEventListener(
+  'touchmove',
+  e=>{
+
+    e.preventDefault();
+
+    if (paused) return;
+
+    for (const touch of e.touches){
+
+      if (mode === 'vs'){
+
+        if (
+          touch.clientX <
+          window.innerWidth/2
+        ){
+
+          left.y =
+            touch.clientY -
+            paddle.height/2;
+
+        }
+
+        else{
+
+          right.y =
+            touch.clientY -
+            paddle.height/2;
+
+        }
+
+      }
+
+      else{
+
+        left.y =
+          touch.clientY -
+          paddle.height/2;
+
+      }
+
+    }
+
+    clampPaddles();
+
+  },
+  {passive:false}
+);
+
+window.addEventListener(
+  'touchend',
+  ()=>{
+
+    if (!running){
+
+      setReadyMessage();
+
+    }
+
+  }
+);
+
+function checkStart(){
+
+  if (running || paused) return;
+
+  const touchCount =
+    Object.keys(touches).length;
+
+  if (
+    (mode === 'vs' && touchCount >= 2)
+    ||
+    (mode === 'bot' && touchCount >= 1)
+  ){
+
+    startCountdown(()=>{
+
+      running = true;
+
+      ball.vx =
+        baseSpeed * launchDirection;
+
+      ball.vy =
+        (Math.random()*6)-3;
+
+    });
+
+  }
+
+}
+
+const keys = {};
+
+window.addEventListener(
+  'keydown',
+  e=>{
+
+    if (paused) return;
+
+    keys[e.key] = true;
+
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  e=>{
+
+    keys[e.key] = false;
+
+  }
+);
 
 function clampPaddles(){
 
@@ -518,102 +657,71 @@ function clampPaddles(){
 
 }
 
-const keys = {};
+function scorePoint(side){
 
-window.addEventListener(
-  'keydown',
-  e => {
+  running = false;
 
-    keys[e.key] = true;
+  resetBall(side);
 
-  }
-);
+  startCountdown(()=>{
 
-window.addEventListener(
-  'keyup',
-  e => {
+    running = true;
 
-    keys[e.key] = false;
+    ball.vx =
+      baseSpeed * side;
 
-  }
-);
+    ball.vy =
+      (Math.random()*6)-3;
 
-window.addEventListener(
-  'touchmove',
-  e => {
+  });
 
-    e.preventDefault();
-
-    for (const touch of e.touches){
-
-      if (
-        touch.clientX <
-        window.innerWidth / 2
-      ) {
-
-        left.y =
-          touch.clientY -
-          paddle.height / 2;
-
-      }
-
-      else if (mode === 'vs') {
-
-        right.y =
-          touch.clientY -
-          paddle.height / 2;
-
-      }
-
-    }
-
-    clampPaddles();
-
-  },
-  {passive:false}
-);
+}
 
 function update(){
 
-  if (!running || paused) return;
-
   right.x =
-    canvas.width - 60;
+    canvas.width - 42;
 
-  if (keys['w']) {
+  left.glow *= 0.9;
+  right.glow *= 0.9;
+
+  if (!running || paused){
+
+    return;
+
+  }
+
+  if (keys['w']){
     left.y -= 10;
   }
 
-  if (keys['s']) {
+  if (keys['s']){
     left.y += 10;
   }
 
-  if (mode === 'vs') {
+  if (mode === 'vs'){
 
-    if (keys['ArrowUp']) {
+    if (keys['ArrowUp']){
       right.y -= 10;
     }
 
-    if (keys['ArrowDown']) {
+    if (keys['ArrowDown']){
       right.y += 10;
     }
 
   }
 
-  if (mode === 'bot') {
+  if (mode === 'bot'){
 
     const target =
       ball.y - paddle.height/2;
 
     right.y +=
-      (target - right.y) * 0.24;
+      (target - right.y) * 0.25;
 
   }
 
   clampPaddles();
-
-  left.glow *= 0.9;
-  right.glow *= 0.9;
 
   ball.trail.push({
     x:ball.x,
@@ -631,7 +739,7 @@ function update(){
     ball.y < ball.size ||
     ball.y >
     canvas.height - ball.size
-  ) {
+  ){
 
     ball.vy *= -1;
 
@@ -646,7 +754,7 @@ function update(){
 
     ball.y <
     left.y + paddle.height
-  ) {
+  ){
 
     const hit =
       (
@@ -658,7 +766,7 @@ function update(){
       Math.abs(ball.vx);
 
     ball.vy =
-      hit * 10;
+      hit * 12;
 
     left.glow = 1;
 
@@ -673,7 +781,7 @@ function update(){
 
     ball.y <
     right.y + paddle.height
-  ) {
+  ){
 
     const hit =
       (
@@ -685,7 +793,7 @@ function update(){
       -Math.abs(ball.vx);
 
     ball.vy =
-      hit * 10;
+      hit * 12;
 
     right.glow = 1;
 
@@ -695,7 +803,7 @@ function update(){
 
     right.score++;
 
-    resetBall();
+    scorePoint(-1);
 
   }
 
@@ -703,7 +811,7 @@ function update(){
 
     left.score++;
 
-    resetBall();
+    scorePoint(1);
 
   }
 
@@ -735,6 +843,33 @@ function drawBackground(){
   ctx.lineTo(
     canvas.width/2,
     canvas.height
+  );
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+}
+
+function drawPrediction(){
+
+  if (running) return;
+
+  ctx.strokeStyle =
+    'rgba(255,255,255,0.22)';
+
+  ctx.setLineDash([10,14]);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    ball.x,
+    ball.y
+  );
+
+  ctx.lineTo(
+    ball.x + launchDirection * 220,
+    ball.y
   );
 
   ctx.stroke();
@@ -780,7 +915,7 @@ function drawBall(){
       ball.trail[i];
 
     ctx.globalAlpha =
-      i / ball.trail.length * 0.5;
+      i / ball.trail.length * 0.45;
 
     ctx.beginPath();
 
@@ -792,8 +927,7 @@ function drawBall(){
       Math.PI*2
     );
 
-    ctx.fillStyle =
-      '#ffffff';
+    ctx.fillStyle = '#ffffff';
 
     ctx.fill();
 
@@ -848,6 +982,8 @@ function drawScores(){
 function draw(){
 
   drawBackground();
+
+  drawPrediction();
 
   drawScores();
 
