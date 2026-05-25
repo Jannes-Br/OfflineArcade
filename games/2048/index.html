@@ -20,19 +20,18 @@
 
 body{
   background:
-    radial-gradient(circle at top,#312e81 0%,#0f172a 45%),
-    linear-gradient(180deg,#0f172a,#020617);
-
+    radial-gradient(circle at top,#1e293b,#0f172a 60%);
   min-height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
   overflow:hidden;
   color:white;
+  padding:20px;
 }
 
 .game-container{
-  width:min(92vw,540px);
+  width:min(92vw,560px);
 }
 
 .top-bar{
@@ -43,126 +42,111 @@ body{
 }
 
 .title{
-  font-size:64px;
+  font-size:62px;
   font-weight:900;
-  letter-spacing:-2px;
+  letter-spacing:2px;
 }
 
 .score-box{
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.12);
-  border-radius:20px;
+  border-radius:18px;
   padding:14px 24px;
   text-align:center;
   min-width:120px;
-  backdrop-filter:blur(10px);
 }
 
 .score-label{
-  font-size:12px;
-  opacity:.7;
+  font-size:13px;
+  opacity:0.7;
 }
 
 .score{
-  font-size:34px;
-  font-weight:900;
-}
-
-.board-wrapper{
-  position:relative;
-  width:100%;
-  aspect-ratio:1;
+  font-size:30px;
+  font-weight:bold;
 }
 
 .board{
-  position:absolute;
-  inset:0;
+  position:relative;
   background:rgba(255,255,255,0.08);
-  border-radius:28px;
+  border:1px solid rgba(255,255,255,0.08);
   padding:12px;
+  border-radius:26px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:12px;
   touch-action:none;
+  user-select:none;
+  overflow:hidden;
 }
 
-.bg-cell{
-  background:rgba(255,255,255,0.06);
+.cell{
+  aspect-ratio:1;
   border-radius:18px;
-}
-
-.tiles-layer{
-  position:absolute;
-  inset:12px;
+  background:rgba(255,255,255,0.05);
 }
 
 .tile{
   position:absolute;
-
-  width:calc((100% - 36px) / 4);
-  height:calc((100% - 36px) / 4);
-
-  border-radius:18px;
-
   display:flex;
-  justify-content:center;
   align-items:center;
-
+  justify-content:center;
   font-weight:900;
-  font-size:42px;
-
+  border-radius:18px;
   transition:
-    left .14s ease,
-    top .14s ease,
-    transform .10s ease;
+    transform 0.16s ease,
+    left 0.14s ease,
+    top 0.14s ease;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.25);
+}
 
-  animation:pop .10s ease;
+.tile.new{
+  animation:pop 0.12s ease;
 }
 
 @keyframes pop{
-
   0%{
-    transform:scale(.94);
+    transform:scale(0.88);
   }
 
   100%{
     transform:scale(1);
   }
-
 }
 
 .tile-2{
   background:#f8fafc;
-  color:#334155;
+  color:#111827;
 }
 
 .tile-4{
-  background:#e2e8f0;
-  color:#334155;
+  background:#dbeafe;
+  color:#111827;
 }
 
 .tile-8{
-  background:#38bdf8;
+  background:#60a5fa;
   color:white;
 }
 
 .tile-16{
-  background:#0ea5e9;
+  background:#3b82f6;
   color:white;
 }
 
 .tile-32{
-  background:#6366f1;
+  background:#2563eb;
   color:white;
 }
 
 .tile-64{
-  background:#8b5cf6;
+  background:#7c3aed;
   color:white;
 }
 
 .tile-128{
-  background:#a855f7;
+  background:#9333ea;
   color:white;
 }
 
@@ -188,50 +172,43 @@ body{
 
 .controls{
   margin-top:18px;
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
   gap:12px;
 }
 
 button{
-  flex:1;
   border:none;
   border-radius:16px;
-  padding:15px;
+  padding:16px;
   background:rgba(255,255,255,0.08);
   color:white;
   font-size:16px;
+  font-weight:700;
   cursor:pointer;
-  transition:.2s;
+  transition:0.2s;
 }
 
-button:hover{
-  background:rgba(255,255,255,0.14);
+button.active{
+  outline:2px solid #60a5fa;
+  background:rgba(96,165,250,0.18);
 }
 
-.special-active{
-  border:2px solid #8b5cf6 !important;
-  box-shadow:0 0 18px rgba(139,92,246,.45);
-}
-
-.special-disabled{
-  opacity:.35;
+button.disabled{
+  opacity:0.35;
 }
 
 .message{
   margin-top:18px;
   text-align:center;
-  min-height:24px;
   font-size:18px;
+  min-height:24px;
 }
 
-@media(max-width:600px){
+@media (max-width:600px){
 
   .title{
-    font-size:52px;
-  }
-
-  .tile{
-    font-size:34px;
+    font-size:46px;
   }
 
 }
@@ -253,10 +230,7 @@ button:hover{
         SCORE
       </div>
 
-      <div
-        class="score"
-        id="score"
-      >
+      <div class="score" id="score">
         0
       </div>
 
@@ -264,49 +238,32 @@ button:hover{
 
   </div>
 
-  <div class="board-wrapper">
-
-    <div
-      class="board"
-      id="board"
-    ></div>
-
-    <div
-      class="tiles-layer"
-      id="tilesLayer"
-    ></div>
-
-  </div>
+  <div class="board" id="board"></div>
 
   <div class="controls">
+
+    <button id="trashBtn">
+      🗑 Delete
+      (<span id="trashCount">3</span>)
+    </button>
+
+    <button id="mergeBtn">
+      Merge
+      (<span id="mergeCount">3</span>)
+    </button>
 
     <button id="restartBtn">
       Restart
     </button>
 
-    <button id="deleteBtn">
-      🗑 3
-    </button>
-
-    <button id="mergeBtn">
-      Merge 3
-    </button>
-
   </div>
 
-  <div
-    class="message"
-    id="message"
-  ></div>
+  <div class="message" id="message"></div>
 
 </div>
 
 <script>
-const board =
-  document.getElementById('board');
-
-const tilesLayer =
-  document.getElementById('tilesLayer');
+const board = document.getElementById('board');
 
 const scoreElement =
   document.getElementById('score');
@@ -317,62 +274,42 @@ const messageElement =
 const restartBtn =
   document.getElementById('restartBtn');
 
-const deleteBtn =
-  document.getElementById('deleteBtn');
+const trashBtn =
+  document.getElementById('trashBtn');
 
 const mergeBtn =
   document.getElementById('mergeBtn');
 
-let score = 0;
-let startX = 0;
-let startY = 0;
-let moving = false;
-let nextId = 1;
+const trashCountElement =
+  document.getElementById('trashCount');
 
-let deleteUses = 3;
-let mergeUses = 3;
-
-let mode = null;
+const mergeCountElement =
+  document.getElementById('mergeCount');
 
 let grid = [];
+
+let score = 0;
+
+let tileId = 0;
+
+let tileMap = [];
+
+let deleteMode = false;
+
+let mergeMode = false;
+
+let trashUses = 3;
+
+let mergeUses = 3;
 
 function createEmptyGrid(){
 
   return [
-    [null,null,null,null],
-    [null,null,null,null],
-    [null,null,null,null],
-    [null,null,null,null]
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0]
   ];
-
-}
-
-function setupBoard(){
-
-  board.innerHTML = '';
-
-  for(let i = 0; i < 16; i++){
-
-    const cell =
-      document.createElement('div');
-
-    cell.className =
-      'bg-cell';
-
-    board.appendChild(cell);
-
-  }
-
-}
-
-function createTile(value,row,col){
-
-  return {
-    id: nextId++,
-    value,
-    row,
-    col
-  };
 
 }
 
@@ -380,72 +317,58 @@ function init(){
 
   grid = createEmptyGrid();
 
+  tileMap = createEmptyGrid();
+
   score = 0;
 
-  deleteUses = 3;
+  tileId = 0;
+
+  trashUses = 3;
+
   mergeUses = 3;
 
-  mode = null;
+  deleteMode = false;
+
+  mergeMode = false;
+
+  updateButtons();
 
   addRandomTile();
   addRandomTile();
 
-  updateSpecialButtons();
-  renderTiles();
+  render();
 
   messageElement.textContent = '';
 
 }
 
-function updateSpecialButtons(){
+function updateButtons(){
 
-  deleteBtn.textContent =
-    '🗑 ' + deleteUses;
+  trashCountElement.textContent =
+    trashUses;
 
-  mergeBtn.textContent =
-    'Merge ' + mergeUses;
+  mergeCountElement.textContent =
+    mergeUses;
 
-  deleteBtn.classList.remove(
-    'special-active',
-    'special-disabled'
+  trashBtn.classList.toggle(
+    'active',
+    deleteMode
   );
 
-  mergeBtn.classList.remove(
-    'special-active',
-    'special-disabled'
+  mergeBtn.classList.toggle(
+    'active',
+    mergeMode
   );
 
-  if(mode === 'delete'){
+  trashBtn.classList.toggle(
+    'disabled',
+    trashUses <= 0
+  );
 
-    deleteBtn.classList.add(
-      'special-active'
-    );
-
-  }
-
-  if(mode === 'merge'){
-
-    mergeBtn.classList.add(
-      'special-active'
-    );
-
-  }
-
-  if(deleteUses <= 0){
-
-    deleteBtn.classList.add(
-      'special-disabled'
-    );
-
-  }
-
-  if(mergeUses <= 0){
-
-    mergeBtn.classList.add(
-      'special-disabled'
-    );
-
-  }
+  mergeBtn.classList.toggle(
+    'disabled',
+    mergeUses <= 0
+  );
 
 }
 
@@ -453,11 +376,11 @@ function addRandomTile(){
 
   const empty = [];
 
-  for(let r = 0; r < 4; r++){
+  for(let r=0;r<4;r++){
 
-    for(let c = 0; c < 4; c++){
+    for(let c=0;c<4;c++){
 
-      if(!grid[r][c]){
+      if(grid[r][c]===0){
 
         empty.push({r,c});
 
@@ -467,71 +390,110 @@ function addRandomTile(){
 
   }
 
-  if(empty.length === 0) return;
+  if(!empty.length) return;
 
   const spot =
-    empty[Math.floor(Math.random()*empty.length)];
+    empty[
+      Math.floor(
+        Math.random()*empty.length
+      )
+    ];
 
-  grid[spot.r][spot.c] =
-    createTile(
-      Math.random() < 0.9 ? 2 : 4,
-      spot.r,
-      spot.c
-    );
+  const value =
+    Math.random()<0.9 ? 2 : 4;
 
-}
+  grid[spot.r][spot.c] = value;
 
-function getPosition(index){
-
-  return `
-    calc(${index} * (100% + 12px) / 4)
-  `;
+  tileMap[spot.r][spot.c] = ++tileId;
 
 }
 
-function renderTiles(){
+function render(){
 
-  tilesLayer.innerHTML = '';
+  board.innerHTML = '';
 
-  for(let r = 0; r < 4; r++){
+  const boardSize =
+    board.clientWidth;
 
-    for(let c = 0; c < 4; c++){
+  const gap = 12;
 
-      const tile = grid[r][c];
+  const padding = 12;
 
-      if(!tile) continue;
+  const tileSize =
+    (boardSize - padding*2 - gap*3) / 4;
 
-      const element =
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
+      const bg =
         document.createElement('div');
 
-      element.className =
-        `tile tile-${tile.value}`;
+      bg.className = 'cell';
 
-      element.textContent =
-        tile.value;
-
-      element.style.left =
-        getPosition(c);
-
-      element.style.top =
-        getPosition(r);
-
-      element.addEventListener(
-        'click',
-        () => {
-
-          handleTileClick(r,c);
-
-        }
-      );
-
-      tilesLayer.appendChild(element);
+      board.appendChild(bg);
 
     }
 
   }
 
-  scoreElement.textContent = score;
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
+      const value = grid[r][c];
+
+      if(value===0) continue;
+
+      const tile =
+        document.createElement('div');
+
+      tile.className =
+        `tile tile-${value} new`;
+
+      tile.style.width =
+        tileSize + 'px';
+
+      tile.style.height =
+        tileSize + 'px';
+
+      tile.style.left =
+        (
+          padding +
+          c*(tileSize+gap)
+        ) + 'px';
+
+      tile.style.top =
+        (
+          padding +
+          r*(tileSize+gap)
+        ) + 'px';
+
+      tile.style.fontSize =
+        value >= 1024
+          ? '34px'
+          : value >= 128
+          ? '40px'
+          : '46px';
+
+      tile.textContent = value;
+
+      tile.dataset.row = r;
+      tile.dataset.col = c;
+
+      tile.addEventListener(
+        'click',
+        () => tileClick(r,c)
+      );
+
+      board.appendChild(tile);
+
+    }
+
+  }
+
+  scoreElement.textContent =
+    score;
 
   if(hasWon()){
 
@@ -548,329 +510,232 @@ function renderTiles(){
 
 }
 
-function highestPowerOfTwo(n){
+function tileClick(r,c){
 
-  let value = 2;
+  if(deleteMode){
 
-  while(value * 2 <= n){
+    if(grid[r][c]!==0 &&
+       trashUses > 0){
 
-    value *= 2;
+      grid[r][c] = 0;
 
-  }
+      tileMap[r][c] = 0;
 
-  return value;
+      trashUses--;
 
-}
+      deleteMode = false;
 
-function handleTileClick(row,col){
+      updateButtons();
 
-  const tile = grid[row][col];
+      render();
 
-  if(!tile) return;
-
-  // DELETE
-  if(mode === 'delete'){
-
-    if(deleteUses <= 0) return;
-
-    grid[row][col] = null;
-
-    deleteUses--;
-
-    mode = null;
-
-    updateSpecialButtons();
-    renderTiles();
+    }
 
     return;
 
   }
 
-  // MERGE
-  if(mode === 'merge'){
+  if(mergeMode){
 
-    if(mergeUses <= 0) return;
+    const value = grid[r][c];
 
-    const targetValue =
-      tile.value;
+    if(value!==0 &&
+       mergeUses > 0){
 
-    let total = 0;
+      let total = 0;
 
-    for(let r = 0; r < 4; r++){
+      const positions = [];
 
-      for(let c = 0; c < 4; c++){
+      for(let y=0;y<4;y++){
 
-        const current =
-          grid[r][c];
+        for(let x=0;x<4;x++){
 
-        if(
-          current &&
-          current.value === targetValue
-        ){
+          if(grid[y][x]===value){
 
-          total += current.value;
+            total += value;
 
-          grid[r][c] = null;
+            positions.push({
+              y,x
+            });
+
+          }
 
         }
 
       }
 
-    }
+      let finalValue = 2;
 
-    const finalValue =
-      highestPowerOfTwo(total);
+      while(finalValue*2 <= total){
 
-    grid[row][col] =
-      createTile(
-        finalValue,
-        row,
-        col
-      );
-
-    mergeUses--;
-
-    mode = null;
-
-    updateSpecialButtons();
-    renderTiles();
-
-  }
-
-}
-
-function compress(row){
-
-  const filtered =
-    row.filter(Boolean);
-
-  while(filtered.length < 4){
-
-    filtered.push(null);
-
-  }
-
-  return filtered;
-
-}
-
-function merge(row){
-
-  for(let i = 0; i < 3; i++){
-
-    const current = row[i];
-    const next = row[i + 1];
-
-    if(
-      current &&
-      next &&
-      current.value === next.value
-    ){
-
-      current.value *= 2;
-
-      score += current.value;
-
-      row[i + 1] = null;
-
-    }
-
-  }
-
-  return compress(row);
-
-}
-
-function moveLeft(){
-
-  let changed = false;
-
-  for(let r = 0; r < 4; r++){
-
-    let row = grid[r];
-
-    const old =
-      JSON.stringify(
-        row.map(x => x ? x.value : 0)
-      );
-
-    row = compress(row);
-    row = merge(row);
-
-    for(let c = 0; c < 4; c++){
-
-      if(row[c]){
-
-        row[c].row = r;
-        row[c].col = c;
+        finalValue *= 2;
 
       }
 
+      positions.forEach(pos => {
+
+        grid[pos.y][pos.x] = 0;
+        tileMap[pos.y][pos.x] = 0;
+
+      });
+
+      grid[r][c] = finalValue;
+
+      tileMap[r][c] = ++tileId;
+
+      mergeUses--;
+
+      mergeMode = false;
+
+      updateButtons();
+
+      render();
+
     }
 
-    const now =
-      JSON.stringify(
-        row.map(x => x ? x.value : 0)
+  }
+
+}
+
+function slide(row){
+
+  row = row.filter(v=>v);
+
+  for(let i=0;i<row.length-1;i++){
+
+    if(row[i]===row[i+1]){
+
+      row[i] *= 2;
+
+      score += row[i];
+
+      row[i+1] = 0;
+
+    }
+
+  }
+
+  row = row.filter(v=>v);
+
+  while(row.length<4){
+
+    row.push(0);
+
+  }
+
+  return row;
+
+}
+
+function rotateClockwise(matrix){
+
+  return matrix[0].map((_,i)=>
+    matrix.map(row=>row[i]).reverse()
+  );
+
+}
+
+function move(direction){
+
+  if(deleteMode || mergeMode) return;
+
+  const old =
+    JSON.stringify(grid);
+
+  if(direction==='up'){
+
+    grid =
+      rotateClockwise(grid);
+
+    grid =
+      rotateClockwise(grid);
+
+    grid =
+      rotateClockwise(grid);
+
+  }
+
+  if(direction==='right'){
+
+    grid =
+      grid.map(row=>
+        row.reverse()
       );
 
-    if(old !== now){
+  }
 
-      changed = true;
+  if(direction==='down'){
 
-    }
-
-    grid[r] = row;
+    grid =
+      rotateClockwise(grid);
 
   }
 
-  return changed;
+  grid = grid.map(slide);
 
-}
+  if(direction==='up'){
 
-function rotate(){
-
-  const newGrid =
-    createEmptyGrid();
-
-  for(let r = 0; r < 4; r++){
-
-    for(let c = 0; c < 4; c++){
-
-      const tile = grid[r][c];
-
-      if(tile){
-
-        newGrid[c][3-r] = tile;
-
-      }
-
-    }
+    grid =
+      rotateClockwise(grid);
 
   }
 
-  grid = newGrid;
+  if(direction==='right'){
 
-}
-
-async function move(direction){
-
-  if(moving) return;
-
-  if(mode) return;
-
-  moving = true;
-
-  if(direction === 'up'){
-
-    rotate();
-    rotate();
-    rotate();
+    grid =
+      grid.map(row=>
+        row.reverse()
+      );
 
   }
 
-  if(direction === 'right'){
+  if(direction==='down'){
 
-    rotate();
-    rotate();
+    grid =
+      rotateClockwise(grid);
 
-  }
+    grid =
+      rotateClockwise(grid);
 
-  if(direction === 'down'){
-
-    rotate();
-
-  }
-
-  const changed =
-    moveLeft();
-
-  if(direction === 'up'){
-
-    rotate();
+    grid =
+      rotateClockwise(grid);
 
   }
 
-  if(direction === 'right'){
-
-    rotate();
-    rotate();
-
-  }
-
-  if(direction === 'down'){
-
-    rotate();
-    rotate();
-    rotate();
-
-  }
-
-  renderTiles();
-
-  if(changed){
-
-    await new Promise(resolve =>
-      setTimeout(resolve,140)
-    );
+  if(JSON.stringify(grid)!==old){
 
     addRandomTile();
 
-    renderTiles();
+    render();
 
   }
-
-  moving = false;
 
 }
 
 function hasWon(){
 
-  for(let r = 0; r < 4; r++){
-
-    for(let c = 0; c < 4; c++){
-
-      if(
-        grid[r][c] &&
-        grid[r][c].value === 2048
-      ){
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
+  return grid.flat().includes(2048);
 
 }
 
 function canMove(){
 
-  for(let r = 0; r < 4; r++){
+  for(let r=0;r<4;r++){
 
-    for(let c = 0; c < 4; c++){
+    for(let c=0;c<4;c++){
 
-      const tile = grid[r][c];
-
-      if(!tile) return true;
+      if(grid[r][c]===0)
+        return true;
 
       if(
-        c < 3 &&
-        grid[r][c+1] &&
-        grid[r][c+1].value === tile.value
-      ){
-        return true;
-      }
+        c<3 &&
+        grid[r][c]===grid[r][c+1]
+      ) return true;
 
       if(
-        r < 3 &&
-        grid[r+1][c] &&
-        grid[r+1][c].value === tile.value
-      ){
-        return true;
-      }
+        r<3 &&
+        grid[r][c]===grid[r+1][c]
+      ) return true;
 
     }
 
@@ -880,103 +745,104 @@ function canMove(){
 
 }
 
-window.addEventListener('keydown', e => {
+window.addEventListener(
+  'keydown',
+  e => {
 
-  if(moving) return;
+    switch(e.key){
 
-  switch(e.key){
+      case 'ArrowLeft':
+        move('left');
+        break;
 
-    case 'ArrowLeft':
-      move('left');
-      break;
+      case 'ArrowRight':
+        move('right');
+        break;
 
-    case 'ArrowRight':
-      move('right');
-      break;
+      case 'ArrowUp':
+        move('up');
+        break;
 
-    case 'ArrowUp':
-      move('up');
-      break;
-
-    case 'ArrowDown':
-      move('down');
-      break;
-
-  }
-
-});
-
-board.addEventListener('touchstart', e => {
-
-  startX =
-    e.touches[0].clientX;
-
-  startY =
-    e.touches[0].clientY;
-
-});
-
-board.addEventListener('touchend', e => {
-
-  const dx =
-    e.changedTouches[0].clientX - startX;
-
-  const dy =
-    e.changedTouches[0].clientY - startY;
-
-  if(Math.abs(dx) > Math.abs(dy)){
-
-    if(dx > 40){
-
-      move('right');
-
-    }
-    else if(dx < -40){
-
-      move('left');
+      case 'ArrowDown':
+        move('down');
+        break;
 
     }
 
   }
-  else{
-
-    if(dy > 40){
-
-      move('down');
-
-    }
-    else if(dy < -40){
-
-      move('up');
-
-    }
-
-  }
-
-});
-
-restartBtn.addEventListener(
-  'click',
-  init
 );
 
-deleteBtn.addEventListener(
+let startX = 0;
+let startY = 0;
+
+board.addEventListener(
+  'touchstart',
+  e => {
+
+    startX =
+      e.touches[0].clientX;
+
+    startY =
+      e.touches[0].clientY;
+
+  },
+  {passive:true}
+);
+
+board.addEventListener(
+  'touchend',
+  e => {
+
+    if(deleteMode || mergeMode)
+      return;
+
+    const dx =
+      e.changedTouches[0].clientX
+      - startX;
+
+    const dy =
+      e.changedTouches[0].clientY
+      - startY;
+
+    if(
+      Math.abs(dx) >
+      Math.abs(dy)
+    ){
+
+      if(dx > 40)
+        move('right');
+
+      else if(dx < -40)
+        move('left');
+
+    }
+    else{
+
+      if(dy > 40)
+        move('down');
+
+      else if(dy < -40)
+        move('up');
+
+    }
+
+  },
+  {passive:true}
+);
+
+trashBtn.addEventListener(
   'click',
   () => {
 
-    if(deleteUses <= 0) return;
+    if(trashUses <= 0)
+      return;
 
-    if(mode === 'delete'){
+    deleteMode =
+      !deleteMode;
 
-      mode = null;
+    mergeMode = false;
 
-    } else {
-
-      mode = 'delete';
-
-    }
-
-    updateSpecialButtons();
+    updateButtons();
 
   }
 );
@@ -985,24 +851,29 @@ mergeBtn.addEventListener(
   'click',
   () => {
 
-    if(mergeUses <= 0) return;
+    if(mergeUses <= 0)
+      return;
 
-    if(mode === 'merge'){
+    mergeMode =
+      !mergeMode;
 
-      mode = null;
+    deleteMode = false;
 
-    } else {
-
-      mode = 'merge';
-
-    }
-
-    updateSpecialButtons();
+    updateButtons();
 
   }
 );
 
-setupBoard();
+restartBtn.addEventListener(
+  'click',
+  init
+);
+
+window.addEventListener(
+  'resize',
+  render
+);
+
 init();
 </script>
 
