@@ -10,6 +10,11 @@
 
 <title>Pong</title>
 
+<link
+href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap"
+rel="stylesheet"
+>
+
 <style>
 *{
   margin:0;
@@ -21,14 +26,21 @@
 
 body{
   overflow:hidden;
-  font-family:Arial,sans-serif;
+  font-family:'Fredoka',sans-serif;
   background:
-    radial-gradient(circle at top left,#132238 0%,transparent 40%),
-    radial-gradient(circle at bottom right,#1b1030 0%,transparent 40%),
+    radial-gradient(circle at top left,
+    rgba(59,130,246,0.28),
+    transparent 38%),
+
+    radial-gradient(circle at bottom right,
+    rgba(168,85,247,0.28),
+    transparent 38%),
+
     #020617;
-  color:white;
+
   width:100vw;
   height:100vh;
+  color:white;
 }
 
 .topbar{
@@ -36,16 +48,17 @@ body{
   top:0;
   left:0;
   width:100%;
-  z-index:10;
-  padding:18px 24px;
+  padding:18px 22px;
+  z-index:20;
+
   display:flex;
   flex-direction:column;
   gap:14px;
 }
 
 .title{
-  font-size:44px;
-  font-weight:900;
+  font-size:48px;
+  font-weight:700;
   letter-spacing:2px;
 }
 
@@ -58,50 +71,101 @@ body{
 .group{
   display:flex;
   gap:10px;
-  background:rgba(255,255,255,0.06);
+
   padding:8px;
+
   border-radius:18px;
-  backdrop-filter:blur(10px);
+
+  background:rgba(255,255,255,0.07);
+
+  backdrop-filter:blur(12px);
 }
 
 button{
   border:none;
+  outline:none;
+
   background:transparent;
+
   color:white;
+
   padding:12px 18px;
+
   border-radius:14px;
+
   font-size:15px;
-  font-weight:700;
+  font-family:'Fredoka',sans-serif;
+  font-weight:600;
+
   transition:.2s;
 }
 
 button.active{
-  background:rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.16);
 }
 
-button.pause{
-  width:52px;
-  font-size:22px;
+.pause-btn{
+  width:56px;
+  height:48px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.pause-icon{
+  width:18px;
+  height:18px;
+
+  display:flex;
+  gap:5px;
+}
+
+.pause-icon div{
+  width:5px;
+  height:18px;
+
+  border-radius:4px;
+
+  background:white;
+}
+
+.play-icon{
+  width:0;
+  height:0;
+
+  border-top:10px solid transparent;
+  border-bottom:10px solid transparent;
+  border-left:16px solid white;
+
+  margin-left:3px;
 }
 
 .game-wrapper{
   position:absolute;
+
   top:170px;
   left:20px;
   right:20px;
   bottom:20px;
+
   border-radius:30px;
+
   overflow:hidden;
+
+  border:1px solid rgba(255,255,255,0.08);
+
   background:
     linear-gradient(
       180deg,
       rgba(255,255,255,0.03),
-      rgba(255,255,255,0.01)
+      rgba(255,255,255,0.015)
     );
-  border:1px solid rgba(255,255,255,0.08);
+
   box-shadow:
-    0 0 80px rgba(80,120,255,0.12),
-    inset 0 0 80px rgba(255,255,255,0.02);
+    0 0 100px rgba(59,130,246,0.14),
+    0 0 100px rgba(168,85,247,0.14),
+    inset 0 0 50px rgba(255,255,255,0.02);
 }
 
 canvas{
@@ -112,35 +176,49 @@ canvas{
 
 .overlay{
   position:absolute;
-  top:18%;
+
+  top:15%;
   left:50%;
+
   transform:translateX(-50%);
+
   text-align:center;
+
   pointer-events:none;
 }
 
 .bigtext{
-  font-size:58px;
-  font-weight:900;
-  text-shadow:0 0 25px rgba(255,255,255,0.4);
+  font-size:60px;
+  font-weight:700;
+
+  text-shadow:
+    0 0 20px rgba(255,255,255,0.3);
 }
 
 .smalltext{
   margin-top:10px;
+
   font-size:20px;
-  opacity:.7;
+
+  opacity:.72;
 }
 
 .score{
   position:absolute;
+
   top:28px;
   width:100%;
+
   display:flex;
   justify-content:space-between;
+
   padding:0 20%;
-  font-size:72px;
-  font-weight:900;
-  opacity:.15;
+
+  font-size:74px;
+  font-weight:700;
+
+  opacity:.12;
+
   pointer-events:none;
 }
 </style>
@@ -150,18 +228,21 @@ canvas{
 <div class="topbar">
 
   <div class="title">
-    PONG
+    Pong
   </div>
 
   <div class="controls">
 
     <div class="group">
 
-      <button id="vsBtn" class="active">
+      <button
+      id="vsBtn"
+      class="active">
         2 Players
       </button>
 
-      <button id="botBtn">
+      <button
+      id="botBtn">
         Bot
       </button>
 
@@ -169,15 +250,19 @@ canvas{
 
     <div class="group">
 
-      <button id="normalBtn" class="active">
+      <button
+      id="normalBtn"
+      class="active">
         Normal
       </button>
 
-      <button id="fastBtn">
+      <button
+      id="fastBtn">
         Fast
       </button>
 
-      <button id="superBtn">
+      <button
+      id="superBtn">
         Super Fast
       </button>
 
@@ -185,8 +270,15 @@ canvas{
 
     <div class="group">
 
-      <button id="pauseBtn" class="pause">
-        ⏸
+      <button
+      id="pauseBtn"
+      class="pause-btn">
+
+        <div class="pause-icon" id="pauseIcon">
+          <div></div>
+          <div></div>
+        </div>
+
       </button>
 
     </div>
@@ -198,20 +290,27 @@ canvas{
 <div class="game-wrapper">
 
   <div class="score">
+
     <div id="leftScore">0</div>
+
     <div id="rightScore">0</div>
+
   </div>
 
   <canvas id="game"></canvas>
 
   <div class="overlay">
 
-    <div class="bigtext" id="overlayTitle">
+    <div
+    class="bigtext"
+    id="overlayTitle">
       HOLD TO PLAY
     </div>
 
-    <div class="smalltext" id="overlaySub">
-      Keep fingers or keys pressed
+    <div
+    class="smalltext"
+    id="overlaySub">
+      Hold fingers or keys
     </div>
 
   </div>
@@ -219,28 +318,37 @@ canvas{
 </div>
 
 <script>
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
+const canvas=
+document.getElementById('game');
 
-const wrapper=document.querySelector('.game-wrapper');
+const ctx=
+canvas.getContext('2d');
 
-function resize(){
-  canvas.width=wrapper.clientWidth;
-  canvas.height=wrapper.clientHeight;
-}
-resize();
-window.addEventListener('resize',resize);
+const wrapper=
+document.querySelector('.game-wrapper');
 
-const overlayTitle=document.getElementById('overlayTitle');
-const overlaySub=document.getElementById('overlaySub');
+const overlayTitle=
+document.getElementById('overlayTitle');
 
-const pauseBtn=document.getElementById('pauseBtn');
+const overlaySub=
+document.getElementById('overlaySub');
 
-const leftScoreText=document.getElementById('leftScore');
-const rightScoreText=document.getElementById('rightScore');
+const pauseBtn=
+document.getElementById('pauseBtn');
+
+const pauseIcon=
+document.getElementById('pauseIcon');
+
+const leftScoreText=
+document.getElementById('leftScore');
+
+const rightScoreText=
+document.getElementById('rightScore');
 
 let mode='vs';
+
 let paused=false;
+
 let state='hold';
 
 let speed=12;
@@ -248,93 +356,147 @@ let speed=12;
 const keys={};
 
 window.addEventListener('keydown',e=>{
+
   keys[e.key.toLowerCase()]=true;
+
 });
 
 window.addEventListener('keyup',e=>{
+
   keys[e.key.toLowerCase()]=false;
+
 });
 
+function resize(){
+
+  canvas.width=
+  wrapper.clientWidth;
+
+  canvas.height=
+  wrapper.clientHeight;
+
+  right.x=
+  canvas.width-right.w-24;
+
+}
+
+resize();
+
+window.addEventListener(
+'resize',
+resize
+);
+
 const left={
+
   x:24,
   y:200,
+
   w:20,
   h:160,
+
   score:0,
+
   glow:0
+
 };
 
 const right={
+
   x:0,
   y:200,
+
   w:20,
   h:160,
+
   score:0,
+
   glow:0
+
 };
 
 const ball={
+
   x:0,
   y:0,
+
   vx:0,
   vy:0,
+
   size:14,
+
   trail:[]
+
 };
+
+right.x=
+canvas.width-right.w-24;
 
 let nextDirection=1;
 
 function resetBall(){
-  ball.x=canvas.width/2;
-  ball.y=canvas.height/2;
 
-  const angle=(Math.random()*1.2)-0.6;
+  ball.x=
+  canvas.width/2;
 
-  ball.vx=Math.cos(angle)*speed*nextDirection;
-  ball.vy=Math.sin(angle)*speed;
+  ball.y=
+  canvas.height/2;
+
+  const angle=
+  (Math.random()*1.2)-0.6;
+
+  ball.vx=
+  Math.cos(angle)
+  *speed
+  *nextDirection;
+
+  ball.vy=
+  Math.sin(angle)
+  *speed;
 
   ball.trail=[];
+
 }
 
 resetBall();
 
 function setMode(newMode){
+
   mode=newMode;
 
-  document.getElementById('vsBtn')
-    .classList.toggle('active',mode==='vs');
+  vsBtn.classList.toggle(
+    'active',
+    mode==='vs'
+  );
 
-  document.getElementById('botBtn')
-    .classList.toggle('active',mode==='bot');
+  botBtn.classList.toggle(
+    'active',
+    mode==='bot'
+  );
 
   startHold();
+
 }
 
 function setSpeed(value){
+
   speed=value;
 
-  document.getElementById('normalBtn')
-    .classList.remove('active');
+  normalBtn.classList.remove('active');
+  fastBtn.classList.remove('active');
+  superBtn.classList.remove('active');
 
-  document.getElementById('fastBtn')
-    .classList.remove('active');
+  if(value===12)
+  normalBtn.classList.add('active');
 
-  document.getElementById('superBtn')
-    .classList.remove('active');
+  if(value===20)
+  fastBtn.classList.add('active');
 
-  if(value===12){
-    normalBtn.classList.add('active');
-  }
-
-  if(value===20){
-    fastBtn.classList.add('active');
-  }
-
-  if(value===28){
-    superBtn.classList.add('active');
-  }
+  if(value===28)
+  superBtn.classList.add('active');
 
   startHold();
+
 }
 
 vsBtn.onclick=()=>setMode('vs');
@@ -349,18 +511,29 @@ pauseBtn.onclick=()=>{
   if(paused){
 
     paused=false;
+
     startCountdown();
 
-    pauseBtn.textContent='⏸';
+    pauseIcon.innerHTML=
+    `
+    <div></div>
+    <div></div>
+    `;
 
   }else{
 
     paused=true;
 
-    overlayTitle.textContent='PAUSED';
-    overlaySub.textContent='Press Play';
+    overlayTitle.textContent=
+    'PAUSED';
 
-    pauseBtn.textContent='▶';
+    overlaySub.textContent=
+    'Press Play';
+
+    pauseIcon.innerHTML=
+    `
+    <div class="play-icon"></div>
+    `;
 
   }
 
@@ -372,12 +545,20 @@ function startHold(){
 
   state='hold';
 
-  overlayTitle.textContent='HOLD TO PLAY';
-  overlaySub.textContent='Keep touching or holding keys';
+  overlayTitle.textContent=
+  'HOLD TO PLAY';
 
-  pauseBtn.textContent='⏸';
+  overlaySub.textContent=
+  'Hold fingers or keys';
+
+  pauseIcon.innerHTML=
+  `
+  <div></div>
+  <div></div>
+  `;
 
   resetBall();
+
 }
 
 function startCountdown(){
@@ -387,30 +568,38 @@ function startCountdown(){
   let count=3;
 
   overlayTitle.textContent=count;
+
   overlaySub.textContent='';
 
-  const interval=setInterval(()=>{
+  const interval=
+  setInterval(()=>{
 
     if(paused){
+
       clearInterval(interval);
+
       return;
+
     }
 
     count--;
 
     if(count>0){
 
-      overlayTitle.textContent=count;
+      overlayTitle.textContent=
+      count;
 
     }else if(count===0){
 
-      overlayTitle.textContent='GO!';
+      overlayTitle.textContent=
+      'GO!';
 
     }else{
 
       clearInterval(interval);
 
       overlayTitle.textContent='';
+
       overlaySub.textContent='';
 
       state='play';
@@ -421,36 +610,53 @@ function startCountdown(){
 
 }
 
-function playerReady(){
+function readyCheck(){
 
   const leftReady=
+
+    activeLeftTouch||
     keys['w']||
-    keys['s']||
-    activeLeftTouch;
+    keys['s'];
 
   const rightReady=
+
+    activeRightTouch||
     keys['arrowup']||
-    keys['arrowdown']||
-    activeRightTouch;
+    keys['arrowdown'];
 
   if(mode==='vs'){
+
     return leftReady&&rightReady;
+
   }
 
   return leftReady;
+
 }
 
 let activeLeftTouch=null;
 let activeRightTouch=null;
 
-window.addEventListener('touchstart',handleTouch,{passive:false});
-window.addEventListener('touchmove',handleTouch,{passive:false});
-window.addEventListener('touchend',clearTouches,{passive:false});
+window.addEventListener(
+'touchstart',
+handleTouch,
+{passive:false}
+);
+
+window.addEventListener(
+'touchmove',
+handleTouch,
+{passive:false}
+);
+
+window.addEventListener(
+'touchend',
+handleTouch,
+{passive:false}
+);
 
 function handleTouch(e){
 
-  e.preventDefault();
-
   activeLeftTouch=null;
   activeRightTouch=null;
 
@@ -458,48 +664,26 @@ function handleTouch(e){
 
     if(mode==='vs'){
 
-      if(touch.clientX<window.innerWidth/2){
+      if(
+        touch.clientX
+        <
+        window.innerWidth/2
+      ){
 
-        activeLeftTouch=touch.clientY;
+        activeLeftTouch=
+        touch.clientY;
 
       }else{
 
-        activeRightTouch=touch.clientY;
+        activeRightTouch=
+        touch.clientY;
 
       }
 
     }else{
 
-      activeLeftTouch=touch.clientY;
-
-    }
-
-  }
-
-}
-
-function clearTouches(e){
-
-  activeLeftTouch=null;
-  activeRightTouch=null;
-
-  for(const touch of e.touches){
-
-    if(mode==='vs'){
-
-      if(touch.clientX<window.innerWidth/2){
-
-        activeLeftTouch=touch.clientY;
-
-      }else{
-
-        activeRightTouch=touch.clientY;
-
-      }
-
-    }else{
-
-      activeLeftTouch=touch.clientY;
+      activeLeftTouch=
+      touch.clientY;
 
     }
 
@@ -509,100 +693,140 @@ function clearTouches(e){
 
 function clamp(){
 
-  left.y=Math.max(
+  left.y=
+  Math.max(
     0,
-    Math.min(canvas.height-left.h,left.y)
+    Math.min(
+      canvas.height-left.h,
+      left.y
+    )
   );
 
-  right.y=Math.max(
+  right.y=
+  Math.max(
     0,
-    Math.min(canvas.height-right.h,right.y)
+    Math.min(
+      canvas.height-right.h,
+      right.y
+    )
   );
 
 }
 
 function movePlayers(){
 
-  const keyboardSpeed=14;
+  const moveSpeed=14;
 
-  if(keys['w']) left.y-=keyboardSpeed;
-  if(keys['s']) left.y+=keyboardSpeed;
+  if(keys['w'])
+  left.y-=moveSpeed;
+
+  if(keys['s'])
+  left.y+=moveSpeed;
 
   if(mode==='vs'){
 
-    if(keys['arrowup']) right.y-=keyboardSpeed;
-    if(keys['arrowdown']) right.y+=keyboardSpeed;
+    if(keys['arrowup'])
+    right.y-=moveSpeed;
+
+    if(keys['arrowdown'])
+    right.y+=moveSpeed;
 
   }
 
   if(activeLeftTouch!==null){
 
     left.y=
-      activeLeftTouch
-      -wrapper.getBoundingClientRect().top
-      -left.h/2;
+    activeLeftTouch
+    -
+    wrapper.getBoundingClientRect().top
+    -
+    left.h/2;
 
   }
 
-  if(mode==='vs'&&activeRightTouch!==null){
+  if(
+    mode==='vs'
+    &&
+    activeRightTouch!==null
+  ){
 
     right.y=
-      activeRightTouch
-      -wrapper.getBoundingClientRect().top
-      -right.h/2;
+    activeRightTouch
+    -
+    wrapper.getBoundingClientRect().top
+    -
+    right.h/2;
 
   }
 
   if(mode==='bot'){
 
-    const target=ball.y-right.h/2;
+    const target=
+    ball.y-right.h/2;
 
-    right.y+=(target-right.y)*0.24;
+    right.y+=
+    (target-right.y)*0.24;
 
   }
 
   clamp();
+
 }
 
-function paddleBounce(paddle,isLeft){
+function bounce(paddle,isLeft){
 
   const relative=
-    (ball.y-(paddle.y+paddle.h/2))
-    /(paddle.h/2);
 
-  const bounceAngle=
-    relative*1.2;
+    (
+      ball.y-
+      (
+        paddle.y+
+        paddle.h/2
+      )
+    )
+    /
+    (paddle.h/2);
 
-  const direction=isLeft?1:-1;
+  const angle=
+  relative*1.2;
+
+  const direction=
+  isLeft?1:-1;
 
   ball.vx=
-    Math.cos(bounceAngle)
-    *speed
-    *direction;
+  Math.cos(angle)
+  *speed
+  *direction;
 
   ball.vy=
-    Math.sin(bounceAngle)
-    *speed;
+  Math.sin(angle)
+  *speed;
 
   paddle.glow=1;
+
 }
 
 function update(){
 
   movePlayers();
 
-  if(paused) return;
+  if(paused)
+  return;
 
   if(state==='hold'){
 
-    if(playerReady()){
+    if(readyCheck()){
+
       startCountdown();
+
     }
 
     return;
+
   }
 
-  if(state!=='play') return;
+  if(state!=='play')
+  return;
 
   left.glow*=0.9;
   right.glow*=0.9;
@@ -611,60 +835,96 @@ function update(){
   ball.y+=ball.vy;
 
   ball.trail.push({
+
     x:ball.x,
     y:ball.y
+
   });
 
   if(ball.trail.length>14){
+
     ball.trail.shift();
+
   }
 
-  if(ball.y<ball.size||
-     ball.y>canvas.height-ball.size){
+  if(
+    ball.y<ball.size
+    ||
+    ball.y>
+    canvas.height-ball.size
+  ){
 
     ball.vy*=-1;
 
   }
 
   if(
-    ball.x-ball.size<left.x+left.w&&
-    ball.y>left.y&&
+
+    ball.x-ball.size
+    <
+    left.x+left.w
+
+    &&
+
+    ball.y>left.y
+
+    &&
+
     ball.y<left.y+left.h
+
   ){
-    paddleBounce(left,true);
+
+    bounce(left,true);
+
   }
 
-  right.x=canvas.width-right.w-24;
-
   if(
-    ball.x+ball.size>right.x&&
-    ball.y>right.y&&
+
+    ball.x+ball.size
+    >
+    right.x
+
+    &&
+
+    ball.y>right.y
+
+    &&
+
     ball.y<right.y+right.h
+
   ){
-    paddleBounce(right,false);
+
+    bounce(right,false);
+
   }
 
   if(ball.x<0){
 
     right.score++;
-    rightScoreText.textContent=right.score;
+
+    rightScoreText.textContent=
+    right.score;
 
     nextDirection=-1;
 
-    startCountdown();
     resetBall();
+
+    startCountdown();
 
   }
 
   if(ball.x>canvas.width){
 
     left.score++;
-    leftScoreText.textContent=left.score;
+
+    leftScoreText.textContent=
+    left.score;
 
     nextDirection=1;
 
-    startCountdown();
     resetBall();
+
+    startCountdown();
 
   }
 
@@ -673,27 +933,55 @@ function update(){
 function drawBackground(){
 
   ctx.fillStyle='#020617';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  const g=ctx.createLinearGradient(
+  ctx.fillRect(
     0,0,
     canvas.width,
     canvas.height
   );
 
-  g.addColorStop(0,'rgba(80,120,255,0.08)');
-  g.addColorStop(1,'rgba(180,80,255,0.08)');
+  const gradient=
+  ctx.createLinearGradient(
+    0,0,
+    canvas.width,
+    canvas.height
+  );
 
-  ctx.fillStyle=g;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  gradient.addColorStop(
+    0,
+    'rgba(59,130,246,0.13)'
+  );
+
+  gradient.addColorStop(
+    1,
+    'rgba(168,85,247,0.13)'
+  );
+
+  ctx.fillStyle=gradient;
+
+  ctx.fillRect(
+    0,0,
+    canvas.width,
+    canvas.height
+  );
 
   ctx.setLineDash([12,18]);
 
-  ctx.strokeStyle='rgba(255,255,255,0.12)';
+  ctx.strokeStyle=
+  'rgba(255,255,255,0.12)';
 
   ctx.beginPath();
-  ctx.moveTo(canvas.width/2,0);
-  ctx.lineTo(canvas.width/2,canvas.height);
+
+  ctx.moveTo(
+    canvas.width/2,
+    0
+  );
+
+  ctx.lineTo(
+    canvas.width/2,
+    canvas.height
+  );
+
   ctx.stroke();
 
   ctx.setLineDash([]);
@@ -702,12 +990,15 @@ function drawBackground(){
 
 function drawPaddle(p,color){
 
-  ctx.shadowBlur=25*p.glow;
+  ctx.shadowBlur=
+  25*p.glow;
+
   ctx.shadowColor=color;
 
   ctx.fillStyle=color;
 
   ctx.beginPath();
+
   ctx.roundRect(
     p.x,
     p.y,
@@ -719,23 +1010,35 @@ function drawPaddle(p,color){
   ctx.fill();
 
   ctx.shadowBlur=0;
+
 }
 
 function drawBall(){
 
-  for(let i=0;i<ball.trail.length;i++){
+  for(
+    let i=0;
+    i<ball.trail.length;
+    i++
+  ){
 
-    const t=ball.trail[i];
+    const t=
+    ball.trail[i];
 
-    ctx.globalAlpha=i/ball.trail.length;
+    ctx.globalAlpha=
+    i/ball.trail.length;
 
     ctx.fillStyle='white';
 
     ctx.beginPath();
+
     ctx.arc(
       t.x,
       t.y,
-      ball.size*(i/ball.trail.length),
+      ball.size*
+      (
+        i/
+        ball.trail.length
+      ),
       0,
       Math.PI*2
     );
@@ -746,29 +1049,44 @@ function drawBall(){
 
   ctx.globalAlpha=1;
 
-  ctx.shadowBlur=25;
+  ctx.shadowBlur=24;
+
   ctx.shadowColor='white';
 
   ctx.fillStyle='white';
 
   ctx.beginPath();
-  ctx.arc(ball.x,ball.y,ball.size,0,Math.PI*2);
+
+  ctx.arc(
+    ball.x,
+    ball.y,
+    ball.size,
+    0,
+    Math.PI*2
+  );
+
   ctx.fill();
 
   ctx.shadowBlur=0;
+
 }
 
 function drawPrediction(){
 
-  if(state!=='countdown') return;
+  if(state!=='countdown')
+  return;
 
   ctx.setLineDash([10,14]);
 
-  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.strokeStyle=
+  'rgba(255,255,255,0.32)';
 
   ctx.beginPath();
 
-  ctx.moveTo(ball.x,ball.y);
+  ctx.moveTo(
+    ball.x,
+    ball.y
+  );
 
   ctx.lineTo(
     ball.x+ball.vx*18,
@@ -787,8 +1105,15 @@ function draw(){
 
   drawPrediction();
 
-  drawPaddle(left,'#7dd3fc');
-  drawPaddle(right,'#c084fc');
+  drawPaddle(
+    left,
+    '#7dd3fc'
+  );
+
+  drawPaddle(
+    right,
+    '#c084fc'
+  );
 
   drawBall();
 
@@ -797,6 +1122,7 @@ function draw(){
 function loop(){
 
   update();
+
   draw();
 
   requestAnimationFrame(loop);
