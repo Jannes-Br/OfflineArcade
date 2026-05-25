@@ -186,6 +186,7 @@ let grid = [];
 let score = 0;
 
 function init() {
+
   grid = [
     [0,0,0,0],
     [0,0,0,0],
@@ -194,39 +195,57 @@ function init() {
   ];
 
   score = 0;
+
   addRandomTile();
   addRandomTile();
-  updateBoard();
+
+  renderBoard();
+
   messageElement.textContent = '';
 }
 
 function addRandomTile() {
+
   const empty = [];
 
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
-      if (grid[r][c] === 0) {
-        empty.push({r, c});
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
+      if(grid[r][c] === 0){
+
+        empty.push({r,c});
       }
     }
   }
 
-  if (empty.length === 0) return;
+  if(empty.length === 0) return;
 
-  const spot = empty[Math.floor(Math.random() * empty.length)];
-  grid[spot.r][spot.c] = Math.random() < 0.9 ? 2 : 4;
+  const spot =
+    empty[Math.floor(Math.random()*empty.length)];
+
+  grid[spot.r][spot.c] =
+    Math.random() < 0.9 ? 2 : 4;
 }
 
-function updateBoard() {
+function renderBoard() {
+
   board.innerHTML = '';
 
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
       const value = grid[r][c];
 
-      const cell = document.createElement('div');
-      cell.className = `cell tile-${value}`;
-      cell.textContent = value === 0 ? '' : value;
+      const cell =
+        document.createElement('div');
+
+      cell.className =
+        `cell tile-${value}`;
+
+      cell.textContent =
+        value === 0 ? '' : value;
 
       board.appendChild(cell);
     }
@@ -234,106 +253,216 @@ function updateBoard() {
 
   scoreElement.textContent = score;
 
-  if (hasWon()) {
-    messageElement.textContent = 'You reached 2048!';
-  } else if (!canMove()) {
-    messageElement.textContent = 'Game Over';
+  if(hasWon()){
+
+    messageElement.textContent =
+      'You reached 2048!';
+  }
+  else if(!canMove()){
+
+    messageElement.textContent =
+      'Game Over';
   }
 }
 
-function slide(row) {
-  row = row.filter(v => v);
+function animateMove(oldGrid,newGrid){
 
-  for (let i = 0; i < row.length - 1; i++) {
-    if (row[i] === row[i + 1]) {
+  const oldCells =
+    [...board.children];
+
+  const positions = [];
+
+  oldCells.forEach(cell=>{
+
+    const rect =
+      cell.getBoundingClientRect();
+
+    positions.push({
+      x: rect.left,
+      y: rect.top
+    });
+  });
+
+  grid = newGrid;
+
+  renderBoard();
+
+  const newCells =
+    [...board.children];
+
+  newCells.forEach((cell,index)=>{
+
+    const rect =
+      cell.getBoundingClientRect();
+
+    const dx =
+      positions[index].x - rect.left;
+
+    const dy =
+      positions[index].y - rect.top;
+
+    cell.style.transition = 'none';
+
+    cell.style.transform =
+      `translate(${dx}px,${dy}px)`;
+
+    requestAnimationFrame(()=>{
+
+      cell.style.transition =
+        'transform 0.14s ease';
+
+      cell.style.transform =
+        'translate(0px,0px)';
+    });
+  });
+}
+
+function slide(row){
+
+  row = row.filter(v=>v);
+
+  for(let i=0;i<row.length-1;i++){
+
+    if(row[i] === row[i+1]){
+
       row[i] *= 2;
+
       score += row[i];
-      row[i + 1] = 0;
+
+      row[i+1] = 0;
     }
   }
 
-  row = row.filter(v => v);
+  row = row.filter(v=>v);
 
-  while (row.length < 4) {
+  while(row.length < 4){
+
     row.push(0);
   }
 
   return row;
 }
 
-function rotateClockwise(matrix) {
-  return matrix[0].map((_, i) =>
-    matrix.map(row => row[i]).reverse()
+function rotateClockwise(matrix){
+
+  return matrix[0].map((_,i)=>
+    matrix.map(row=>row[i]).reverse()
   );
 }
 
-function move(direction) {
-  const oldGrid = JSON.stringify(grid);
+function move(direction){
 
-  if (direction === 'up') {
-    grid = rotateClockwise(grid);
-    grid = rotateClockwise(grid);
-    grid = rotateClockwise(grid);
+  const oldGrid =
+    JSON.parse(JSON.stringify(grid));
+
+  let tempGrid =
+    JSON.parse(JSON.stringify(grid));
+
+  if(direction === 'up'){
+
+    tempGrid =
+      rotateClockwise(tempGrid);
+
+    tempGrid =
+      rotateClockwise(tempGrid);
+
+    tempGrid =
+      rotateClockwise(tempGrid);
   }
 
-  if (direction === 'right') {
-    grid = grid.map(row => row.reverse());
+  if(direction === 'right'){
+
+    tempGrid =
+      tempGrid.map(row=>row.reverse());
   }
 
-  if (direction === 'down') {
-    grid = rotateClockwise(grid);
+  if(direction === 'down'){
+
+    tempGrid =
+      rotateClockwise(tempGrid);
   }
 
-  grid = grid.map(slide);
+  tempGrid =
+    tempGrid.map(slide);
 
-  if (direction === 'up') {
-    grid = rotateClockwise(grid);
+  if(direction === 'up'){
+
+    tempGrid =
+      rotateClockwise(tempGrid);
   }
 
-  if (direction === 'right') {
-    grid = grid.map(row => row.reverse());
+  if(direction === 'right'){
+
+    tempGrid =
+      tempGrid.map(row=>row.reverse());
   }
 
-  if (direction === 'down') {
-    grid = rotateClockwise(grid);
-    grid = rotateClockwise(grid);
-    grid = rotateClockwise(grid);
+  if(direction === 'down'){
+
+    tempGrid =
+      rotateClockwise(tempGrid);
+
+    tempGrid =
+      rotateClockwise(tempGrid);
+
+    tempGrid =
+      rotateClockwise(tempGrid);
   }
 
-  if (JSON.stringify(grid) !== oldGrid) {
+  if(JSON.stringify(oldGrid) !== JSON.stringify(tempGrid)){
+
+    grid = tempGrid;
+
     addRandomTile();
-    updateBoard();
+
+    animateMove(oldGrid,grid);
   }
 }
 
-function hasWon() {
+function hasWon(){
+
   return grid.flat().includes(2048);
 }
 
-function canMove() {
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
-      if (grid[r][c] === 0) return true;
+function canMove(){
 
-      if (c < 3 && grid[r][c] === grid[r][c+1]) return true;
-      if (r < 3 && grid[r][c] === grid[r+1][c]) return true;
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
+      if(grid[r][c] === 0) return true;
+
+      if(
+        c < 3 &&
+        grid[r][c] === grid[r][c+1]
+      ) return true;
+
+      if(
+        r < 3 &&
+        grid[r][c] === grid[r+1][c]
+      ) return true;
     }
   }
 
   return false;
 }
 
-window.addEventListener('keydown', e => {
-  switch(e.key) {
+window.addEventListener('keydown',e=>{
+
+  switch(e.key){
+
     case 'ArrowLeft':
       move('left');
       break;
+
     case 'ArrowRight':
       move('right');
       break;
+
     case 'ArrowUp':
       move('up');
       break;
+
     case 'ArrowDown':
       move('down');
       break;
@@ -343,28 +472,40 @@ window.addEventListener('keydown', e => {
 let startX = 0;
 let startY = 0;
 
-board.addEventListener('touchstart', e => {
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
+board.addEventListener('touchstart',e=>{
+
+  startX =
+    e.touches[0].clientX;
+
+  startY =
+    e.touches[0].clientY;
 });
 
-board.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - startX;
-  const dy = e.changedTouches[0].clientY - startY;
+board.addEventListener('touchend',e=>{
 
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 40) move('right');
-    else if (dx < -40) move('left');
-  } else {
-    if (dy > 40) move('down');
-    else if (dy < -40) move('up');
+  const dx =
+    e.changedTouches[0].clientX - startX;
+
+  const dy =
+    e.changedTouches[0].clientY - startY;
+
+  if(Math.abs(dx) > Math.abs(dy)){
+
+    if(dx > 40) move('right');
+
+    else if(dx < -40) move('left');
+  }
+  else{
+
+    if(dy > 40) move('down');
+
+    else if(dy < -40) move('up');
   }
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click',init);
 
 init();
 </script>
-
 </body>
 </html>
