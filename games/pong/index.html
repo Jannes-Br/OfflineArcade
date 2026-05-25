@@ -6,16 +6,17 @@
 <meta
   name="viewport"
   content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
+/>
 
 <title>Pong</title>
 
 <link
-href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap"
-rel="stylesheet"
->
+  href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap"
+  rel="stylesheet"
+/>
 
 <style>
+
 *{
   margin:0;
   padding:0;
@@ -26,146 +27,133 @@ rel="stylesheet"
 
 body{
   overflow:hidden;
+  width:100vw;
+  height:100vh;
   font-family:'Fredoka',sans-serif;
   background:
     radial-gradient(circle at top left,
-    rgba(59,130,246,0.28),
-    transparent 38%),
+    rgba(80,120,255,0.28),
+    transparent 40%),
 
     radial-gradient(circle at bottom right,
-    rgba(168,85,247,0.28),
-    transparent 38%),
+    rgba(160,90,255,0.28),
+    transparent 40%),
 
     #020617;
 
-  width:100vw;
-  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   color:white;
 }
 
-.topbar{
-  position:fixed;
-  top:0;
-  left:0;
+.wrapper{
   width:100%;
-  padding:18px 22px;
-  z-index:20;
-
+  height:100%;
   display:flex;
   flex-direction:column;
+  align-items:center;
+}
+
+.topbar{
+  width:100%;
+  padding:18px 20px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   gap:14px;
+  z-index:10;
 }
 
 .title{
-  font-size:48px;
+  font-size:52px;
   font-weight:700;
-  letter-spacing:2px;
+  letter-spacing:1px;
+  color:white;
+  text-shadow:
+    0 0 20px rgba(120,120,255,0.8);
 }
 
 .controls{
   display:flex;
   flex-wrap:wrap;
+  justify-content:center;
   gap:12px;
 }
 
-.group{
+.segment{
   display:flex;
-  gap:10px;
-
-  padding:8px;
-
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:18px;
-
-  background:rgba(255,255,255,0.07);
-
-  backdrop-filter:blur(12px);
+  padding:5px;
+  backdrop-filter:blur(14px);
 }
 
-button{
+.segment button{
   border:none;
-  outline:none;
-
   background:transparent;
-
   color:white;
-
   padding:12px 18px;
-
   border-radius:14px;
-
   font-size:15px;
   font-family:'Fredoka',sans-serif;
-  font-weight:600;
-
-  transition:.2s;
+  cursor:pointer;
+  transition:0.25s;
 }
 
-button.active{
-  background:rgba(255,255,255,0.16);
+.segment button.active{
+  background:rgba(255,255,255,0.14);
 }
 
 .pause-btn{
   width:56px;
-  height:48px;
-
+  height:56px;
+  border:none;
+  border-radius:18px;
+  background:rgba(255,255,255,0.08);
   display:flex;
   align-items:center;
   justify-content:center;
+  cursor:pointer;
+  backdrop-filter:blur(12px);
 }
 
 .pause-icon{
   width:18px;
-  height:18px;
-
+  height:22px;
   display:flex;
-  gap:5px;
+  justify-content:space-between;
 }
 
 .pause-icon div{
-  width:5px;
-  height:18px;
-
-  border-radius:4px;
-
+  width:6px;
+  height:22px;
   background:white;
+  border-radius:999px;
 }
 
 .play-icon{
   width:0;
   height:0;
-
-  border-top:10px solid transparent;
-  border-bottom:10px solid transparent;
-  border-left:16px solid white;
-
-  margin-left:3px;
+  border-top:12px solid transparent;
+  border-bottom:12px solid transparent;
+  border-left:18px solid white;
+  margin-left:4px;
 }
 
-.game-wrapper{
-  position:absolute;
-
-  top:170px;
-  left:20px;
-  right:20px;
-  bottom:20px;
-
+.game-wrap{
+  width:96vw;
+  height:calc(100vh - 180px);
+  max-width:1700px;
+  max-height:850px;
   border-radius:30px;
-
   overflow:hidden;
+  position:relative;
+  box-shadow:
+    0 0 40px rgba(90,120,255,0.15);
 
   border:1px solid rgba(255,255,255,0.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.03),
-      rgba(255,255,255,0.015)
-    );
-
-  box-shadow:
-    0 0 100px rgba(59,130,246,0.14),
-    0 0 100px rgba(168,85,247,0.14),
-    inset 0 0 50px rgba(255,255,255,0.02);
 }
 
 canvas{
@@ -176,141 +164,97 @@ canvas{
 
 .overlay{
   position:absolute;
-
-  top:15%;
-  left:50%;
-
-  transform:translateX(-50%);
-
-  text-align:center;
-
+  inset:0;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
   pointer-events:none;
 }
 
-.bigtext{
-  font-size:60px;
+.overlay-text{
+  margin-top:80px;
+  font-size:58px;
   font-weight:700;
-
+  text-align:center;
   text-shadow:
-    0 0 20px rgba(255,255,255,0.3);
-}
-
-.smalltext{
-  margin-top:10px;
-
-  font-size:20px;
-
-  opacity:.72;
+    0 0 25px rgba(255,255,255,0.4);
 }
 
 .score{
   position:absolute;
-
-  top:28px;
+  top:26px;
   width:100%;
-
   display:flex;
   justify-content:space-between;
-
   padding:0 20%;
-
-  font-size:74px;
-  font-weight:700;
-
-  opacity:.12;
-
+  font-size:72px;
+  color:rgba(255,255,255,0.14);
   pointer-events:none;
+  font-weight:700;
 }
+
 </style>
 </head>
 <body>
 
-<div class="topbar">
+<div class="wrapper">
 
-  <div class="title">
-    Pong
-  </div>
+  <div class="topbar">
 
-  <div class="controls">
-
-    <div class="group">
-
-      <button
-      id="vsBtn"
-      class="active">
-        2 Players
-      </button>
-
-      <button
-      id="botBtn">
-        Bot
-      </button>
-
+    <div class="title">
+      Pong
     </div>
 
-    <div class="group">
+    <div class="controls">
 
-      <button
-      id="normalBtn"
-      class="active">
-        Normal
-      </button>
+      <div class="segment">
+        <button id="vsBtn" class="active">
+          2 Players
+        </button>
 
-      <button
-      id="fastBtn">
-        Fast
-      </button>
+        <button id="botBtn">
+          Bot
+        </button>
+      </div>
 
-      <button
-      id="superBtn">
-        Super Fast
-      </button>
+      <div class="segment">
+        <button id="normalBtn" class="active">
+          Normal
+        </button>
 
-    </div>
+        <button id="fastBtn">
+          Fast
+        </button>
 
-    <div class="group">
+        <button id="superBtn">
+          Super Fast
+        </button>
+      </div>
 
-      <button
-      id="pauseBtn"
-      class="pause-btn">
-
+      <button id="pauseBtn" class="pause-btn">
         <div class="pause-icon" id="pauseIcon">
           <div></div>
           <div></div>
         </div>
-
       </button>
 
     </div>
 
   </div>
 
-</div>
+  <div class="game-wrap">
 
-<div class="game-wrapper">
+    <canvas id="game"></canvas>
 
-  <div class="score">
-
-    <div id="leftScore">0</div>
-
-    <div id="rightScore">0</div>
-
-  </div>
-
-  <canvas id="game"></canvas>
-
-  <div class="overlay">
-
-    <div
-    class="bigtext"
-    id="overlayTitle">
-      HOLD TO PLAY
+    <div class="score">
+      <div id="leftScore">0</div>
+      <div id="rightScore">0</div>
     </div>
 
-    <div
-    class="smalltext"
-    id="overlaySub">
-      Hold fingers or keys
+    <div class="overlay">
+      <div class="overlay-text" id="overlayText">
+        HOLD TO PLAY
+      </div>
     </div>
 
   </div>
@@ -318,657 +262,657 @@ canvas{
 </div>
 
 <script>
-const canvas=
-document.getElementById('game');
 
-const ctx=
-canvas.getContext('2d');
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 
-const wrapper=
-document.querySelector('.game-wrapper');
+const overlayText =
+  document.getElementById('overlayText');
 
-const overlayTitle=
-document.getElementById('overlayTitle');
+const pauseBtn =
+  document.getElementById('pauseBtn');
 
-const overlaySub=
-document.getElementById('overlaySub');
+const pauseIcon =
+  document.getElementById('pauseIcon');
 
-const pauseBtn=
-document.getElementById('pauseBtn');
+const leftScoreEl =
+  document.getElementById('leftScore');
 
-const pauseIcon=
-document.getElementById('pauseIcon');
+const rightScoreEl =
+  document.getElementById('rightScore');
 
-const leftScoreText=
-document.getElementById('leftScore');
+const vsBtn =
+  document.getElementById('vsBtn');
 
-const rightScoreText=
-document.getElementById('rightScore');
+const botBtn =
+  document.getElementById('botBtn');
 
-let mode='vs';
+const normalBtn =
+  document.getElementById('normalBtn');
 
-let paused=false;
+const fastBtn =
+  document.getElementById('fastBtn');
 
-let state='hold';
-
-let speed=12;
-
-const keys={};
-
-window.addEventListener('keydown',e=>{
-
-  keys[e.key.toLowerCase()]=true;
-
-});
-
-window.addEventListener('keyup',e=>{
-
-  keys[e.key.toLowerCase()]=false;
-
-});
+const superBtn =
+  document.getElementById('superBtn');
 
 function resize(){
 
-  canvas.width=
-  wrapper.clientWidth;
+  canvas.width =
+    canvas.offsetWidth;
 
-  canvas.height=
-  wrapper.clientHeight;
+  canvas.height =
+    canvas.offsetHeight;
 
-  right.x=
-  canvas.width-right.w-24;
+  right.x =
+    canvas.width - 46;
+
+}
+
+window.addEventListener(
+  'resize',
+  resize
+);
+
+const paddle = {
+  width:18,
+  height:150
+};
+
+const left = {
+  x:28,
+  y:200,
+  score:0,
+  glow:0
+};
+
+const right = {
+  x:0,
+  y:200,
+  score:0,
+  glow:0
+};
+
+const ball = {
+  x:0,
+  y:0,
+  vx:0,
+  vy:0,
+  size:12,
+  trail:[]
+};
+
+let mode = 'vs';
+
+let speed = 11;
+
+let paused = false;
+let playing = false;
+let countdown = false;
+
+let keys = {};
+
+function resetPositions(){
+
+  left.y =
+    canvas.height/2 -
+    paddle.height/2;
+
+  right.x =
+    canvas.width - 46;
+
+  right.y =
+    canvas.height/2 -
+    paddle.height/2;
+
+  ball.x =
+    canvas.width/2;
+
+  ball.y =
+    canvas.height/2;
+
+  ball.vx = 0;
+  ball.vy = 0;
+
+}
+
+function launchBall(direction){
+
+  const angle =
+    (Math.random()*0.9)-0.45;
+
+  ball.vx =
+    Math.cos(angle) *
+    speed *
+    direction;
+
+  ball.vy =
+    Math.sin(angle) *
+    speed;
+
+}
+
+function updateScores(){
+
+  leftScoreEl.textContent =
+    left.score;
+
+  rightScoreEl.textContent =
+    right.score;
 
 }
 
 resize();
+resetPositions();
+updateScores();
 
-window.addEventListener(
-'resize',
-resize
-);
+function setOverlay(text){
 
-const left={
-
-  x:24,
-  y:200,
-
-  w:20,
-  h:160,
-
-  score:0,
-
-  glow:0
-
-};
-
-const right={
-
-  x:0,
-  y:200,
-
-  w:20,
-  h:160,
-
-  score:0,
-
-  glow:0
-
-};
-
-const ball={
-
-  x:0,
-  y:0,
-
-  vx:0,
-  vy:0,
-
-  size:14,
-
-  trail:[]
-
-};
-
-right.x=
-canvas.width-right.w-24;
-
-let nextDirection=1;
-
-function resetBall(){
-
-  ball.x=
-  canvas.width/2;
-
-  ball.y=
-  canvas.height/2;
-
-  const angle=
-  (Math.random()*1.2)-0.6;
-
-  ball.vx=
-  Math.cos(angle)
-  *speed
-  *nextDirection;
-
-  ball.vy=
-  Math.sin(angle)
-  *speed;
-
-  ball.trail=[];
+  overlayText.textContent =
+    text;
 
 }
 
-resetBall();
+function clearOverlay(){
+
+  overlayText.textContent = '';
+
+}
+
+function requiredInputs(){
+
+  if(mode === 'bot'){
+
+    return (
+      activeTouches.size >= 1 ||
+      keys['w'] ||
+      keys['s']
+    );
+
+  }
+
+  return (
+    activeTouches.size >= 2 ||
+    keys['w'] ||
+    keys['s'] ||
+    keys['arrowup'] ||
+    keys['arrowdown']
+  );
+
+}
+
+async function startCountdown(){
+
+  if(countdown) return;
+
+  countdown = true;
+
+  for(const text of ['3','2','1','GO!']){
+
+    if(
+      !requiredInputs() &&
+      !playing
+    ){
+      countdown = false;
+      setOverlay('HOLD TO PLAY');
+      return;
+    }
+
+    setOverlay(text);
+
+    await new Promise(r =>
+      setTimeout(r,700)
+    );
+
+  }
+
+  clearOverlay();
+
+  countdown = false;
+  playing = true;
+
+  launchBall(
+    Math.random() > 0.5 ? 1 : -1
+  );
+
+}
+
+function resetRound(direction){
+
+  playing = false;
+
+  resetPositions();
+
+  setOverlay('3');
+
+  let nums = ['3','2','1','GO!'];
+  let i = 0;
+
+  const interval =
+    setInterval(()=>{
+
+      setOverlay(nums[i]);
+      i++;
+
+      if(i >= nums.length){
+
+        clearInterval(interval);
+
+        clearOverlay();
+
+        playing = true;
+
+        launchBall(direction);
+
+      }
+
+    },700);
+
+}
+
+pauseBtn.addEventListener(
+  'click',
+  ()=>{
+
+    paused = !paused;
+
+    if(paused){
+
+      setOverlay('PAUSED');
+
+      pauseIcon.innerHTML =
+        `<div class="play-icon"></div>`;
+
+    } else {
+
+      pauseIcon.innerHTML =
+      `
+      <div></div>
+      <div></div>
+      `;
+
+      startCountdown();
+
+    }
+
+  }
+);
 
 function setMode(newMode){
 
-  mode=newMode;
+  mode = newMode;
+
+  playing = false;
+  paused = false;
+
+  resetPositions();
+
+  setOverlay('HOLD TO PLAY');
 
   vsBtn.classList.toggle(
     'active',
-    mode==='vs'
+    newMode === 'vs'
   );
 
   botBtn.classList.toggle(
     'active',
-    mode==='bot'
+    newMode === 'bot'
   );
-
-  startHold();
 
 }
 
+vsBtn.onclick = ()=> setMode('vs');
+botBtn.onclick = ()=> setMode('bot');
+
 function setSpeed(value){
 
-  speed=value;
+  speed = value;
 
   normalBtn.classList.remove('active');
   fastBtn.classList.remove('active');
   superBtn.classList.remove('active');
 
-  if(value===12)
-  normalBtn.classList.add('active');
-
-  if(value===20)
-  fastBtn.classList.add('active');
-
-  if(value===28)
-  superBtn.classList.add('active');
-
-  startHold();
-
 }
 
-vsBtn.onclick=()=>setMode('vs');
-botBtn.onclick=()=>setMode('bot');
+normalBtn.onclick = ()=>{
 
-normalBtn.onclick=()=>setSpeed(12);
-fastBtn.onclick=()=>setSpeed(20);
-superBtn.onclick=()=>setSpeed(28);
-
-pauseBtn.onclick=()=>{
-
-  if(paused){
-
-    paused=false;
-
-    startCountdown();
-
-    pauseIcon.innerHTML=
-    `
-    <div></div>
-    <div></div>
-    `;
-
-  }else{
-
-    paused=true;
-
-    overlayTitle.textContent=
-    'PAUSED';
-
-    overlaySub.textContent=
-    'Press Play';
-
-    pauseIcon.innerHTML=
-    `
-    <div class="play-icon"></div>
-    `;
-
-  }
+  setSpeed(11);
+  normalBtn.classList.add('active');
 
 };
 
-function startHold(){
+fastBtn.onclick = ()=>{
 
-  paused=false;
+  setSpeed(18);
+  fastBtn.classList.add('active');
 
-  state='hold';
+};
 
-  overlayTitle.textContent=
-  'HOLD TO PLAY';
+superBtn.onclick = ()=>{
 
-  overlaySub.textContent=
-  'Hold fingers or keys';
+  setSpeed(24);
+  superBtn.classList.add('active');
 
-  pauseIcon.innerHTML=
-  `
-  <div></div>
-  <div></div>
-  `;
+};
 
-  resetBall();
+const activeTouches =
+  new Map();
 
-}
+window.addEventListener(
+  'touchstart',
+  e=>{
 
-function startCountdown(){
+    for(const touch of e.changedTouches){
 
-  state='countdown';
-
-  let count=3;
-
-  overlayTitle.textContent=count;
-
-  overlaySub.textContent='';
-
-  const interval=
-  setInterval(()=>{
-
-    if(paused){
-
-      clearInterval(interval);
-
-      return;
+      activeTouches.set(
+        touch.identifier,
+        touch
+      );
 
     }
 
-    count--;
+    if(
+      !playing &&
+      !paused &&
+      !countdown
+    ){
 
-    if(count>0){
+      if(requiredInputs()){
 
-      overlayTitle.textContent=
-      count;
-
-    }else if(count===0){
-
-      overlayTitle.textContent=
-      'GO!';
-
-    }else{
-
-      clearInterval(interval);
-
-      overlayTitle.textContent='';
-
-      overlaySub.textContent='';
-
-      state='play';
-
-    }
-
-  },700);
-
-}
-
-function readyCheck(){
-
-  const leftReady=
-
-    activeLeftTouch||
-    keys['w']||
-    keys['s'];
-
-  const rightReady=
-
-    activeRightTouch||
-    keys['arrowup']||
-    keys['arrowdown'];
-
-  if(mode==='vs'){
-
-    return leftReady&&rightReady;
-
-  }
-
-  return leftReady;
-
-}
-
-let activeLeftTouch=null;
-let activeRightTouch=null;
-
-window.addEventListener(
-'touchstart',
-handleTouch,
-{passive:false}
-);
-
-window.addEventListener(
-'touchmove',
-handleTouch,
-{passive:false}
-);
-
-window.addEventListener(
-'touchend',
-handleTouch,
-{passive:false}
-);
-
-function handleTouch(e){
-
-  activeLeftTouch=null;
-  activeRightTouch=null;
-
-  for(const touch of e.touches){
-
-    if(mode==='vs'){
-
-      if(
-        touch.clientX
-        <
-        window.innerWidth/2
-      ){
-
-        activeLeftTouch=
-        touch.clientY;
-
-      }else{
-
-        activeRightTouch=
-        touch.clientY;
+        startCountdown();
 
       }
 
-    }else{
+    }
 
-      activeLeftTouch=
-      touch.clientY;
+  },
+  {passive:false}
+);
+
+window.addEventListener(
+  'touchend',
+  e=>{
+
+    for(const touch of e.changedTouches){
+
+      activeTouches.delete(
+        touch.identifier
+      );
 
     }
 
   }
+);
 
-}
+window.addEventListener(
+  'touchmove',
+  e=>{
+
+    if(paused) return;
+
+    for(const touch of e.touches){
+
+      if(mode === 'bot'){
+
+        left.y =
+          touch.clientY -
+          paddle.height/2;
+
+      }
+
+      else{
+
+        if(
+          touch.clientX <
+          canvas.width/2
+        ){
+
+          left.y =
+            touch.clientY -
+            paddle.height/2;
+
+        }
+
+        else{
+
+          right.y =
+            touch.clientY -
+            paddle.height/2;
+
+        }
+
+      }
+
+    }
+
+  },
+  {passive:false}
+);
+
+window.addEventListener(
+  'keydown',
+  e=>{
+
+    keys[
+      e.key.toLowerCase()
+    ] = true;
+
+    if(
+      !playing &&
+      !paused &&
+      !countdown &&
+      requiredInputs()
+    ){
+
+      startCountdown();
+
+    }
+
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  e=>{
+
+    keys[
+      e.key.toLowerCase()
+    ] = false;
+
+  }
+);
 
 function clamp(){
 
-  left.y=
-  Math.max(
+  left.y = Math.max(
     0,
     Math.min(
-      canvas.height-left.h,
+      canvas.height -
+      paddle.height,
       left.y
     )
   );
 
-  right.y=
-  Math.max(
+  right.y = Math.max(
     0,
     Math.min(
-      canvas.height-right.h,
+      canvas.height -
+      paddle.height,
       right.y
     )
   );
 
 }
 
-function movePlayers(){
+function update(){
 
-  const moveSpeed=14;
+  if(paused) return;
 
   if(keys['w'])
-  left.y-=moveSpeed;
+    left.y -= 12;
 
   if(keys['s'])
-  left.y+=moveSpeed;
-
-  if(mode==='vs'){
-
-    if(keys['arrowup'])
-    right.y-=moveSpeed;
-
-    if(keys['arrowdown'])
-    right.y+=moveSpeed;
-
-  }
-
-  if(activeLeftTouch!==null){
-
-    left.y=
-    activeLeftTouch
-    -
-    wrapper.getBoundingClientRect().top
-    -
-    left.h/2;
-
-  }
+    left.y += 12;
 
   if(
-    mode==='vs'
-    &&
-    activeRightTouch!==null
+    mode === 'vs'
   ){
 
-    right.y=
-    activeRightTouch
-    -
-    wrapper.getBoundingClientRect().top
-    -
-    right.h/2;
+    if(keys['arrowup'])
+      right.y -= 12;
+
+    if(keys['arrowdown'])
+      right.y += 12;
 
   }
 
-  if(mode==='bot'){
+  else{
 
-    const target=
-    ball.y-right.h/2;
+    const target =
+      ball.y -
+      paddle.height/2;
 
-    right.y+=
-    (target-right.y)*0.24;
+    right.y +=
+      (target - right.y) * 0.18;
 
   }
 
   clamp();
 
-}
+  if(!playing) return;
 
-function bounce(paddle,isLeft){
+  ball.x += ball.vx;
+  ball.y += ball.vy;
 
-  const relative=
+  if(
+    ball.y < ball.size ||
+    ball.y >
+    canvas.height - ball.size
+  ){
 
-    (
-      ball.y-
-      (
-        paddle.y+
-        paddle.h/2
-      )
-    )
-    /
-    (paddle.h/2);
-
-  const angle=
-  relative*1.2;
-
-  const direction=
-  isLeft?1:-1;
-
-  ball.vx=
-  Math.cos(angle)
-  *speed
-  *direction;
-
-  ball.vy=
-  Math.sin(angle)
-  *speed;
-
-  paddle.glow=1;
-
-}
-
-function update(){
-
-  movePlayers();
-
-  if(paused)
-  return;
-
-  if(state==='hold'){
-
-    if(readyCheck()){
-
-      startCountdown();
-
-    }
-
-    return;
+    ball.vy *= -1;
 
   }
 
-  if(state!=='play')
-  return;
+  function bounce(p){
 
-  left.glow*=0.9;
-  right.glow*=0.9;
+    const relative =
+      (ball.y -
+      (p.y + paddle.height/2))
+      /
+      (paddle.height/2);
 
-  ball.x+=ball.vx;
-  ball.y+=ball.vy;
+    const angle =
+      relative * 1.1;
 
-  ball.trail.push({
+    const dir =
+      p === left ? 1 : -1;
 
-    x:ball.x,
-    y:ball.y
+    ball.vx =
+      Math.cos(angle) *
+      speed *
+      dir;
 
-  });
+    ball.vy =
+      Math.sin(angle) *
+      speed;
 
-  if(ball.trail.length>14){
-
-    ball.trail.shift();
+    p.glow = 1;
 
   }
 
   if(
-    ball.y<ball.size
-    ||
-    ball.y>
-    canvas.height-ball.size
+    ball.x - ball.size <
+    left.x + paddle.width &&
+
+    ball.y >
+    left.y &&
+
+    ball.y <
+    left.y + paddle.height
   ){
 
-    ball.vy*=-1;
+    ball.x =
+      left.x +
+      paddle.width +
+      ball.size;
+
+    bounce(left);
 
   }
 
   if(
+    ball.x + ball.size >
+    right.x &&
 
-    ball.x-ball.size
-    <
-    left.x+left.w
+    ball.y >
+    right.y &&
 
-    &&
-
-    ball.y>left.y
-
-    &&
-
-    ball.y<left.y+left.h
-
+    ball.y <
+    right.y + paddle.height
   ){
 
-    bounce(left,true);
+    ball.x =
+      right.x -
+      ball.size;
+
+    bounce(right);
 
   }
 
-  if(
-
-    ball.x+ball.size
-    >
-    right.x
-
-    &&
-
-    ball.y>right.y
-
-    &&
-
-    ball.y<right.y+right.h
-
-  ){
-
-    bounce(right,false);
-
-  }
-
-  if(ball.x<0){
+  if(ball.x < -50){
 
     right.score++;
+    updateScores();
 
-    rightScoreText.textContent=
-    right.score;
-
-    nextDirection=-1;
-
-    resetBall();
-
-    startCountdown();
+    resetRound(-1);
 
   }
 
-  if(ball.x>canvas.width){
+  if(ball.x > canvas.width + 50){
 
     left.score++;
+    updateScores();
 
-    leftScoreText.textContent=
-    left.score;
-
-    nextDirection=1;
-
-    resetBall();
-
-    startCountdown();
+    resetRound(1);
 
   }
+
+  left.glow *= 0.9;
+  right.glow *= 0.9;
 
 }
 
 function drawBackground(){
 
-  ctx.fillStyle='#020617';
+  const g =
+    ctx.createLinearGradient(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+  g.addColorStop(0,'#081225');
+  g.addColorStop(1,'#140a24');
+
+  ctx.fillStyle = g;
 
   ctx.fillRect(
-    0,0,
-    canvas.width,
-    canvas.height
-  );
-
-  const gradient=
-  ctx.createLinearGradient(
-    0,0,
-    canvas.width,
-    canvas.height
-  );
-
-  gradient.addColorStop(
     0,
-    'rgba(59,130,246,0.13)'
-  );
-
-  gradient.addColorStop(
-    1,
-    'rgba(168,85,247,0.13)'
-  );
-
-  ctx.fillStyle=gradient;
-
-  ctx.fillRect(
-    0,0,
+    0,
     canvas.width,
     canvas.height
   );
 
-  ctx.setLineDash([12,18]);
+}
 
-  ctx.strokeStyle=
-  'rgba(255,255,255,0.12)';
+function drawMiddle(){
+
+  ctx.strokeStyle =
+    'rgba(255,255,255,0.12)';
+
+  ctx.setLineDash([18,16]);
 
   ctx.beginPath();
 
@@ -990,55 +934,63 @@ function drawBackground(){
 
 function drawPaddle(p,color){
 
-  ctx.shadowBlur=
-  25*p.glow;
+  ctx.save();
 
-  ctx.shadowColor=color;
+  ctx.shadowBlur =
+    30 * p.glow;
 
-  ctx.fillStyle=color;
+  ctx.shadowColor =
+    color;
+
+  ctx.fillStyle =
+    color;
 
   ctx.beginPath();
 
   ctx.roundRect(
     p.x,
     p.y,
-    p.w,
-    p.h,
-    20
+    paddle.width,
+    paddle.height,
+    999
   );
 
   ctx.fill();
 
-  ctx.shadowBlur=0;
+  ctx.restore();
 
 }
 
 function drawBall(){
 
-  for(
-    let i=0;
-    i<ball.trail.length;
-    i++
-  ){
+  ball.trail.push({
+    x:ball.x,
+    y:ball.y
+  });
 
-    const t=
-    ball.trail[i];
+  if(ball.trail.length > 12){
 
-    ctx.globalAlpha=
-    i/ball.trail.length;
+    ball.trail.shift();
 
-    ctx.fillStyle='white';
+  }
+
+  for(let i=0;i<ball.trail.length;i++){
+
+    const t =
+      ball.trail[i];
 
     ctx.beginPath();
+
+    ctx.fillStyle =
+      `rgba(255,255,255,${
+        i/16
+      })`;
 
     ctx.arc(
       t.x,
       t.y,
-      ball.size*
-      (
-        i/
-        ball.trail.length
-      ),
+      ball.size *
+      (i/ball.trail.length),
       0,
       Math.PI*2
     );
@@ -1047,13 +999,10 @@ function drawBall(){
 
   }
 
-  ctx.globalAlpha=1;
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = 'white';
 
-  ctx.shadowBlur=24;
-
-  ctx.shadowColor='white';
-
-  ctx.fillStyle='white';
+  ctx.fillStyle = 'white';
 
   ctx.beginPath();
 
@@ -1067,47 +1016,18 @@ function drawBall(){
 
   ctx.fill();
 
-  ctx.shadowBlur=0;
+  ctx.shadowBlur = 0;
 
 }
 
-function drawPrediction(){
-
-  if(state!=='countdown')
-  return;
-
-  ctx.setLineDash([10,14]);
-
-  ctx.strokeStyle=
-  'rgba(255,255,255,0.32)';
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    ball.x,
-    ball.y
-  );
-
-  ctx.lineTo(
-    ball.x+ball.vx*18,
-    ball.y+ball.vy*18
-  );
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-
-}
-
-function draw(){
+function render(){
 
   drawBackground();
-
-  drawPrediction();
+  drawMiddle();
 
   drawPaddle(
     left,
-    '#7dd3fc'
+    '#7c8cff'
   );
 
   drawPaddle(
@@ -1122,15 +1042,14 @@ function draw(){
 function loop(){
 
   update();
-
-  draw();
+  render();
 
   requestAnimationFrame(loop);
 
 }
 
 loop();
-</script>
 
+</script>
 </body>
-</html>
+</html>+
