@@ -32,12 +32,12 @@ body{
   font-family:'Fredoka',sans-serif;
   background:
     radial-gradient(circle at top left,
-    rgba(80,120,255,0.28),
-    transparent 40%),
+    rgba(95,120,255,0.35),
+    transparent 42%),
 
     radial-gradient(circle at bottom right,
-    rgba(160,90,255,0.28),
-    transparent 40%),
+    rgba(175,110,255,0.35),
+    transparent 42%),
 
     #020617;
 
@@ -57,21 +57,19 @@ body{
 
 .topbar{
   width:100%;
-  padding:18px 20px 10px;
+  padding:16px 20px 10px;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap:14px;
-  z-index:10;
 }
 
 .title{
-  font-size:52px;
+  font-size:56px;
   font-weight:700;
   letter-spacing:1px;
-  color:white;
   text-shadow:
-    0 0 20px rgba(120,120,255,0.8);
+    0 0 22px rgba(120,130,255,0.85);
 }
 
 .controls{
@@ -99,7 +97,7 @@ body{
   font-size:15px;
   font-family:'Fredoka',sans-serif;
   cursor:pointer;
-  transition:0.25s;
+  transition:0.22s;
 }
 
 .segment button.active{
@@ -119,21 +117,21 @@ body{
   backdrop-filter:blur(12px);
 }
 
-.pause-icon{
+.pause-bars{
   width:18px;
   height:22px;
   display:flex;
   justify-content:space-between;
 }
 
-.pause-icon div{
-  width:6px;
+.pause-bars div{
+  width:5px;
   height:22px;
   background:white;
   border-radius:999px;
 }
 
-.play-icon{
+.play-triangle{
   width:0;
   height:0;
   border-top:12px solid transparent;
@@ -150,10 +148,11 @@ body{
   border-radius:30px;
   overflow:hidden;
   position:relative;
-  box-shadow:
-    0 0 40px rgba(90,120,255,0.15);
 
   border:1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 0 40px rgba(100,120,255,0.18);
 }
 
 canvas{
@@ -166,31 +165,31 @@ canvas{
   position:absolute;
   inset:0;
   display:flex;
-  align-items:flex-start;
   justify-content:center;
   pointer-events:none;
 }
 
 .overlay-text{
-  margin-top:80px;
-  font-size:58px;
+  margin-top:75px;
+  font-size:62px;
   font-weight:700;
   text-align:center;
+
   text-shadow:
-    0 0 25px rgba(255,255,255,0.4);
+    0 0 25px rgba(255,255,255,0.35);
 }
 
 .score{
   position:absolute;
-  top:26px;
+  top:24px;
   width:100%;
   display:flex;
   justify-content:space-between;
   padding:0 20%;
-  font-size:72px;
-  color:rgba(255,255,255,0.14);
-  pointer-events:none;
+  font-size:74px;
   font-weight:700;
+  color:rgba(255,255,255,0.12);
+  pointer-events:none;
 }
 
 </style>
@@ -208,34 +207,58 @@ canvas{
     <div class="controls">
 
       <div class="segment">
-        <button id="vsBtn" class="active">
+
+        <button
+          id="vsBtn"
+          class="active"
+        >
           2 Players
         </button>
 
-        <button id="botBtn">
+        <button
+          id="botBtn"
+        >
           Bot
         </button>
+
       </div>
 
       <div class="segment">
-        <button id="normalBtn" class="active">
+
+        <button
+          id="normalBtn"
+          class="active"
+        >
           Normal
         </button>
 
-        <button id="fastBtn">
+        <button
+          id="fastBtn"
+        >
           Fast
         </button>
 
-        <button id="superBtn">
+        <button
+          id="superBtn"
+        >
           Super Fast
         </button>
+
       </div>
 
-      <button id="pauseBtn" class="pause-btn">
-        <div class="pause-icon" id="pauseIcon">
+      <button
+        id="pauseBtn"
+        class="pause-btn"
+      >
+
+        <div
+          class="pause-bars"
+          id="pauseIcon"
+        >
           <div></div>
           <div></div>
         </div>
+
       </button>
 
     </div>
@@ -252,7 +275,10 @@ canvas{
     </div>
 
     <div class="overlay">
-      <div class="overlay-text" id="overlayText">
+      <div
+        class="overlay-text"
+        id="overlayText"
+      >
         HOLD TO PLAY
       </div>
     </div>
@@ -263,38 +289,61 @@ canvas{
 
 <script>
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const canvas =
+  document.getElementById('game');
+
+const ctx =
+  canvas.getContext('2d');
 
 const overlayText =
-  document.getElementById('overlayText');
-
-const pauseBtn =
-  document.getElementById('pauseBtn');
-
-const pauseIcon =
-  document.getElementById('pauseIcon');
+  document.getElementById(
+    'overlayText'
+  );
 
 const leftScoreEl =
-  document.getElementById('leftScore');
+  document.getElementById(
+    'leftScore'
+  );
 
 const rightScoreEl =
-  document.getElementById('rightScore');
+  document.getElementById(
+    'rightScore'
+  );
+
+const pauseBtn =
+  document.getElementById(
+    'pauseBtn'
+  );
+
+const pauseIcon =
+  document.getElementById(
+    'pauseIcon'
+  );
 
 const vsBtn =
-  document.getElementById('vsBtn');
+  document.getElementById(
+    'vsBtn'
+  );
 
 const botBtn =
-  document.getElementById('botBtn');
+  document.getElementById(
+    'botBtn'
+  );
 
 const normalBtn =
-  document.getElementById('normalBtn');
+  document.getElementById(
+    'normalBtn'
+  );
 
 const fastBtn =
-  document.getElementById('fastBtn');
+  document.getElementById(
+    'fastBtn'
+  );
 
 const superBtn =
-  document.getElementById('superBtn');
+  document.getElementById(
+    'superBtn'
+  );
 
 function resize(){
 
@@ -346,11 +395,40 @@ let mode = 'vs';
 
 let speed = 11;
 
-let paused = false;
 let playing = false;
-let countdown = false;
+let paused = false;
+let countdownRunning = false;
 
-let keys = {};
+let countdownTimeouts = [];
+
+const keys = {};
+
+const touches = new Map();
+
+function clearCountdowns(){
+
+  for(const id of countdownTimeouts){
+
+    clearTimeout(id);
+
+  }
+
+  countdownTimeouts = [];
+
+}
+
+function setOverlay(text){
+
+  overlayText.textContent =
+    text;
+
+}
+
+function clearOverlay(){
+
+  overlayText.textContent = '';
+
+}
 
 function resetPositions(){
 
@@ -376,22 +454,6 @@ function resetPositions(){
 
 }
 
-function launchBall(direction){
-
-  const angle =
-    (Math.random()*0.9)-0.45;
-
-  ball.vx =
-    Math.cos(angle) *
-    speed *
-    direction;
-
-  ball.vy =
-    Math.sin(angle) *
-    speed;
-
-}
-
 function updateScores(){
 
   leftScoreEl.textContent =
@@ -406,74 +468,103 @@ resize();
 resetPositions();
 updateScores();
 
-function setOverlay(text){
+function requiredInputActive(){
 
-  overlayText.textContent =
-    text;
+  const keyboardLeft =
+    keys['w'] || keys['s'];
 
-}
-
-function clearOverlay(){
-
-  overlayText.textContent = '';
-
-}
-
-function requiredInputs(){
+  const keyboardRight =
+    keys['arrowup'] ||
+    keys['arrowdown'];
 
   if(mode === 'bot'){
 
     return (
-      activeTouches.size >= 1 ||
-      keys['w'] ||
-      keys['s']
+      touches.size >= 1 ||
+      keyboardLeft
     );
 
   }
 
   return (
-    activeTouches.size >= 2 ||
-    keys['w'] ||
-    keys['s'] ||
-    keys['arrowup'] ||
-    keys['arrowdown']
+    touches.size >= 2 ||
+    (keyboardLeft && keyboardRight)
   );
 
 }
 
-async function startCountdown(){
+function launchBall(direction){
 
-  if(countdown) return;
+  const angle =
+    (Math.random()*1)-0.5;
 
-  countdown = true;
+  ball.vx =
+    Math.cos(angle) *
+    speed *
+    direction;
 
-  for(const text of ['3','2','1','GO!']){
+  ball.vy =
+    Math.sin(angle) *
+    speed;
 
-    if(
-      !requiredInputs() &&
-      !playing
-    ){
-      countdown = false;
-      setOverlay('HOLD TO PLAY');
-      return;
-    }
+}
 
-    setOverlay(text);
+function startCountdown(direction){
 
-    await new Promise(r =>
-      setTimeout(r,700)
-    );
+  if(
+    countdownRunning ||
+    paused
+  ) return;
 
-  }
+  countdownRunning = true;
 
-  clearOverlay();
+  const texts =
+    ['3','2','1','GO!'];
 
-  countdown = false;
-  playing = true;
+  texts.forEach((text,index)=>{
 
-  launchBall(
-    Math.random() > 0.5 ? 1 : -1
-  );
+    const id =
+      setTimeout(()=>{
+
+        if(
+          !playing &&
+          !requiredInputActive()
+        ){
+
+          countdownRunning = false;
+
+          setOverlay(
+            'HOLD TO PLAY'
+          );
+
+          clearCountdowns();
+
+          return;
+
+        }
+
+        setOverlay(text);
+
+      },index*700);
+
+    countdownTimeouts.push(id);
+
+  });
+
+  const startId =
+    setTimeout(()=>{
+
+      clearOverlay();
+
+      countdownRunning = false;
+
+      playing = true;
+
+      launchBall(direction);
+
+    },2800);
+
+  countdownTimeouts.push(startId);
 
 }
 
@@ -483,30 +574,38 @@ function resetRound(direction){
 
   resetPositions();
 
-  setOverlay('3');
+  startCountdown(direction);
 
-  let nums = ['3','2','1','GO!'];
-  let i = 0;
+}
 
-  const interval =
-    setInterval(()=>{
+function setPause(state){
 
-      setOverlay(nums[i]);
-      i++;
+  paused = state;
 
-      if(i >= nums.length){
+  if(paused){
 
-        clearInterval(interval);
+    setOverlay('PAUSED');
 
-        clearOverlay();
+    pauseIcon.innerHTML =
+      `
+      <div class="play-triangle"></div>
+      `;
 
-        playing = true;
+  }
 
-        launchBall(direction);
+  else{
 
-      }
+    pauseIcon.innerHTML =
+      `
+      <div></div>
+      <div></div>
+      `;
 
-    },700);
+    startCountdown(
+      Math.random()>0.5 ? 1 : -1
+    );
+
+  }
 
 }
 
@@ -514,26 +613,7 @@ pauseBtn.addEventListener(
   'click',
   ()=>{
 
-    paused = !paused;
-
-    if(paused){
-
-      setOverlay('PAUSED');
-
-      pauseIcon.innerHTML =
-        `<div class="play-icon"></div>`;
-
-    } else {
-
-      pauseIcon.innerHTML =
-      `
-      <div></div>
-      <div></div>
-      `;
-
-      startCountdown();
-
-    }
+    setPause(!paused);
 
   }
 );
@@ -544,6 +624,10 @@ function setMode(newMode){
 
   playing = false;
   paused = false;
+
+  clearCountdowns();
+
+  countdownRunning = false;
 
   resetPositions();
 
@@ -561,42 +645,86 @@ function setMode(newMode){
 
 }
 
-vsBtn.onclick = ()=> setMode('vs');
-botBtn.onclick = ()=> setMode('bot');
+vsBtn.onclick =
+  ()=> setMode('vs');
 
-function setSpeed(value){
+botBtn.onclick =
+  ()=> setMode('bot');
+
+function activateSpeed(btn,value){
 
   speed = value;
 
-  normalBtn.classList.remove('active');
-  fastBtn.classList.remove('active');
-  superBtn.classList.remove('active');
+  normalBtn.classList.remove(
+    'active'
+  );
+
+  fastBtn.classList.remove(
+    'active'
+  );
+
+  superBtn.classList.remove(
+    'active'
+  );
+
+  btn.classList.add(
+    'active'
+  );
 
 }
 
-normalBtn.onclick = ()=>{
+normalBtn.onclick =
+  ()=> activateSpeed(
+    normalBtn,
+    11
+  );
 
-  setSpeed(11);
-  normalBtn.classList.add('active');
+fastBtn.onclick =
+  ()=> activateSpeed(
+    fastBtn,
+    18
+  );
 
-};
+superBtn.onclick =
+  ()=> activateSpeed(
+    superBtn,
+    24
+  );
 
-fastBtn.onclick = ()=>{
+window.addEventListener(
+  'keydown',
+  e=>{
 
-  setSpeed(18);
-  fastBtn.classList.add('active');
+    keys[
+      e.key.toLowerCase()
+    ] = true;
 
-};
+    if(
+      !playing &&
+      !paused &&
+      !countdownRunning &&
+      requiredInputActive()
+    ){
 
-superBtn.onclick = ()=>{
+      startCountdown(
+        Math.random()>0.5 ? 1 : -1
+      );
 
-  setSpeed(24);
-  superBtn.classList.add('active');
+    }
 
-};
+  }
+);
 
-const activeTouches =
-  new Map();
+window.addEventListener(
+  'keyup',
+  e=>{
+
+    keys[
+      e.key.toLowerCase()
+    ] = false;
+
+  }
+);
 
 window.addEventListener(
   'touchstart',
@@ -604,9 +732,12 @@ window.addEventListener(
 
     for(const touch of e.changedTouches){
 
-      activeTouches.set(
+      touches.set(
         touch.identifier,
-        touch
+        {
+          x:touch.clientX,
+          y:touch.clientY
+        }
       );
 
     }
@@ -614,34 +745,18 @@ window.addEventListener(
     if(
       !playing &&
       !paused &&
-      !countdown
+      !countdownRunning &&
+      requiredInputActive()
     ){
 
-      if(requiredInputs()){
-
-        startCountdown();
-
-      }
+      startCountdown(
+        Math.random()>0.5 ? 1 : -1
+      );
 
     }
 
   },
   {passive:false}
-);
-
-window.addEventListener(
-  'touchend',
-  e=>{
-
-    for(const touch of e.changedTouches){
-
-      activeTouches.delete(
-        touch.identifier
-      );
-
-    }
-
-  }
 );
 
 window.addEventListener(
@@ -690,34 +805,16 @@ window.addEventListener(
 );
 
 window.addEventListener(
-  'keydown',
+  'touchend',
   e=>{
 
-    keys[
-      e.key.toLowerCase()
-    ] = true;
+    for(const touch of e.changedTouches){
 
-    if(
-      !playing &&
-      !paused &&
-      !countdown &&
-      requiredInputs()
-    ){
-
-      startCountdown();
+      touches.delete(
+        touch.identifier
+      );
 
     }
-
-  }
-);
-
-window.addEventListener(
-  'keyup',
-  e=>{
-
-    keys[
-      e.key.toLowerCase()
-    ] = false;
 
   }
 );
@@ -754,9 +851,7 @@ function update(){
   if(keys['s'])
     left.y += 12;
 
-  if(
-    mode === 'vs'
-  ){
+  if(mode === 'vs'){
 
     if(keys['arrowup'])
       right.y -= 12;
@@ -773,7 +868,7 @@ function update(){
       paddle.height/2;
 
     right.y +=
-      (target - right.y) * 0.18;
+      (target-right.y)*0.18;
 
   }
 
@@ -784,11 +879,20 @@ function update(){
   ball.x += ball.vx;
   ball.y += ball.vy;
 
+  if(ball.y < ball.size){
+
+    ball.y = ball.size;
+    ball.vy *= -1;
+
+  }
+
   if(
-    ball.y < ball.size ||
     ball.y >
-    canvas.height - ball.size
+    canvas.height-ball.size
   ){
+
+    ball.y =
+      canvas.height-ball.size;
 
     ball.vy *= -1;
 
@@ -797,10 +901,17 @@ function update(){
   function bounce(p){
 
     const relative =
-      (ball.y -
-      (p.y + paddle.height/2))
+      (
+        ball.y -
+        (
+          p.y +
+          paddle.height/2
+        )
+      )
       /
-      (paddle.height/2);
+      (
+        paddle.height/2
+      );
 
     const angle =
       relative * 1.1;
@@ -822,14 +933,13 @@ function update(){
   }
 
   if(
-    ball.x - ball.size <
-    left.x + paddle.width &&
 
-    ball.y >
-    left.y &&
+    ball.x-ball.size <
+    left.x+paddle.width &&
 
-    ball.y <
-    left.y + paddle.height
+    ball.y > left.y &&
+    ball.y < left.y+paddle.height
+
   ){
 
     ball.x =
@@ -842,14 +952,13 @@ function update(){
   }
 
   if(
-    ball.x + ball.size >
+
+    ball.x+ball.size >
     right.x &&
 
-    ball.y >
-    right.y &&
+    ball.y > right.y &&
+    ball.y < right.y+paddle.height
 
-    ball.y <
-    right.y + paddle.height
   ){
 
     ball.x =
@@ -863,15 +972,17 @@ function update(){
   if(ball.x < -50){
 
     right.score++;
+
     updateScores();
 
     resetRound(-1);
 
   }
 
-  if(ball.x > canvas.width + 50){
+  if(ball.x > canvas.width+50){
 
     left.score++;
+
     updateScores();
 
     resetRound(1);
@@ -893,8 +1004,8 @@ function drawBackground(){
       canvas.height
     );
 
-  g.addColorStop(0,'#081225');
-  g.addColorStop(1,'#140a24');
+  g.addColorStop(0,'#091426');
+  g.addColorStop(1,'#180d2f');
 
   ctx.fillStyle = g;
 
@@ -924,6 +1035,36 @@ function drawMiddle(){
   ctx.lineTo(
     canvas.width/2,
     canvas.height
+  );
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+}
+
+function drawPrediction(){
+
+  if(playing) return;
+
+  const dir =
+    Math.random() > 0.5 ? 1 : -1;
+
+  ctx.setLineDash([12,10]);
+
+  ctx.strokeStyle =
+    'rgba(255,255,255,0.22)';
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    ball.x,
+    ball.y
+  );
+
+  ctx.lineTo(
+    ball.x + dir*250,
+    ball.y - 80
   );
 
   ctx.stroke();
@@ -1023,7 +1164,10 @@ function drawBall(){
 function render(){
 
   drawBackground();
+
   drawMiddle();
+
+  drawPrediction();
 
   drawPaddle(
     left,
@@ -1042,6 +1186,7 @@ function render(){
 function loop(){
 
   update();
+
   render();
 
   requestAnimationFrame(loop);
@@ -1052,4 +1197,4 @@ loop();
 
 </script>
 </body>
-</html>+
+</html>
