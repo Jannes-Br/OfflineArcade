@@ -305,8 +305,8 @@ main {
 
 #reload-btn {
 
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 
   flex-shrink: 0;
 
@@ -314,14 +314,14 @@ main {
 
   border: none;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   background:
     rgba(255,255,255,0.08);
 
   color: white;
 
-  font-size: 18px;
+  font-size: 16px;
 
   cursor: pointer;
 
@@ -344,6 +344,56 @@ main {
     rotate(90deg);
 }
 
+/* LEFT MESSAGE BOX */
+
+#install-info {
+
+  position: fixed;
+
+  left: 14px;
+  bottom: 14px;
+
+  z-index: 100;
+
+  width: 250px;
+
+  background:
+    rgba(0,0,0,0.45);
+
+  backdrop-filter: blur(12px);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  border-radius: 18px;
+
+  padding: 14px;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+  display: none;
+}
+
+.install-title {
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  margin-bottom: 8px;
+}
+
+.install-text {
+
+  opacity: 0.8;
+}
+
 @media (max-width: 700px) {
 
   h1 {
@@ -352,6 +402,10 @@ main {
 
   .game-card {
     width: 190px;
+  }
+
+  #install-info {
+    width: 210px;
   }
 
 }
@@ -567,6 +621,18 @@ main {
 
 </div>
 
+<div id="install-info">
+
+  <div class="install-title">
+    ⚠️ Add to Home Screen
+  </div>
+
+  <div class="install-text">
+    Offline features work best when OfflineArcade is added to your home screen.
+  </div>
+
+</div>
+
 </div>
 
 <script>
@@ -596,6 +662,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const reloadBtn =
     document.getElementById(
       'reload-btn'
+    );
+
+  const installInfo =
+    document.getElementById(
+      'install-info'
     );
 
   function updateOnlineStatus() {
@@ -632,6 +703,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
+  function checkInstallState() {
+
+    const isStandalone =
+      window.matchMedia(
+        '(display-mode: standalone)'
+      ).matches
+      ||
+      window.navigator.standalone === true;
+
+    if (isStandalone) {
+
+      installInfo.style.display =
+        'none';
+
+    } else {
+
+      installInfo.style.display =
+        'block';
+
+    }
+
+  }
+
   reloadBtn.addEventListener(
     'click',
     () => {
@@ -640,6 +734,8 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   updateOnlineStatus();
+
+  checkInstallState();
 
   window.addEventListener(
     'online',
