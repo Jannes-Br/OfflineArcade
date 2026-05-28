@@ -8,52 +8,28 @@ const ASSETS = [
   '/OfflineArcade/main.js',
   '/OfflineArcade/manifest.json',
 
-
-  
-  
   '/OfflineArcade/games/escape-road/index.html',
   '/OfflineArcade/games/escape-road/manifest.json',
   '/OfflineArcade/games/escape-road/script.js',
   '/OfflineArcade/games/escape-road/style.css',
-
   '/OfflineArcade/games/escape-road/icon-512.png',
   '/OfflineArcade/games/escape-road/icon.png',
-  
-  '/OfflineArcade/assets/thumbnails/escape-road.png'
+  '/OfflineArcade/assets/thumbnails/escape-road.png',
 
+  '/OfflineArcade/games/drive-mad/index.html',
+  '/OfflineArcade/assets/thumbnails/drive-mad.png',
 
-  
-  
-  '/OfflineArcade/games/drive-mad/index..html',
-  
-  '/OfflineArcade/assets/thumbnails/drive-mad.png'
+  '/OfflineArcade/games/block-smasher/index.html',
+  '/OfflineArcade/assets/thumbnails/block-smasher.png',
 
+  '/OfflineArcade/games/tic-tac-toe/index.html',
+  '/OfflineArcade/assets/thumbnails/tic-tac-toe.png',
 
-  
-  '/games/block-smasher/index.html',
-  
-  '/assets/thumbnails/block-smasher.png',
+  '/OfflineArcade/games/2048/index.html',
+  '/OfflineArcade/assets/thumbnails/2048.png',
 
-
-
-
-  '/games/tic-tac-toe/index.html',
-    
-  '/assets/thumbnails/tic-tac-toe.png',
-
-
-
-
-  '/games/2048/index.html',
-    
-  '/assets/thumbnails/2048.png',
-
-
-
-    
   '/OfflineArcade/games/pong/index.html',
-    
-  '/assets/thumbnails/pong.png',
+  '/OfflineArcade/assets/thumbnails/pong.png',
 ];
 
 self.addEventListener('install', event => {
