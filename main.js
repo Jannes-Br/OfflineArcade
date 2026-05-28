@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v66';
+const CACHE_VERSION = 'v67';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -25,6 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const reloadBtn =
     document.getElementById(
       'reload-btn'
+    );
+
+  // INSTALL INFO
+  const installInfo =
+    document.getElementById(
+      'install-info'
     );
 
   function updateOnlineStatus() {
@@ -61,6 +67,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
+  function checkInstallState() {
+
+    const isIOSStandalone =
+      window.navigator.standalone === true;
+
+    const isStandaloneMode =
+      window.matchMedia(
+        '(display-mode: standalone)'
+      ).matches;
+
+    const isInstalled =
+      isIOSStandalone || isStandaloneMode;
+
+    if (isInstalled) {
+
+      installInfo.style.display =
+        'none';
+
+    } else {
+
+      installInfo.style.display =
+        'block';
+
+    }
+
+  }
+
   reloadBtn.addEventListener(
     'click',
     () => {
@@ -72,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Beim Start prüfen
   updateOnlineStatus();
+
+  checkInstallState();
 
   // Änderungen erkennen
   window.addEventListener(
