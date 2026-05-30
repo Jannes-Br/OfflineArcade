@@ -1,6 +1,6 @@
-const CACHE = 'offlinearcade-v71';
+const CACHE = 'offlinearcade-v72';
 
-// Nur die App-Shell muss beim Start sicher installiert sein
+// Essenzielle App-Shell Dateien (SW schlägt fehl, wenn diese nicht geladen werden können)
 const ESSENTIAL_ASSETS = [
   './',
   'index.html',
@@ -9,11 +9,48 @@ const ESSENTIAL_ASSETS = [
   'manifest.json'
 ];
 
+// Optionale Spiele-Assets (werden sofort beim SW-Install geladen, Fehler blockieren den SW nicht)
+const GAME_ASSETS = [
+  'games/escape-road/index.html',
+  'games/escape-road/manifest.json',
+  'games/escape-road/script.js',
+  'games/escape-road/style.css',
+  'games/escape-road/icon-512.png',
+  'games/escape-road/icon.png',
+  'assets/thumbnails/escape-road.png',
+
+  'games/drive-mad/index.html',
+  'assets/thumbnails/drive-mad.png',
+
+  'games/block-smasher/index.html',
+  'assets/thumbnails/block-smasher.png',
+
+  'games/tic-tac-toe/index.html',
+  'assets/thumbnails/tic-tac-toe.png',
+
+  'games/2048/index.html',
+  'assets/thumbnails/2048.png',
+
+  'games/pong/index.html',
+  'assets/thumbnails/pong.png'
+];
+
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then(cache => {
-      return cache.addAll(ESSENTIAL_ASSETS);
+      // 1. Essenzielle Shell-Dateien laden
+      return cache.addAll(ESSENTIAL_ASSETS)
+        .then(() => {
+          // 2. Optionale Spiele-Assets einzeln cachen, damit Fehler (404) nicht die Installation blockieren
+          return Promise.allSettled(
+            GAME_ASSETS.map(url => {
+              return cache.add(url).catch(err => {
+                console.warn(`Optionales Pre-Caching übersprungen für: ${url}`, err);
+              });
+            })
+          );
+        });
     })
   );
 });
@@ -33,46 +70,51 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// WICHTIG: Cacht ALLES was geladen wird - egal ob Spiel, Bild, Script, Audio etc.
-// So werden beim Laden eines Spiels (manuell ODER per Download-Button) alle Assets gespeichert.
+// Fetch-Handler: Hybride Caching-Strategie
 self.addEventListener('fetch', e => {
+  // Nur HTTP/HTTPS GET-Requests verarbeiten
   if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) {
     return;
   }
 
   const url = new URL(e.request.url);
+  // Erkennt statische Spiele-Ressourcen und Thumbnails
+  const isStaticAsset = url.pathname.includes('/games/') || url.pathname.includes('/assets/');
 
-  // Spiele-Assets und Thumbnails: Cache-First (sofortiges Laden offline)
-  const isGameAsset = url.pathname.includes('/games/') || url.pathname.includes('/assets/');
-
-  if (isGameAsset) {
+  if (isStaticAsset) {
+    // A. CACHE-FIRST für Spiele-Ressourcen (lädt offline & online sofort aus dem Cache)
     e.respondWith(
-      caches.match(e.request).then(cached => {
-        if (cached) {
-          return cached;
+      caches.match(e.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        // Nicht im Cache? Netzwerk holen und für später speichern
-        return fetch(e.request).then(response => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE).then(cache => cache.put(e.request, copy));
+        return fetch(e.request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE).then(cache => {
+              cache.put(e.request, copy);
+            });
           }
-          return response;
+          return networkResponse;
         });
       })
     );
   } else {
-    // App-Shell: Network-First (Updates werden sofort geladen)
+    // B. NETWORK-FIRST für die App Shell (stellt sicher, dass Updates geladen werden)
     e.respondWith(
       fetch(e.request)
-        .then(response => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE).then(cache => cache.put(e.request, copy));
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE).then(cache => {
+              cache.put(e.request, copy);
+            });
           }
-          return response;
+          return networkResponse;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => {
+          return caches.match(e.request);
+        })
     );
   }
 });
