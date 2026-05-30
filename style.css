@@ -7,16 +7,11 @@ html,
 body {
   margin: 0;
   padding: 0;
-
   width: 100%;
   height: 100%;
-
   overflow: hidden;
-
-  font-family: Arial, sans-serif;
-
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   color: white;
-
   background: #0f172a;
 }
 
@@ -26,10 +21,8 @@ body {
 }
 
 .background {
-
   position: fixed;
   inset: 0;
-
   background:
     radial-gradient(
       circle at top right,
@@ -46,73 +39,91 @@ body {
       #111827 0%,
       #0b1120 100%
     );
-
   z-index: 0;
 }
 
 .app {
   position: relative;
-
   z-index: 1;
-
   width: 100%;
   height: 100%;
-
   display: flex;
   flex-direction: column;
 }
 
 header {
-
   padding:
     max(45px, env(safe-area-inset-top))
     24px
     10px;
-
   flex-shrink: 0;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 h1 {
   margin: 0;
-
   font-size: 42px;
-
   font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-
   margin-top: 8px;
-
   opacity: 0.7;
-
   font-size: 15px;
 }
 
-main {
-
-  flex: 1;
-
+#random-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  font-size: 22px;
+  cursor: pointer;
   display: flex;
-
   align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
+#random-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(76, 201, 240, 0.4);
+  transform: translateY(-2px) rotate(15deg);
+}
+
+#random-btn:active {
+  transform: scale(0.95);
+}
+
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
   overflow: hidden;
 }
 
 .games-wrapper {
-
   width: 100%;
-
   overflow-x: auto;
   overflow-y: hidden;
-
   scroll-snap-type: x mandatory;
-
   -webkit-overflow-scrolling: touch;
-
-  padding: 10px 24px 40px;
-
+  padding: 10px 24px 30px;
   scrollbar-width: none;
 }
 
@@ -121,183 +132,285 @@ main {
 }
 
 .game-grid {
-
   display: flex;
-
   gap: 22px;
 }
 
 .game-card {
-
+  position: relative;
   width: 220px;
-
   flex-shrink: 0;
-
   overflow: hidden;
-
   border-radius: 24px;
-
-  background:
-    rgba(255,255,255,0.06);
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   text-decoration: none;
-
   color: white;
-
   scroll-snap-align: center;
-
   transition:
-    transform 0.2s,
-    border 0.2s,
-    box-shadow 0.2s;
-
+    transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    border-color 0.3s,
+    box-shadow 0.3s;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .game-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(76, 201, 240, 0.55);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
 
-  transform:
-    translateY(-5px);
-
-  border:
-    1px solid rgba(76,201,240,0.55);
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.3);
+/* Roulette Highlight Animation */
+.game-card.highlighted {
+  border-color: #4cc9f0 !important;
+  box-shadow: 0 0 25px rgba(76, 201, 240, 0.8) !important;
+  transform: scale(1.06) translateY(-5px);
+  background: rgba(76, 201, 240, 0.15);
 }
 
 .game-thumb {
-
   width: 100%;
-
   height: 125px;
-
   object-fit: cover;
-
   display: block;
 }
 
 .game-content {
-
   padding: 14px;
 }
 
 .game-title {
-
   font-size: 18px;
-
   font-weight: 700;
-
   margin-bottom: 7px;
 }
 
 .game-description {
-
   opacity: 0.72;
-
   font-size: 13px;
-
   line-height: 1.4;
 }
 
-#app-info {
-
-  position: fixed;
-
-  right: 14px;
-  bottom: 14px;
-
-  z-index: 100;
-
+/* Offline-Status Badges */
+.offline-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
-
   align-items: center;
-
-  gap: 14px;
-
-  background:
-    rgba(0,0,0,0.45);
-
-  backdrop-filter: blur(12px);
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
-  border-radius: 18px;
-
-  padding: 12px 14px;
-
+  justify-content: center;
   font-size: 12px;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
 
+.offline-badge.ready {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.offline-badge.downloading {
+  border-color: #4cc9f0;
+  color: #4cc9f0;
+  animation: pulse 1.5s infinite;
+}
+
+.offline-badge.not-ready {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Footer-Bereich (Keine Überlappungen mehr dank Flexbox) */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 10px 24px max(14px, env(safe-area-inset-bottom));
+  margin-top: auto;
+  flex-shrink: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+#install-info,
+#cache-manager,
+#app-info {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#install-info {
+  width: 250px;
+  padding: 14px;
+}
+
+.install-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.install-text {
+  opacity: 0.8;
+}
+
+/* Cache-Manager Styles */
+#cache-manager {
+  width: 280px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cache-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+
+#cache-status {
+  opacity: 0.9;
+}
+
+#download-all-btn {
+  border: none;
+  background: #4cc9f0;
+  color: #0f172a;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+#download-all-btn:hover {
+  background: #3eb5d8;
+  transform: translateY(-1px);
+}
+
+#download-all-btn:active {
+  transform: scale(0.96);
+}
+
+#cache-progress-container {
+  display: none;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+#cache-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #22c55e;
+  transition: width 0.3s ease;
+}
+
+/* App-Info */
+#app-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
   min-width: 175px;
 }
 
-#reload-btn{
-
-  border:none;
-
-  width:42px;
-  height:42px;
-
-  border-radius:12px;
-
-  background:
-    rgba(255,255,255,0.08);
-
-  color:white;
-
-  font-size:24px;
-
-  cursor:pointer;
-
-  transition:0.2s;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-}
-
-#reload-btn:hover{
-
-  background:
-    rgba(255,255,255,0.14);
-}
-
-#reload-btn:active{
-
-  transform:scale(0.94);
+.info-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .status-row {
-
   display: flex;
-
   align-items: center;
-
   gap: 8px;
+  margin-bottom: 4px;
+}
 
-  margin-bottom: 6px;
+.version-row {
+  opacity: 0.85;
 }
 
 #status-dot {
-
   width: 10px;
   height: 10px;
-
   border-radius: 50%;
-
   background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+}
 
-  box-shadow:
-    0 0 10px #22c55e;
+#reload-btn {
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#reload-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: rotate(90deg);
+}
+
+#reload-btn:active {
+  transform: scale(0.94);
+}
+
+/* RESPONSIVE DESIGN */
+
+/* Für Tablets und kleinere Bildschirme */
+@media (max-width: 900px) {
+  .footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  }
+  
+  #install-info,
+  #cache-manager,
+  #app-info {
+    width: 100%;
+    max-width: 340px;
+  }
 }
 
 @media (max-width: 700px) {
-
   h1 {
     font-size: 34px;
   }
@@ -305,5 +418,118 @@ main {
   .game-card {
     width: 190px;
   }
+  
+  .game-thumb {
+    height: 110px;
+  }
+}
 
+/* EXTREMES QUERFORMAT (Landscape Optimierung für geringe Höhen) */
+@media (max-height: 550px) {
+  header {
+    padding: max(10px, env(safe-area-inset-top)) 24px 5px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+  
+  .subtitle {
+    display: none;
+  }
+  
+  #random-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    border-radius: 12px;
+  }
+  
+  main {
+    align-items: center;
+  }
+
+  .games-wrapper {
+    padding: 5px 24px 15px;
+  }
+
+  .game-card {
+    width: 170px;
+    border-radius: 16px;
+  }
+
+  .game-thumb {
+    height: 90px;
+  }
+  
+  .game-content {
+    padding: 10px;
+  }
+  
+  .game-title {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+  
+  .game-description {
+    font-size: 11px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .footer {
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 24px max(6px, env(safe-area-inset-bottom));
+  }
+  
+  #install-info {
+    display: none !important;
+  }
+  
+  #cache-manager,
+  #app-info {
+    width: auto;
+    max-width: none;
+    padding: 8px 12px;
+    border-radius: 12px;
+    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  #cache-manager {
+    min-width: 250px;
+  }
+  
+  .cache-header {
+    gap: 8px;
+  }
+  
+  #cache-progress-container {
+    margin-top: 0;
+  }
+  
+  #app-info {
+    min-width: 0;
+  }
+  
+  .status-row {
+    margin-bottom: 0;
+  }
+  
+  .version-row {
+    display: none;
+  }
+  
+  #reload-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
 }
