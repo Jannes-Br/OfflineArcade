@@ -1,99 +1,78 @@
 const CACHE = 'offlinearcade-v68';
 
 const ASSETS = [
+  './',
+  'index.html',
+  'style.css',
+  'main.js',
+  'manifest.json',
 
-  '/OfflineArcade/',
-  '/OfflineArcade/index.html',
-  '/OfflineArcade/style.css',
-  '/OfflineArcade/main.js',
-  '/OfflineArcade/manifest.json',
+  'games/escape-road/index.html',
+  'games/escape-road/manifest.json',
+  'games/escape-road/script.js',
+  'games/escape-road/style.css',
+  'games/escape-road/icon-512.png',
+  'games/escape-road/icon.png',
+  'assets/thumbnails/escape-road.png',
 
-  '/OfflineArcade/games/escape-road/index.html',
-  '/OfflineArcade/games/escape-road/manifest.json',
-  '/OfflineArcade/games/escape-road/script.js',
-  '/OfflineArcade/games/escape-road/style.css',
-  '/OfflineArcade/games/escape-road/icon-512.png',
-  '/OfflineArcade/games/escape-road/icon.png',
-  '/OfflineArcade/assets/thumbnails/escape-road.png',
+  'games/drive-mad/index.html',
+  'assets/thumbnails/drive-mad.png',
 
-  '/OfflineArcade/games/drive-mad/index.html',
-  '/OfflineArcade/assets/thumbnails/drive-mad.png',
+  'games/block-smasher/index.html',
+  'assets/thumbnails/block-smasher.png',
 
-  '/OfflineArcade/games/block-smasher/index.html',
-  '/OfflineArcade/assets/thumbnails/block-smasher.png',
+  'games/tic-tac-toe/index.html',
+  'assets/thumbnails/tic-tac-toe.png',
 
-  '/OfflineArcade/games/tic-tac-toe/index.html',
-  '/OfflineArcade/assets/thumbnails/tic-tac-toe.png',
+  'games/2048/index.html',
+  'assets/thumbnails/2048.png',
 
-  '/OfflineArcade/games/2048/index.html',
-  '/OfflineArcade/assets/thumbnails/2048.png',
-
-  '/OfflineArcade/games/pong/index.html',
-  '/OfflineArcade/assets/thumbnails/pong.png',
+  'games/pong/index.html',
+  'assets/thumbnails/pong.png'
 ];
 
 self.addEventListener('install', event => {
-
   self.skipWaiting();
-
   event.waitUntil(
-
     caches.open(CACHE).then(cache => {
-
       return cache.addAll(ASSETS);
-
     })
-
   );
-
 });
 
 self.addEventListener('activate', event => {
-
   event.waitUntil(
-
     caches.keys().then(keys => {
-
       return Promise.all(
-
         keys.map(key => {
-
           if (key !== CACHE) {
-
             return caches.delete(key);
-
           }
-
         })
-
       );
-
     })
-
   );
-
   self.clients.claim();
-
 });
+
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) {
+    return;
+  }
 
   e.respondWith(
-
     fetch(e.request)
-
       .then(res => {
-
-        const copy = res.clone();
-
-        caches.open(CACHE)
-          .then(cache => cache.put(e.request, copy));
-
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then(cache => {
+            cache.put(e.request, copy);
+          });
+        }
         return res;
-
       })
-
-      .catch(() => caches.match(e.request))
-
+      .catch(() => {
+        return caches.match(e.request);
+      })
   );
-
 });
