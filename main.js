@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v69';
+const CACHE_VERSION = 'v71';
 const GAMES = ['escape-road', 'drive-mad', 'block-smasher', 'tic-tac-toe', '2048', 'pong'];
 
 // Spezifische Unterdateien für Spiele mit tiefen Strukturen
