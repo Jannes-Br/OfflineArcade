@@ -15,14 +15,17 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="main.js"></script>
 </head>
-<body>
+<body class="dark-mode">
   <div class="background"></div>
 
   <div class="app">
     <header>
       <div class="header-main">
         <h1>OfflineArcade</h1>
-        <button id="random-btn" title="Zufälliges Spiel">🎲</button>
+        <div class="header-actions">
+          <button id="theme-btn" title="Theme wechseln">☀️</button>
+          <button id="random-btn" title="Zufälliges Spiel">🎲</button>
+        </div>
       </div>
       <p class="subtitle">Offline gaming platform</p>
     </header>
@@ -30,9 +33,9 @@
     <main>
       <div class="games-wrapper">
         <div class="game-grid">
-
+          
+          <!-- Escape Road -->
           <a class="game-card" href="games/escape-road/index.html" data-game="escape-road">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/escape-road.png" alt="Escape Road">
             <div class="game-content">
               <div class="game-title">Escape Road</div>
@@ -40,8 +43,8 @@
             </div>
           </a>
 
+          <!-- Drive Mad -->
           <a class="game-card" href="games/drive-mad/index.html" data-game="drive-mad">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/drive-mad.png" alt="Drive Mad">
             <div class="game-content">
               <div class="game-title">Drive Mad</div>
@@ -49,8 +52,8 @@
             </div>
           </a>
 
+          <!-- Block Smasher -->
           <a class="game-card" href="games/block-smasher/index.html" data-game="block-smasher">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/block-smasher.png" alt="Block Smasher">
             <div class="game-content">
               <div class="game-title">Block Smasher</div>
@@ -58,8 +61,8 @@
             </div>
           </a>
 
+          <!-- Tic Tac Toe -->
           <a class="game-card" href="games/tic-tac-toe/index.html" data-game="tic-tac-toe">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/tic-tac-toe.png" alt="Tic Tac Toe">
             <div class="game-content">
               <div class="game-title">Tic Tac Toe</div>
@@ -67,8 +70,8 @@
             </div>
           </a>
 
+          <!-- 2048 -->
           <a class="game-card" href="games/2048/index.html" data-game="2048">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/2048.png" alt="2048">
             <div class="game-content">
               <div class="game-title">2048</div>
@@ -76,8 +79,8 @@
             </div>
           </a>
 
+          <!-- Pong -->
           <a class="game-card" href="games/pong/index.html" data-game="pong">
-            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
             <img class="game-thumb" src="assets/thumbnails/pong.png" alt="Pong">
             <div class="game-content">
               <div class="game-title">Pong</div>
@@ -90,6 +93,7 @@
     </main>
 
     <div class="footer">
+      <!-- Install Guide (A2HS) -->
       <div id="install-info">
         <div class="install-title">⚠️ Add to Home Screen</div>
         <div class="install-text" id="install-text">
@@ -97,16 +101,15 @@
         </div>
       </div>
 
-      <div id="cache-manager">
-        <div class="cache-header">
-          <span id="cache-status">Prüfe Cache...</span>
-          <button id="download-all-btn">Alle laden</button>
-        </div>
-        <div id="cache-progress-container">
-          <div id="cache-progress-bar"></div>
+      <!-- Offline Info Message -->
+      <div id="offline-message-box">
+        <span class="offline-icon">ℹ️</span>
+        <div class="offline-message-text">
+          Spiele sind offline spielbar, sobald sie einmal mit Internet geöffnet wurden. Für neue Spiel-Versionen einfach mit Internet öffnen.
         </div>
       </div>
 
+      <!-- App Info & Version & Reload -->
       <div id="app-info">
         <div class="info-left">
           <div class="status-row">
