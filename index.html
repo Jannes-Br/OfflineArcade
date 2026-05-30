@@ -1,645 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1,viewport-fit=cover"
->
-
-<title>OfflineArcade</title>
-
-<link rel="manifest" href="manifest.json">
-
-<link
-  rel="apple-touch-icon"
-  href="assets/icon-512.png"
->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OfflineArcade</title>
   
-<link
-  rel="icon"
-  type="image/png"
-  href="assets/favicon.png"
->
-
-<meta
-  name="apple-mobile-web-app-capable"
-  content="yes"
->
-
-<meta
-  name="theme-color"
-  content="#0f172a"
->
-
-<link rel="stylesheet" href="style.css">
-
-<script defer src="main.js"></script>
-
-<style>
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-
-  width: 100%;
-  height: 100%;
-
-  overflow: hidden;
-
-  font-family: Arial, sans-serif;
-
-  color: white;
-
-  background: #0f172a;
-}
-
-body {
-  position: fixed;
-  inset: 0;
-}
-
-.background {
-
-  position: fixed;
-  inset: 0;
-
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(76,201,240,0.22),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(99,102,241,0.22),
-      transparent 35%
-    ),
-    linear-gradient(
-      180deg,
-      #111827 0%,
-      #0b1120 100%
-    );
-
-  z-index: 0;
-}
-
-.app {
-  position: relative;
-
-  z-index: 1;
-
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-
-  padding:
-    max(45px, env(safe-area-inset-top))
-    24px
-    10px;
-
-  flex-shrink: 0;
-}
-
-h1 {
-  margin: 0;
-
-  font-size: 42px;
-
-  font-weight: 800;
-}
-
-.subtitle {
-
-  margin-top: 8px;
-
-  opacity: 0.7;
-
-  font-size: 15px;
-}
-
-main {
-
-  flex: 1;
-
-  display: flex;
-
-  align-items: center;
-
-  overflow: hidden;
-}
-
-.games-wrapper {
-
-  width: 100%;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  scroll-snap-type: x mandatory;
-
-  -webkit-overflow-scrolling: touch;
-
-  padding: 10px 24px 40px;
-
-  scrollbar-width: none;
-}
-
-.games-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-.game-grid {
-
-  display: flex;
-
-  gap: 22px;
-}
-
-.game-card {
-
-  width: 220px;
-
-  flex-shrink: 0;
-
-  overflow: hidden;
-
-  border-radius: 24px;
-
-  background:
-    rgba(255,255,255,0.06);
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
-  text-decoration: none;
-
-  color: white;
-
-  scroll-snap-align: center;
-
-  transition:
-    transform 0.2s,
-    border 0.2s,
-    box-shadow 0.2s;
-
-  backdrop-filter: blur(12px);
-}
-
-.game-card:hover {
-
-  transform:
-    translateY(-5px);
-
-  border:
-    1px solid rgba(76,201,240,0.55);
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.3);
-}
-
-.game-thumb {
-
-  width: 100%;
-
-  height: 125px;
-
-  object-fit: cover;
-
-  display: block;
-}
-
-.game-content {
-
-  padding: 14px;
-}
-
-.game-title {
-
-  font-size: 18px;
-
-  font-weight: 700;
-
-  margin-bottom: 7px;
-}
-
-.game-description {
-
-  opacity: 0.72;
-
-  font-size: 13px;
-
-  line-height: 1.4;
-}
-
-#app-info {
-
-  position: fixed;
-
-  right: 14px;
-  bottom: 14px;
-
-  z-index: 100;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-
-  width: 205px;
-
-  background:
-    rgba(0,0,0,0.45);
-
-  backdrop-filter: blur(12px);
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
-  border-radius: 18px;
-
-  padding: 12px 14px;
-
-  font-size: 12px;
-
-  line-height: 1.7;
-}
-
-.info-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.status-row {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-}
-
-.version-row {
-  opacity: 0.85;
-}
-
-#status-dot {
-
-  width: 10px;
-  height: 10px;
-
-  border-radius: 50%;
-
-  background: #22c55e;
-
-  box-shadow:
-    0 0 10px #22c55e;
-}
-
-#reload-btn {
-
-  width: 30px;
-  height: 30px;
-
-  flex-shrink: 0;
-
-  margin-left: auto;
-
-  border: none;
-
-  border-radius: 10px;
-
-  background:
-    rgba(255,255,255,0.08);
-
-  color: white;
-
-  font-size: 16px;
-
-  cursor: pointer;
-
-  display: none;
-
-  align-items: center;
-  justify-content: center;
-
-  transition:
-    background 0.2s,
-    transform 0.2s;
-}
-
-#reload-btn:hover {
-
-  background:
-    rgba(255,255,255,0.14);
-
-  transform:
-    rotate(90deg);
-}
-
-/* LEFT MESSAGE BOX */
-
-#install-info {
-
-  position: fixed;
-
-  left: 14px;
-  bottom: 14px;
-
-  z-index: 100;
-
-  width: 250px;
-
-  background:
-    rgba(0,0,0,0.45);
-
-  backdrop-filter: blur(12px);
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
-  border-radius: 18px;
-
-  padding: 14px;
-
-  font-size: 12px;
-
-  line-height: 1.6;
-
-  display: none;
-}
-
-.install-title {
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  font-size: 13px;
-  font-weight: 700;
-
-  margin-bottom: 8px;
-}
-
-.install-text {
-
-  opacity: 0.8;
-}
-
-@media (max-width: 700px) {
-
-  h1 {
-    font-size: 34px;
-  }
-
-  .game-card {
-    width: 190px;
-  }
-
-  #install-info {
-    width: 210px;
-  }
-
-}
-
-</style>
-
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-512.png">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+  
+  <link rel="stylesheet" href="style.css">
+  <script defer src="main.js"></script>
 </head>
-
 <body>
+  <div class="background"></div>
 
-<div class="background"></div>
+  <div class="app">
+    <header>
+      <div class="header-main">
+        <h1>OfflineArcade</h1>
+        <button id="random-btn" title="Zufälliges Spiel">🎲</button>
+      </div>
+      <p class="subtitle">Offline gaming platform</p>
+    </header>
 
-<div class="app">
+    <main>
+      <div class="games-wrapper">
+        <div class="game-grid">
+          
+          <!-- Escape Road -->
+          <a class="game-card" href="games/escape-road/index.html" data-game="escape-road">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/escape-road.png" alt="Escape Road">
+            <div class="game-content">
+              <div class="game-title">Escape Road</div>
+              <div class="game-description">Escape the police and survive the chase.</div>
+            </div>
+          </a>
 
-<header>
+          <!-- Drive Mad -->
+          <a class="game-card" href="games/drive-mad/index.html" data-game="drive-mad">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/drive-mad.png" alt="Drive Mad">
+            <div class="game-content">
+              <div class="game-title">Drive Mad</div>
+              <div class="game-description">Drive carefully across crazy obstacles.</div>
+            </div>
+          </a>
 
-  <h1>OfflineArcade</h1>
+          <!-- Block Smasher -->
+          <a class="game-card" href="games/block-smasher/index.html" data-game="block-smasher">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/block-smasher.png" alt="Block Smasher">
+            <div class="game-content">
+              <div class="game-title">Block Smasher</div>
+              <div class="game-description">Smash blocks and survive as long as possible.</div>
+            </div>
+          </a>
 
-  <p class="subtitle">
-    Offline gaming platform
-  </p>
+          <!-- Tic Tac Toe -->
+          <a class="game-card" href="games/tic-tac-toe/index.html" data-game="tic-tac-toe">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/tic-tac-toe.png" alt="Tic Tac Toe">
+            <div class="game-content">
+              <div class="game-title">Tic Tac Toe</div>
+              <div class="game-description">Play against friends or a smart AI bot.</div>
+            </div>
+          </a>
 
-</header>
+          <!-- 2048 -->
+          <a class="game-card" href="games/2048/index.html" data-game="2048">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/2048.png" alt="2048">
+            <div class="game-content">
+              <div class="game-title">2048</div>
+              <div class="game-description">Merge numbers and reach 2048.</div>
+            </div>
+          </a>
 
-<main>
-
-  <div class="games-wrapper">
-
-    <div class="game-grid">
-
-      <a
-        class="game-card"
-        href="games/escape-road/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/escape-road.png"
-          alt="Escape Road"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            Escape Road
-          </div>
-
-          <div class="game-description">
-            Escape the police and survive the chase.
-          </div>
-
-        </div>
-
-      </a>
-
-      <a
-        class="game-card"
-        href="games/drive-mad/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/drive-mad.png"
-          alt="Drive Mad"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            Drive Mad
-          </div>
-
-          <div class="game-description">
-            Drive carefully across crazy obstacles.
-          </div>
-
-        </div>
-
-      </a>
-
-      <a
-        class="game-card"
-        href="games/block-smasher/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/block-smasher.png"
-          alt="Block Smasher"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            Block Smasher
-          </div>
-
-          <div class="game-description">
-            Smash blocks and survive as long as possible.
-          </div>
+          <!-- Pong -->
+          <a class="game-card" href="games/pong/index.html" data-game="pong">
+            <div class="offline-badge not-ready" title="Offline-Status">📥</div>
+            <img class="game-thumb" src="assets/thumbnails/pong.png" alt="Pong">
+            <div class="game-content">
+              <div class="game-title">Pong</div>
+              <div class="game-description">Play against friends or an impossible AI.</div>
+            </div>
+          </a>
 
         </div>
+      </div>
+    </main>
 
-      </a>
-
-      <a
-        class="game-card"
-        href="games/tic-tac-toe/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/tic-tac-toe.png"
-          alt="Tic Tac Toe"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            Tic Tac Toe
-          </div>
-
-          <div class="game-description">
-            Play against friends or a smart AI bot.
-          </div>
-
+    <div class="footer">
+      <!-- Install Guide (A2HS) -->
+      <div id="install-info">
+        <div class="install-title">⚠️ Add to Home Screen</div>
+        <div class="install-text" id="install-text">
+          Offline features work best when OfflineArcade is added to your home screen.
         </div>
+      </div>
 
-      </a>
-
-      <a
-        class="game-card"
-        href="games/2048/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/2048.png"
-          alt="2048"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            2048
-          </div>
-
-          <div class="game-description">
-            Merge numbers and reach 2048.
-          </div>
-
+      <!-- Cache Manager -->
+      <div id="cache-manager">
+        <div class="cache-header">
+          <span id="cache-status">Prüfe Cache...</span>
+          <button id="download-all-btn">Alle laden</button>
         </div>
-
-      </a>
-
-      <a
-        class="game-card"
-        href="games/pong/index.html"
-      >
-
-        <img
-          class="game-thumb"
-          src="assets/thumbnails/pong.png"
-          alt="Pong"
-        >
-
-        <div class="game-content">
-
-          <div class="game-title">
-            Pong
-          </div>
-
-          <div class="game-description">
-            Play against friends or an impossible AI.
-          </div>
-
+        <div id="cache-progress-container">
+          <div id="cache-progress-bar"></div>
         </div>
+      </div>
 
-      </a>
-
+      <!-- App Info & Version & Reload -->
+      <div id="app-info">
+        <div class="info-left">
+          <div class="status-row">
+            <div id="status-dot"></div>
+            <span id="online-status">Online</span>
+          </div>
+          <div class="version-row">
+            Version: <span id="version"></span>
+          </div>
+        </div>
+        <button id="reload-btn">↻</button>
+      </div>
     </div>
-
   </div>
-
-</main>
-
-<div id="app-info">
-
-  <div class="info-left">
-
-    <div class="status-row">
-
-      <div id="status-dot"></div>
-
-      <span id="online-status">
-        Online
-      </span>
-
-    </div>
-
-    <div class="version-row">
-
-      Version:
-      <span id="version"></span>
-
-    </div>
-
-  </div>
-
-  <button id="reload-btn">
-    ↻
-  </button>
-
-</div>
-
-<div id="install-info">
-
-  <div class="install-title">
-    ⚠️ Add to Home Screen
-  </div>
-
-  <div class="install-text">
-    Offline features work best when OfflineArcade is added to your home screen.
-  </div>
-
-</div>
-
-</div>
-
 </body>
 </html>
