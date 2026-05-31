@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v74';
+const CACHE_VERSION = 'v75';
 const GAMES = ['escape-road', 'drive-mad', 'block-smasher', 'tic-tac-toe', '2048', 'pong'];
 
 document.addEventListener('DOMContentLoaded', () => {
