@@ -267,6 +267,31 @@ body.dark-mode .game-card.highlighted {
   line-height: 1.4;
 }
 
+/* Game Meta / Speicherplatz-Badge */
+.game-meta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.game-size {
+  font-size: 11px;
+  opacity: 0.65;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  transition: opacity 0.3s ease, background-color 0.3s, border-color 0.3s;
+}
+
+.game-card:hover .game-size {
+  opacity: 0.95;
+}
+
 /* Footer-Bereich (Keine Überlappungen dank Flexbox) */
 .footer {
   display: flex;
