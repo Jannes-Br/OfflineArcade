@@ -1,8 +1,8 @@
 /* ============================================================
-   OfflineArcade – main.js  (v82 – Clipboard & Share Connection)
+   OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v82';
+const CACHE_VERSION = 'v83';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
@@ -28,6 +28,8 @@ let currentMode    = localStorage.getItem('gameMode') || 'solo';
 let playerName     = localStorage.getItem('playerName') || '';
 let unreadChat     = 0;
 let chatHistory    = {};
+let scanStream     = null;
+let scanInterval   = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -46,10 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const lobbyConnectedActions = document.getElementById('lobbyConnectedActions');
   const lobbyDisconnectBtn = document.getElementById('lobbyDisconnectBtn');
   const lobbyHint         = document.getElementById('lobbyHint');
+  const disconnectBtn     = document.getElementById('disconnectBtn');
   const createLobbyBtn    = document.getElementById('createLobbyBtn');
   const joinLobbyBtn      = document.getElementById('joinLobbyBtn');
-  const chatFab           = document.getElementById('chatFab');
-  const chatBadge         = document.getElementById('chatBadge');
+  const chatFab           = document.getElementById('chat-header-btn');
+  const chatBadge         = document.getElementById('chatBadgeHeader');
   const suggestToast      = document.getElementById('suggestToast');
   const suggestText       = document.getElementById('suggestText');
   const instructToggle    = document.getElementById('instructionsToggle');
@@ -178,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lobbyActions.style.display = 'none';
         lobbyConnectedActions.style.display = 'flex';
         lobbyDisconnectBtn.innerHTML = `<span>✕</span> Verbindung trennen (mit <strong>${MP.opponent || 'Gegner'}</strong> verbunden)`;
-        lobbyHint.textContent = `Wähle ein Spiel aus, um zu starten.`;
+        lobbyHint.textContent = `Wähle ein spiel aus, um zu starten.`;
       } else {
         lobbyActions.style.display = 'flex';
         lobbyConnectedActions.style.display = 'none';
@@ -231,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
           openGameFrame(game);
         }
       } else {
+        // Solo or Bot mode
         openGameFrame(game);
       }
     });
@@ -265,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   lobbyDisconnectBtn.addEventListener('click', doDisconnect);
   settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
+  disconnectBtn.addEventListener('click', doDisconnect);
 
   function doDisconnect() {
     MP.disconnect();
@@ -281,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('disconnected', ({ opponent }) => {
+    MP.disconnect(); // Sauberen Reset durchführen
     onDisconnected();
     if (opponent) showToast(`${opponent} hat die Verbindung getrennt.`);
   });
@@ -492,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = MP.opponent || 'Gegner';
     if (!chatHistory[key]) chatHistory[key] = [];
     chatHistory[key].push({ text, name, mine, ts: Date.now() });
-    if (chatHistory[key].length > 100) chatHistory[key].shift();
+    if (chatHistory[key].length > 100) chatHistory[key].shift(); // keep max 100
     try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch {}
 
     if (chatDrawer.classList.contains('open')) {
@@ -500,6 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   }
+  window.addChatMessageFromGame = addChatMessage;
 
   function renderChatHistory() {
     chatMessages.innerHTML = '';
