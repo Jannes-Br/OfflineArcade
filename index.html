@@ -28,6 +28,10 @@
           <span class="player-name-display" id="playerNameDisplay">...</span>
         </div>
         <div class="header-actions">
+          <button id="chat-header-btn" style="display:none;" title="Chat öffnen">
+            💬
+            <span class="chat-badge-header" id="chatBadgeHeader" style="display:none;">0</span>
+          </button>
           <button id="random-btn" title="Zufälliges Spiel">🎲</button>
           <button id="settings-btn" title="Einstellungen">⚙️</button>
         </div>
@@ -80,8 +84,9 @@
             </div>
           </a>
 
-          <!-- 2048 -->
-          <a class="game-card" href="games/2048/index.html" data-game="2048" data-multiplayer="false">
+          <!-- 2048 – Multiplayer-fähig -->
+          <a class="game-card" href="games/2048/index.html" data-game="2048" data-multiplayer="true">
+            <div class="mp-badge">Multiplayer</div>
             <img class="game-thumb" src="assets/thumbnails/2048.png" alt="2048">
             <div class="game-content">
               <div class="game-title">2048</div>
@@ -188,12 +193,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ═══════════════════════ CHAT FLOATING BUTTON ══════════════════ -->
-  <button class="chat-fab" id="chatFab" style="display:none;" title="Chat öffnen">
-    💬
-    <span class="chat-badge" id="chatBadge" style="display:none;">0</span>
-  </button>
 
   <!-- ═══════════════════════════ MODALS ════════════════════════════ -->
 
