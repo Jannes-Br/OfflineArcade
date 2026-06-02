@@ -1,5 +1,11 @@
 /* ============================================================
    OfflineArcade – Multiplayer Core (WebRTC P2P, no server)
+   ============================================================
+   Flow:
+   1. Host calls MP.createOffer()  → base64 string → show as QR
+   2. Guest scans QR  → MP.receiveOffer(str) → base64 string → show as QR
+   3. Host scans QR   → MP.receiveAnswer(str) → P2P connected
+   After that everything goes over the DataChannel (no internet).
    ============================================================ */
 
 const MP = (() => {
@@ -11,8 +17,13 @@ const MP = (() => {
   let myName       = null;
   const listeners  = {};
 
-  /* No STUN servers → pure local-network (LAN / same WiFi) P2P */
-  const ICE_CONFIG = { iceServers: [] };
+  /* STUN server for robust NAT traversal (fallback to LAN host candidates if offline) */
+  const ICE_CONFIG = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  };
 
   /* ---- event bus ---- */
   function on(event, cb) {
@@ -49,12 +60,19 @@ const MP = (() => {
     });
   }
 
-  /* ---- SDP minifier: strip fat, keep only what we need ---- */
+  /* ---- SDP minifier: strip fat, keep only what we need ----
+     Removes IPv6 candidates, TCP candidates, and verbose
+     attribute lines that are irrelevant for a LAN DataChannel.
+     Reduces QR payload from ~2000 chars to ~400-600 chars.  */
   function minifySDP(sdp) {
     return sdp.split('\n').filter(line => {
+      // Keep all non-candidate lines
       if (!line.startsWith('a=candidate:')) return true;
+      // Drop IPv6 candidates
       if (line.includes(' :: ') || line.match(/[0-9a-f]{4}:[0-9a-f]/i)) return false;
+      // Drop TCP candidates
       if (line.includes(' tcp ')) return false;
+      // Drop relay/srflx candidates (only keep host)
       if (line.includes(' relay ') || line.includes(' srflx ')) return false;
       return true;
     }).join('\n');
@@ -62,6 +80,7 @@ const MP = (() => {
 
   /* ---- encode / decode SDP ---- */
   function encode(obj) {
+    // Minify SDP before encoding to shrink QR code
     if (obj.sdp) obj = { ...obj, sdp: minifySDP(obj.sdp) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
   }
@@ -105,7 +124,13 @@ const MP = (() => {
     emit('disconnected', { opponent: opponentName });
   }
 
-  /* ---- PUBLIC API ---- */
+  /* ============================================================
+     PUBLIC API
+     ============================================================ */
+
+  /**
+   * HOST: create WebRTC offer, return base64 string for QR code.
+   */
   async function createOffer(name) {
     myName = name;
     role   = 'host';
@@ -127,6 +152,9 @@ const MP = (() => {
     });
   }
 
+  /**
+   * GUEST: receive host's base64 offer, return base64 answer for QR code.
+   */
   async function receiveOffer(encodedOffer, name) {
     myName = name;
     role   = 'guest';
@@ -151,12 +179,18 @@ const MP = (() => {
     });
   }
 
+  /**
+   * HOST: receive guest's base64 answer → connection established.
+   */
   async function receiveAnswer(encodedAnswer) {
     const data = decode(encodedAnswer);
     opponentName = data.name;
     await pc.setRemoteDescription({ type: data.type, sdp: data.sdp });
   }
 
+  /**
+   * Disconnect and clean up.
+   */
   function disconnect() {
     send('disconnect');
     try { if (dc) dc.close(); } catch {}
