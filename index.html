@@ -38,6 +38,7 @@
       </div>
     </header>
 
+
     <!-- ═══════════════════════════ MAIN CONTENT ══════════════════════ -->
     <main>
       <div class="games-wrapper">
@@ -84,9 +85,8 @@
             </div>
           </a>
 
-          <!-- 2048 – Multiplayer-fähig -->
-          <a class="game-card" href="games/2048/index.html" data-game="2048" data-multiplayer="true">
-            <div class="mp-badge">Multiplayer</div>
+          <!-- 2048 -->
+          <a class="game-card" href="games/2048/index.html" data-game="2048" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/2048.png" alt="2048">
             <div class="game-content">
               <div class="game-title">2048</div>
@@ -131,7 +131,7 @@
           <span>✕</span> Verbindung trennen
         </button>
       </div>
-      <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und tausche die Signale per Clipboard/Share aus.</p>
+      <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und tausche den Code per Kopieren/Teilen aus.</p>
     </div>
 
     <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
@@ -151,7 +151,7 @@
           </div>
           <div class="instr-item">
             <div class="instr-icon">📡</div>
-            <div><strong>Multiplayer</strong> – Verbinde dich per P2P-Code mit einem Freund im gleichen WLAN.</div>
+            <div><strong>Multiplayer</strong> – Verbinde dich per Code-Austausch mit einem Freund im gleichen WLAN.</div>
           </div>
           <div class="instr-item">
             <div class="instr-icon">📶</div>
@@ -163,11 +163,11 @@
           </div>
           <div class="instr-item">
             <div class="instr-icon">2️⃣</div>
-            <div>Dein Freund klickt <strong>„Beitreten"</strong>, fügt den Host-Code ein, und kopiert/teilt seinen Antwort-Code.</div>
+            <div>Dein Freund klickt <strong>„Beitreten"</strong>, fügt deinen Code ein und teilt seinen Code.</div>
           </div>
           <div class="instr-item">
             <div class="instr-icon">3️⃣</div>
-            <div>Du fügst seinen Code per Klick ein → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
+            <div>Du fügst seinen Antwort-Code ein → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
           </div>
         </div>
       </div>
@@ -175,7 +175,8 @@
 
     <!-- ═══════════════════════════ FOOTER ════════════════════════════ -->
     <div class="footer">
-      <div id="install-info">
+      <div id="install-info" style="display:none;">
+        <button id="installCloseBtn" style="float: right; background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 4px; margin-top: -2px;">✕</button>
         <div class="install-title">⚠️ Add to Home Screen</div>
         <div class="install-text" id="install-text">
           Offline features work best when OfflineArcade is added to your home screen.
@@ -193,6 +194,8 @@
       </div>
     </div>
   </div>
+
+
 
   <!-- ═══════════════════════════ MODALS ════════════════════════════ -->
 
@@ -227,6 +230,7 @@
       <div class="modal-title">📡 Verbindung erstellen</div>
       <p class="modal-subtitle" id="hostQrSubtitle">Code wird erstellt…</p>
       
+      <!-- Code box (styled like a box) -->
       <div id="hostCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 11px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
 
       <div class="scanner-fallback-actions" id="hostShareActions" style="margin-top: 12px; display: none; gap: 8px;">
