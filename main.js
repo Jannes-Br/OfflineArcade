@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v80';
+const CACHE_VERSION = 'v81';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeTabs          = document.querySelectorAll('.mode-tab');
   const gameCards         = document.querySelectorAll('.game-card');
   const lobbyPanel        = document.getElementById('lobbyPanel');
+  const lobbyActions      = document.getElementById('lobbyActions');
+  const lobbyConnectedActions = document.getElementById('lobbyConnectedActions');
+  const lobbyDisconnectBtn = document.getElementById('lobbyDisconnectBtn');
+  const lobbyHint         = document.getElementById('lobbyHint');
   const connectionBar     = document.getElementById('connectionBar');
   const connAvatar        = document.getElementById('connAvatar');
   const connName          = document.getElementById('connName');
@@ -56,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const suggestText       = document.getElementById('suggestText');
   const instructToggle    = document.getElementById('instructionsToggle');
   const instructBody      = document.getElementById('instructionsBody');
+  const gameFrameOverlay  = document.getElementById('gameFrameOverlay');
+  const gameFrame         = document.getElementById('gameFrame');
 
   /* Settings */
   const settingsOverlay        = document.getElementById('settingsOverlay');
@@ -179,10 +185,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMulti   = mode === 'multi';
     const connected = MP.isConnected();
 
-    lobbyPanel.style.display             = (isMulti && !connected) ? 'block' : 'none';
+    lobbyPanel.style.display             = isMulti ? 'block' : 'none';
     connectionBar.style.display          = (isMulti &&  connected) ? 'flex'  : 'none';
     chatFab.style.display                = (isMulti &&  connected) ? 'flex'  : 'none';
     settingsDisconnectWrap.style.display = (isMulti &&  connected) ? 'block' : 'none';
+
+    if (isMulti) {
+      if (connected) {
+        lobbyActions.style.display = 'none';
+        lobbyConnectedActions.style.display = 'flex';
+        lobbyHint.textContent = `Verbunden mit ${MP.opponent || 'Gegner'}. Wähle ein multiplayer-fähiges Spiel aus, um zu starten.`;
+      } else {
+        lobbyActions.style.display = 'flex';
+        lobbyConnectedActions.style.display = 'none';
+        lobbyHint.textContent = 'Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.';
+      }
+    }
 
     updateCardStates(mode, connected);
     localStorage.setItem('gameMode', mode);
@@ -192,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tab.addEventListener('click', () => setMode(tab.dataset.mode));
   });
 
-  /* ══════════════════ CARD STATES ══════════════════ */
+  /* ── Card states ── */
   function updateCardStates(mode, connected) {
     gameCards.forEach(card => {
       const isMP = card.dataset.multiplayer === 'true';
@@ -211,20 +229,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ══════════════════ GAME CARD CLICK (Multiplayer) ══════════════════ */
+  /* ══════════════════ GAME CARD CLICK ══════════════════ */
   gameCards.forEach(card => {
     card.addEventListener('click', (e) => {
       if (card.classList.contains('mp-disabled')) { e.preventDefault(); return; }
-      if (currentMode !== 'multi' || !MP.isConnected()) return;
-
       const game = card.dataset.game;
-      if (MP.role === 'guest') {
-        e.preventDefault();
-        MP.send('suggest', { game });
-        showToast('Vorschlag gesendet! Warte auf den Host.');
-      }
-      if (MP.role === 'host') {
-        MP.send('start', { game, role: 'O' });
+      e.preventDefault();
+
+      if (currentMode === 'multi' && MP.isConnected()) {
+        if (MP.role === 'guest') {
+          MP.send('suggest', { game });
+          showToast('Vorschlag gesendet! Warte auf den Host.');
+        }
+        if (MP.role === 'host') {
+          MP.send('start', { game, role: 'O' });
+          localStorage.setItem('mpRole', 'X'); // Host is X
+          openGameFrame(game);
+        }
+      } else {
+        // Solo or Bot mode
+        openGameFrame(game);
       }
     });
   });
@@ -256,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettings();
   }
 
+  lobbyDisconnectBtn.addEventListener('click', doDisconnect);
   settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
   disconnectBtn.addEventListener('click', doDisconnect);
 
@@ -270,12 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
     connAvatar.textContent      = (opponent || '?')[0].toUpperCase();
     connName.textContent        = opponent || 'Gegner';
     chatPartnerName.textContent = opponent || 'Gegner';
-    lobbyPanel.style.display    = 'none';
-    connectionBar.style.display = 'flex';
-    chatFab.style.display       = 'flex';
-    settingsDisconnectWrap.style.display = 'block';
-    updateCardStates(currentMode, true);
     closeAllModals();
+    setMode(currentMode, false);
     showToast(`✅ Verbunden mit ${opponent}!`);
   });
 
@@ -293,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   MP.on('start', ({ game }) => {
     localStorage.setItem('mpRole', 'O');
-    window.location.href = `games/${game}/index.html`;
+    openGameFrame(game);
   });
 
   MP.on('chat', ({ text, name }) => {
@@ -316,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsDisconnectWrap.style.display = 'none';
     gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
     document.querySelectorAll('.solo-badge').forEach(b => b.remove());
-    if (currentMode === 'multi') lobbyPanel.style.display = 'block';
+    setMode(currentMode, false);
   }
 
   /* ══════════════════ HOST FLOW ══════════════════ */
@@ -450,14 +471,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   guestJoinClose.addEventListener('click', () => { stopCamera(); closeModal(guestJoinOverlay); MP.disconnect(); });
 
-  /* ══════════════════ QR HELPERS ══════════════════ */
+  /* ── QR helpers ── */
   function renderQR(container, text) {
     container.innerHTML = '';
     new QRCode(container, {
       text,
       width:        240,
       height:       240,
-      correctLevel: QRCode.CorrectLevel.L   // Lowest correction → smallest/clearest QR
+      correctLevel: QRCode.CorrectLevel.L
     });
   }
 
@@ -477,7 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
       let found = false;
 
       const tick = () => {
-        // Wait until the video has actual pixel data
         if (!found && videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
           try {
             const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
@@ -491,16 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code && code.data) {
               found = true;
               onResult(code.data);
-              return; // stop rAF loop
+              return;
             }
-          } catch (err) {
-            // Silently ignore frame errors, keep scanning
-          }
+          } catch (err) {}
         }
         if (!found) scanInterval = requestAnimationFrame(tick);
       };
 
-      // Start scanning only after video plays
       videoEl.onloadedmetadata = () => {
         videoEl.play().then(() => {
           scanInterval = requestAnimationFrame(tick);
@@ -515,6 +532,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scanStream)   { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
   }
 
+  /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
+  function openGameFrame(game) {
+    gameFrame.src = `games/${game}/index.html`;
+    gameFrameOverlay.style.display = "flex";
+  }
+  window.openGameFrame = openGameFrame;
+
+  function closeGameFrame() {
+    gameFrame.src = "";
+    gameFrameOverlay.style.display = "none";
+    if (MP.isConnected()) {
+      MP.send('menu');
+    }
+  }
+  window.closeGameFrame = closeGameFrame;
+
+  MP.on('menu', () => {
+    if (gameFrameOverlay.style.display !== "none") {
+      gameFrame.src = "";
+      gameFrameOverlay.style.display = "none";
+      showToast(`${MP.opponent || 'Gegner'} ist zurück im Menü.`);
+    }
+  });
+
   /* ══════════════════ FILE SCAN HELPER ══════════════════ */
   function scanFile(file, callback) {
     if (typeof jsQR === 'undefined') {
@@ -527,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
       img.onload = function() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const maxDim = 1000;
+        const maxDim = 2500;
         let w = img.width;
         let h = img.height;
         if (w > maxDim || h > maxDim) {
@@ -559,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   }
 
-  /* ══════════════════ MODAL HELPERS ══════════════════ */
+  /* ── Modal helpers ── */
   function openModal(el)  { el.classList.add('open'); }
   function closeModal(el) { el.classList.remove('open'); }
   function closeAllModals() {
@@ -567,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stopCamera();
   }
 
-  /* ══════════════════ CHAT ══════════════════ */
+  /* ── Chat ── */
   chatFab.addEventListener('click', openChat);
   chatClose.addEventListener('click', closeChat);
   chatOverlay.addEventListener('click', closeChat);
@@ -600,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = MP.opponent || 'Gegner';
     if (!chatHistory[key]) chatHistory[key] = [];
     chatHistory[key].push({ text, name, mine, ts: Date.now() });
-    if (chatHistory[key].length > 100) chatHistory[key].shift(); // keep max 100
+    if (chatHistory[key].length > 100) chatHistory[key].shift();
     try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch {}
 
     if (chatDrawer.classList.contains('open')) {
@@ -630,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.appendChild(div);
   }
 
-  /* ══════════════════ LUCKY SPIN ══════════════════ */
+  /* ── Lucky spin ── */
   randomBtn.addEventListener('click', startLuckySpin);
 
   function startLuckySpin() {
@@ -675,13 +716,13 @@ document.addEventListener('DOMContentLoaded', () => {
     spin();
   }
 
-  /* ══════════════════ INSTRUCTIONS ══════════════════ */
+  /* ── Instructions ── */
   instructToggle.addEventListener('click', () => {
     const open = instructBody.classList.toggle('open');
     instructToggle.classList.toggle('open', open);
   });
 
-  /* ══════════════════ RELOAD / INSTALL ══════════════════ */
+  /* ── Reload / Install ── */
   reloadBtn.addEventListener('click', () => window.location.reload());
 
   let deferredPrompt = null;
