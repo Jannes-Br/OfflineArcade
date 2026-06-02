@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v79';
+const CACHE_VERSION = 'v80';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hostQrCanvas    = document.getElementById('hostQrCanvas');
   const hostScanGuestBtn= document.getElementById('hostScanGuestBtn');
   const hostSpinner     = document.getElementById('hostSpinner');
+  const hostCopyBtn     = document.getElementById('hostCopyBtn');
 
   /* Guest Join Modal */
   const guestJoinOverlay = document.getElementById('guestJoinOverlay');
@@ -84,12 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const guestScanCanvas  = document.getElementById('guestScanCanvas');
   const guestAnswerQr    = document.getElementById('guestAnswerQr');
   const guestSpinner     = document.getElementById('guestSpinner');
+  const guestCopyBtn     = document.getElementById('guestCopyBtn');
+  const guestPhotoBtn    = document.getElementById('guestPhotoBtn');
+  const guestPasteBtn    = document.getElementById('guestPasteBtn');
+  const guestFileInput   = document.getElementById('guestFileInput');
 
   /* Host Scan Modal */
   const hostScanOverlay = document.getElementById('hostScanOverlay');
   const hostScanClose   = document.getElementById('hostScanClose');
   const hostVideo       = document.getElementById('hostVideo');
   const hostScanCanvas  = document.getElementById('hostScanCanvas');
+  const hostPhotoBtn     = document.getElementById('hostPhotoBtn');
+  const hostPasteBtn     = document.getElementById('hostPasteBtn');
+  const hostFileInput    = document.getElementById('hostFileInput');
 
   /* Chat */
   const chatOverlay     = document.getElementById('chatOverlay');
@@ -315,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   createLobbyBtn.addEventListener('click', async () => {
     hostQrCanvas.innerHTML         = '';
     hostScanGuestBtn.style.display = 'none';
+    hostCopyBtn.style.display      = 'none';
     hostSpinner.style.display      = 'block';
     hostQrSubtitle.textContent     = 'QR-Code wird erstellt…';
     openModal(hostQrOverlay);
@@ -325,6 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
       hostQrSubtitle.textContent = 'Lass deinen Freund diesen QR-Code scannen:';
       renderQR(hostQrCanvas, encoded);
       hostScanGuestBtn.style.display = 'flex';
+      hostCopyBtn.style.display      = 'flex';
+      hostCopyBtn.onclick = () => {
+        navigator.clipboard.writeText(encoded)
+          .then(() => showToast('📋 Code kopiert!'))
+          .catch(() => showToast('❌ Fehler beim Kopieren.'));
+      };
     } catch(e) {
       hostQrSubtitle.textContent = '❌ Fehler beim Erstellen. Nochmal versuchen.';
       hostSpinner.style.display  = 'none';
@@ -346,6 +361,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  hostPasteBtn.addEventListener('click', async () => {
+    let text = "";
+    try { text = await navigator.clipboard.readText(); } catch(e) {}
+    if (!text) text = prompt("Füge den Verbindungscode des Gastes hier ein:");
+    text = text ? text.trim() : "";
+    if (!text) return;
+    stopCamera();
+    closeModal(hostScanOverlay);
+    try {
+      await MP.receiveAnswer(text);
+    } catch(e) {
+      showToast('❌ Ungültiger Code.');
+      openModal(hostQrOverlay);
+    }
+  });
+
+  hostPhotoBtn.addEventListener('click', () => hostFileInput.click());
+  hostFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    hostFileInput.value = "";
+    if (!file) return;
+    scanFile(file, async (decoded) => {
+      stopCamera();
+      closeModal(hostScanOverlay);
+      try {
+        await MP.receiveAnswer(decoded);
+      } catch(e) {
+        showToast('❌ Ungültiger QR-Code im Bild.');
+        openModal(hostQrOverlay);
+      }
+    });
+  });
+
   hostQrClose.addEventListener('click',  () => { closeModal(hostQrOverlay);  MP.disconnect(); });
   hostScanClose.addEventListener('click', () => { stopCamera(); closeModal(hostScanOverlay); MP.disconnect(); });
 
@@ -355,18 +403,48 @@ document.addEventListener('DOMContentLoaded', () => {
     guestAnswerStep.style.display = 'none';
     openModal(guestJoinOverlay);
     startCamera(guestVideo, guestScanCanvas, async (decoded) => {
-      stopCamera();
-      guestScanStep.style.display   = 'none';
-      guestAnswerStep.style.display = 'block';
-      guestAnswerQr.innerHTML       = '';
-      guestSpinner.style.display    = 'block';
-      try {
-        const answer = await MP.receiveOffer(decoded, playerName);
-        guestSpinner.style.display = 'none';
-        renderQR(guestAnswerQr, answer);
-      } catch(e) {
-        guestSpinner.textContent = '❌ Fehler. Bitte erneut scannen.';
-      }
+      guestProcessOffer(decoded);
+    });
+  });
+
+  async function guestProcessOffer(offerText) {
+    stopCamera();
+    guestScanStep.style.display   = 'none';
+    guestAnswerStep.style.display = 'block';
+    guestAnswerQr.innerHTML       = '';
+    guestSpinner.style.display    = 'block';
+    guestCopyBtn.style.display    = 'none';
+    try {
+      const answer = await MP.receiveOffer(offerText, playerName);
+      guestSpinner.style.display = 'none';
+      renderQR(guestAnswerQr, answer);
+      guestCopyBtn.style.display = 'flex';
+      guestCopyBtn.onclick = () => {
+        navigator.clipboard.writeText(answer)
+          .then(() => showToast('📋 Code kopiert!'))
+          .catch(() => showToast('❌ Fehler beim Kopieren.'));
+      };
+    } catch(e) {
+      guestSpinner.textContent = '❌ Fehler. Bitte erneut versuchen.';
+    }
+  }
+
+  guestPasteBtn.addEventListener('click', async () => {
+    let text = "";
+    try { text = await navigator.clipboard.readText(); } catch(e) {}
+    if (!text) text = prompt("Füge den Verbindungscode des Hosts hier ein:");
+    text = text ? text.trim() : "";
+    if (!text) return;
+    guestProcessOffer(text);
+  });
+
+  guestPhotoBtn.addEventListener('click', () => guestFileInput.click());
+  guestFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    guestFileInput.value = "";
+    if (!file) return;
+    scanFile(file, (decoded) => {
+      guestProcessOffer(decoded);
     });
   });
 
@@ -435,6 +513,50 @@ document.addEventListener('DOMContentLoaded', () => {
   function stopCamera() {
     if (scanInterval) { cancelAnimationFrame(scanInterval); scanInterval = null; }
     if (scanStream)   { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  }
+
+  /* ══════════════════ FILE SCAN HELPER ══════════════════ */
+  function scanFile(file, callback) {
+    if (typeof jsQR === 'undefined') {
+      showToast('❌ QR-Scanner nicht geladen.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxDim = 1000;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const code = jsQR(imgData.data, w, h);
+          if (code && code.data) {
+            callback(code.data);
+          } else {
+            showToast("❌ Kein QR-Code im Bild gefunden.");
+          }
+        } catch (err) {
+          showToast("❌ Fehler beim Analysieren des Bildes.");
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   /* ══════════════════ MODAL HELPERS ══════════════════ */
