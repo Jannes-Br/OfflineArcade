@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v76';
+const CACHE = 'offlinearcade-v77';
 
 // Essenzielle App-Shell Dateien (SW schlägt fehl, wenn diese nicht geladen werden können)
 const ESSENTIAL_ASSETS = [
@@ -6,10 +6,13 @@ const ESSENTIAL_ASSETS = [
   'index.html',
   'style.css',
   'main.js',
-  'manifest.json'
+  'manifest.json',
+  'multiplayer.js',
+  'assets/qrcode.min.js',
+  'assets/jsqr.min.js'
 ];
 
-// Optionale Spiele-Assets (werden sofort beim SW-Install geladen, Fehler blockieren den SW nicht)
+// Optionale Spiele-Assets (SW installiert sich trotzdem, falls eine Datei fehlt)
 const GAME_ASSETS = [
   'games/escape-road/index.html',
   'games/escape-road/manifest.json',
@@ -35,6 +38,7 @@ const GAME_ASSETS = [
   'assets/thumbnails/pong.png'
 ];
 
+// Installation: Essentials cachen (muss gelingen) und Games optional cachen
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -55,6 +59,7 @@ self.addEventListener('install', event => {
   );
 });
 
+// Aktivierung: Alten Cache bereinigen
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
