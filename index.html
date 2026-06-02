@@ -46,19 +46,6 @@
       <button class="conn-disconnect" id="disconnectBtn" title="Verbindung trennen">✕</button>
     </div>
 
-    <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
-    <div class="lobby-panel" id="lobbyPanel" style="display:none;">
-      <div class="lobby-actions">
-        <button class="lobby-btn primary" id="createLobbyBtn">
-          <span>📡</span> Verbindung erstellen
-        </button>
-        <button class="lobby-btn" id="joinLobbyBtn">
-          <span>📷</span> Beitreten (QR scannen)
-        </button>
-      </div>
-      <p class="lobby-hint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
-    </div>
-
     <!-- ═══════════════════════════ MAIN CONTENT ══════════════════════ -->
     <main>
       <div class="games-wrapper">
@@ -134,6 +121,19 @@
       <button class="mode-tab active" data-mode="solo"  id="tabSolo">🎮 Solo</button>
       <button class="mode-tab"        data-mode="bot"   id="tabBot">🤖 vs. Bot</button>
       <button class="mode-tab"        data-mode="multi" id="tabMulti">📡 Multiplayer</button>
+    </div>
+
+    <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
+    <div class="lobby-panel" id="lobbyPanel" style="display:none;">
+      <div class="lobby-actions">
+        <button class="lobby-btn primary" id="createLobbyBtn">
+          <span>📡</span> Verbindung erstellen
+        </button>
+        <button class="lobby-btn" id="joinLobbyBtn">
+          <span>📷</span> Beitreten (QR scannen)
+        </button>
+      </div>
+      <p class="lobby-hint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
     </div>
 
     <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
@@ -235,6 +235,9 @@
       <div class="modal-title">📡 Verbindung erstellen</div>
       <p class="modal-subtitle" id="hostQrSubtitle">QR-Code wird erstellt…</p>
       <div id="hostQrCanvas" class="qr-wrap"></div>
+      <button class="modal-btn secondary" id="hostCopyBtn" style="display:none; margin-top:8px;">
+        📋 Code kopieren
+      </button>
       <p class="modal-hint">Lass deinen Freund diesen QR-Code scannen.<br>Danach scannst du seinen.</p>
       <button class="modal-btn" id="hostScanGuestBtn" style="display:none;">
         📷 Gast-QR scannen
@@ -255,11 +258,23 @@
           <canvas id="guestScanCanvas" style="display:none;"></canvas>
           <div class="scan-reticle"></div>
         </div>
+        <div class="scanner-fallback-actions" style="margin-top: 12px; display: flex; gap: 8px;">
+          <button class="modal-btn secondary" id="guestPhotoBtn" style="margin-top:0; flex: 1;">
+            🖼️ Foto wählen
+          </button>
+          <button class="modal-btn secondary" id="guestPasteBtn" style="margin-top:0; flex: 1;">
+            📋 Code einfügen
+          </button>
+        </div>
+        <input type="file" id="guestFileInput" accept="image/*" style="display:none;">
         <p class="modal-hint-small">Halte die Kamera auf den QR-Code des Hosts.</p>
       </div>
       <div id="guestAnswerStep" style="display:none;">
         <p class="modal-subtitle">Zeig deinem Host diesen QR-Code:</p>
         <div id="guestAnswerQr" class="qr-wrap"></div>
+        <button class="modal-btn secondary" id="guestCopyBtn" style="display:none; margin-top:8px;">
+          📋 Code kopieren
+        </button>
         <p class="modal-hint">Warte bis der Host deinen QR gescannt hat.</p>
         <div class="qr-spinner" id="guestSpinner">⏳ Warte auf Verbindung…</div>
       </div>
@@ -277,6 +292,15 @@
         <canvas id="hostScanCanvas" style="display:none;"></canvas>
         <div class="scan-reticle"></div>
       </div>
+      <div class="scanner-fallback-actions" style="margin-top: 12px; display: flex; gap: 8px;">
+        <button class="modal-btn secondary" id="hostPhotoBtn" style="margin-top:0; flex: 1;">
+          🖼️ Foto wählen
+        </button>
+        <button class="modal-btn secondary" id="hostPasteBtn" style="margin-top:0; flex: 1;">
+          📋 Code einfügen
+        </button>
+      </div>
+      <input type="file" id="hostFileInput" accept="image/*" style="display:none;">
       <p class="modal-hint-small">Halte die Kamera auf den QR-Code des Gastes.</p>
     </div>
   </div>
