@@ -125,7 +125,7 @@
 
     <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
     <div class="lobby-panel" id="lobbyPanel" style="display:none;">
-      <div class="lobby-actions">
+      <div class="lobby-actions" id="lobbyActions">
         <button class="lobby-btn primary" id="createLobbyBtn">
           <span>📡</span> Verbindung erstellen
         </button>
@@ -133,7 +133,12 @@
           <span>📷</span> Beitreten (QR scannen)
         </button>
       </div>
-      <p class="lobby-hint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
+      <div class="lobby-actions" id="lobbyConnectedActions" style="display:none;">
+        <button class="lobby-btn danger" id="lobbyDisconnectBtn" style="background:#ef4444; color:white; border-color:transparent; box-shadow:0 4px 14px rgba(239,68,68,0.4);">
+          <span>✕</span> Verbindung trennen
+        </button>
+      </div>
+      <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
     </div>
 
     <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
@@ -327,5 +332,10 @@
 
   <!-- Toast Notification -->
   <div class="toast" id="toast"></div>
+
+  <!-- Game Frame Overlay -->
+  <div class="game-frame-overlay" id="gameFrameOverlay" style="display:none;">
+    <iframe id="gameFrame" src=""></iframe>
+  </div>
 </body>
 </html>
