@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v83';
+const CACHE_VERSION = 'v84';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const lobbyConnectedActions = document.getElementById('lobbyConnectedActions');
   const lobbyDisconnectBtn = document.getElementById('lobbyDisconnectBtn');
   const lobbyHint         = document.getElementById('lobbyHint');
-  const disconnectBtn     = document.getElementById('disconnectBtn');
   const createLobbyBtn    = document.getElementById('createLobbyBtn');
   const joinLobbyBtn      = document.getElementById('joinLobbyBtn');
   const chatFab           = document.getElementById('chat-header-btn');
@@ -269,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   lobbyDisconnectBtn.addEventListener('click', doDisconnect);
   settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
-  disconnectBtn.addEventListener('click', doDisconnect);
 
   function doDisconnect() {
     MP.disconnect();
@@ -600,12 +598,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const installCloseBtn = document.getElementById('installCloseBtn');
+  if (installCloseBtn) {
+    installCloseBtn.addEventListener('click', () => {
+      document.getElementById('install-info').style.display = 'none';
+      localStorage.setItem('installBannerDismissed', 'true');
+    });
+  }
+
   (function checkInstall() {
     const isIOS      = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isInstalled= window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
+    const dismissed  = localStorage.getItem('installBannerDismissed') === 'true';
     const info       = document.getElementById('install-info');
     const text       = document.getElementById('install-text');
-    if (isInstalled) { info.style.display = 'none'; return; }
+    if (isInstalled || dismissed) { info.style.display = 'none'; return; }
     info.style.display = 'block';
     if (isIOS) text.innerHTML = `Tippe auf ⎙ in Safari und wähle <strong>„Zum Home-Bildschirm"</strong>.`;
   })();
