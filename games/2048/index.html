@@ -1,881 +1,2061 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>2048 – OfflineArcade</title>
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
+  <style>
+    :root {
+      /* LIGHT MODE VARIABLES (Default) */
+      --bg-color: #f8fafc;
+      --text-color: #0f172a;
+      --text-gradient: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+      
+      --bg-radial-1: rgba(59, 130, 246, 0.08);
+      --bg-radial-2: rgba(147, 51, 234, 0.08);
+      --bg-linear: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      
+      --box-bg: rgba(255, 255, 255, 0.7);
+      --box-border: rgba(0, 0, 0, 0.08);
+      --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+      
+      --btn-bg: rgba(0, 0, 0, 0.04);
+      --btn-border: rgba(0, 0, 0, 0.08);
+      --btn-color: #0f172a;
+      --btn-hover-bg: rgba(0, 0, 0, 0.08);
+      --btn-hover-border: rgba(59, 130, 246, 0.4);
+      --btn-active-bg: #3b82f6;
+      --btn-active-color: white;
+      
+      --score-bg: rgba(0, 0, 0, 0.03);
+      --score-border: rgba(0, 0, 0, 0.04);
+      --score-title: #475569;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+    }
 
-<title>2048</title>
+    body.dark-mode {
+      /* DARK MODE VARIABLES */
+      --bg-color: #0f172a;
+      --text-color: #ffffff;
+      --text-gradient: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      
+      --bg-radial-1: rgba(76, 201, 240, 0.18);
+      --bg-radial-2: rgba(99, 102, 241, 0.18);
+      --bg-linear: linear-gradient(180deg, #111827 0%, #0b1120 100%);
+      
+      --box-bg: rgba(255, 255, 255, 0.06);
+      --box-border: rgba(255, 255, 255, 0.08);
+      --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      
+      --btn-bg: rgba(255, 255, 255, 0.08);
+      --btn-border: rgba(255, 255, 255, 0.1);
+      --btn-color: #ffffff;
+      --btn-hover-bg: rgba(255, 255, 255, 0.16);
+      --btn-hover-border: rgba(76, 201, 240, 0.4);
+      --btn-active-bg: #38bdf8;
+      --btn-active-color: #0f172a;
+      
+      --score-bg: rgba(255, 255, 255, 0.04);
+      --score-border: rgba(255, 255, 255, 0.05);
+      --score-title: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+    }
 
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial,sans-serif;
-}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-body{
-  background:
-    radial-gradient(circle at top,#1e293b,#0f172a 60%);
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  overflow:hidden;
-  color:white;
-  padding:20px;
-}
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text-color);
+      background: var(--bg-color);
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
 
-.game-container{
-  width:min(92vw,560px);
-}
+    body {
+      position: fixed;
+      inset: 0;
+    }
 
-.top-bar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
+    .background {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, var(--bg-radial-1), transparent 35%),
+        radial-gradient(circle at bottom left, var(--bg-radial-2), transparent 35%),
+        var(--bg-linear);
+      z-index: 0;
+      transition: background 0.4s ease;
+    }
 
-.title{
-  font-size:62px;
-  font-weight:900;
-  letter-spacing:2px;
-}
+    /* Fixed Navigation Header */
+    .game-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: max(16px, env(safe-area-inset-top)) 16px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
 
-.score-box{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:18px;
-  padding:14px 24px;
-  text-align:center;
-  min-width:120px;
-}
+    .back-btn, #mute-btn, #chat-btn {
+      pointer-events: auto;
+      border: none;
+      background: var(--box-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--box-border);
+      color: var(--text-color);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
 
-.score-label{
-  font-size:13px;
-  opacity:0.7;
-}
+    #mute-btn, #chat-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      font-size: 16px;
+      position: relative;
+    }
 
-.score{
-  font-size:30px;
-  font-weight:bold;
-}
+    .back-btn:hover, #mute-btn:hover, #chat-btn:hover {
+      transform: translateY(-2px);
+      background: var(--btn-hover-bg);
+      border-color: var(--btn-hover-border);
+    }
 
-.board{
-  position:relative;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-  padding:12px;
-  border-radius:26px;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  touch-action:none;
-  user-select:none;
-  overflow:hidden;
-}
+    .back-btn:active, #mute-btn:active, #chat-btn:active {
+      transform: scale(0.95);
+    }
 
-.cell{
-  aspect-ratio:1;
-  border-radius:18px;
-  background:rgba(255,255,255,0.05);
-}
+    .header-right {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
 
-.tile{
-  position:absolute;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  border-radius:18px;
-  transition:
-    transform 0.16s ease,
-    left 0.14s ease,
-    top 0.14s ease;
-  box-shadow:
-    0 8px 18px rgba(0,0,0,0.25);
-}
+    .chat-badge-hdr {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg-color);
+    }
 
-.tile.new{
-  animation:pop 0.12s ease;
-}
+    .mode-badge {
+      pointer-events: none;
+      background: var(--btn-active-bg);
+      color: var(--btn-active-color);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
 
-@keyframes pop{
-  0%{
-    transform:scale(0.88);
-  }
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 72px 16px 20px;
+    }
 
-  100%{
-    transform:scale(1);
-  }
-}
+    .game-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
+      border-radius: 28px;
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--box-shadow);
+      transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
 
-.tile-2{
-  background:#f8fafc;
-  color:#111827;
-}
+    .title-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
 
-.tile-4{
-  background:#dbeafe;
-  color:#111827;
-}
+    .title {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: var(--text-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-.tile-8{
-  background:#60a5fa;
-  color:white;
-}
+    .opponent-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(56, 189, 248, 0.08));
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 16px;
+    }
 
-.tile-16{
-  background:#3b82f6;
-  color:white;
-}
+    .opponent-bar.show {
+      display: flex;
+    }
 
-.tile-32{
-  background:#2563eb;
-  color:white;
-}
+    .opp-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
 
-.tile-64{
-  background:#7c3aed;
-  color:white;
-}
+    .opp-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
 
-.tile-128{
-  background:#9333ea;
-  color:white;
-}
+    .opp-role {
+      font-size: 11px;
+      opacity: 0.55;
+      margin-top: 1px;
+    }
 
-.tile-256{
-  background:#c026d3;
-  color:white;
-}
+    /* Scoreboards */
+    .score-box {
+      background: var(--score-bg);
+      border: 1px solid var(--score-border);
+      border-radius: 16px;
+      padding: 8px 14px;
+      text-align: center;
+      min-width: 90px;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
 
-.tile-512{
-  background:#db2777;
-  color:white;
-}
+    .score-label {
+      color: var(--score-title);
+      margin-bottom: 2px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-.tile-1024{
-  background:#f43f5e;
-  color:white;
-}
+    .score-value {
+      font-size: 22px;
+      font-weight: 800;
+    }
 
-.tile-2048{
-  background:#f59e0b;
-  color:white;
-}
+    .multi-scoreboard {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
 
-.controls{
-  margin-top:18px;
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:12px;
-}
+    .multi-score-box {
+      flex: 1;
+      background: var(--score-bg);
+      border: 1px solid var(--score-border);
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
 
-button{
-  border:none;
-  border-radius:16px;
-  padding:16px;
-  background:rgba(255,255,255,0.08);
-  color:white;
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-  transition:0.2s;
-}
+    .multi-score-label {
+      color: var(--score-title);
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
 
-button.active{
-  outline:2px solid #60a5fa;
-  background:rgba(96,165,250,0.18);
-}
+    .multi-score-value {
+      font-size: 22px;
+      font-weight: 800;
+    }
 
-button.disabled{
-  opacity:0.35;
-}
+    .board {
+      position: relative;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--box-border);
+      padding: 12px;
+      border-radius: 24px;
+      aspect-ratio: 1;
+      width: 100%;
+      touch-action: none;
+      user-select: none;
+    }
 
-.message{
-  margin-top:18px;
-  text-align:center;
-  font-size:18px;
-  min-height:24px;
-}
+    body.dark-mode .board {
+      background: rgba(255, 255, 255, 0.04);
+    }
 
-@media (max-width:600px){
+    .grid-cells {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
 
-  .title{
-    font-size:46px;
-  }
+    .cell {
+      aspect-ratio: 1;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.04);
+    }
 
-}
-</style>
+    body.dark-mode .cell {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tiles-container {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+    }
+
+    .tile {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      border-radius: 18px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+      transition: left 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      user-select: none;
+    }
+
+    body.dark-mode .tile {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .tile.new {
+      animation: pop 0.14s ease-out forwards;
+    }
+
+    .tile.merged-pop {
+      animation: mergePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      z-index: 5;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes mergePop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* Tile Colors */
+    .tile-2 { background: #f8fafc; color: #111827; }
+    .tile-4 { background: #f1f5f9; color: #111827; }
+    .tile-8 { background: #e2e8f0; color: #111827; }
+    .tile-16 { background: #cbd5e1; color: #0f172a; }
+    .tile-32 { background: #3b82f6; color: white; }
+    .tile-64 { background: #2563eb; color: white; }
+    .tile-128 { background: #1d4ed8; color: white; }
+    .tile-256 { background: #8b5cf6; color: white; }
+    .tile-512 { background: #7c3aed; color: white; }
+    .tile-1024 { background: #db2777; color: white; }
+    .tile-2048 { background: #f59e0b; color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+
+    body.dark-mode .tile-2 { background: rgba(255, 255, 255, 0.08); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.06); }
+    body.dark-mode .tile-4 { background: rgba(255, 255, 255, 0.13); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
+    body.dark-mode .tile-8 { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+    body.dark-mode .tile-16 { background: rgba(59, 130, 246, 0.32); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }
+    body.dark-mode .tile-32 { background: rgba(139, 92, 246, 0.28); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+    body.dark-mode .tile-64 { background: rgba(139, 92, 246, 0.42); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.55); }
+    body.dark-mode .tile-128 { background: rgba(236, 72, 153, 0.28); color: #f9a8d4; border: 1px solid rgba(236, 72, 153, 0.4); }
+    body.dark-mode .tile-256 { background: rgba(236, 72, 153, 0.42); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.55); }
+    body.dark-mode .tile-512 { background: rgba(244, 63, 94, 0.32); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.45); }
+    body.dark-mode .tile-1024 { background: rgba(244, 63, 94, 0.48); color: #fecdd3; border: 1px solid rgba(244, 63, 94, 0.65); }
+    body.dark-mode .tile-2048 { background: rgba(245, 158, 11, 0.38); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.55); box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+
+    .tile.waiting-turn {
+      opacity: 0.6;
+    }
+
+    .controls {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .controls.three-buttons {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .controls.four-buttons {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--btn-color);
+      transition: background-color 0.2s, transform 0.1s, border-color 0.2s, color 0.2s;
+    }
+
+    button:hover {
+      background: var(--btn-hover-bg);
+      border-color: var(--btn-hover-border);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.active {
+      background: var(--btn-active-bg);
+      color: var(--btn-active-color);
+      border-color: var(--btn-active-bg);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    body.dark-mode button.active {
+      box-shadow: 0 4px 12px rgba(76, 201, 240, 0.2);
+    }
+
+    button.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      min-height: 20px;
+      opacity: 0.9;
+    }
+
+    /* Delete / Merge interactive states */
+    body.delete-active .tile {
+      animation: wiggle 0.22s infinite alternate ease-in-out;
+      cursor: pointer;
+    }
+
+    body.merge-active .tile {
+      animation: pulse-glow 0.35s infinite alternate ease-in-out;
+      cursor: pointer;
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(-1.5deg) scale(0.98); }
+      100% { transform: rotate(1.5deg) scale(1.02); }
+    }
+
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.4); transform: scale(0.98); }
+      100% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.8); transform: scale(1.02); }
+    }
+
+    /* Screen overlays */
+    .overlay {
+      position: absolute;
+      inset: 12px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .overlay.visible {
+      display: flex;
+    }
+
+    .overlay-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: white;
+    }
+
+    .overlay-sub {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 8px;
+    }
+
+    .overlay-btn {
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .overlay-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    /* ── Local Chat (for multiplayer) ── */
+    .chat-overlay-local{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .chat-overlay-local.open{opacity:1;pointer-events:auto;}
+    .chat-drawer-local{position:fixed;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--box-bg);border-left:1px solid var(--box-border);z-index:400;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+    .chat-drawer-local.open{transform:translateX(0);}
+    .chat-header-local{display:flex;align-items:center;justify-content:space-between;padding:max(52px,env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--box-border);flex-shrink:0;}
+    .chat-title-local{font-size:16px;font-weight:800;}
+    .chat-close-local{border:1px solid var(--btn-border);background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--text-color);width:30px;height:30px;border-radius:9px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .chat-messages-local{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+    .chat-msg-local{max-width:80%;padding:8px 13px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;}
+    .chat-msg-local.mine{align-self:flex-end;background:var(--btn-active-bg);color:var(--btn-active-color);border-bottom-right-radius:4px;}
+    .chat-msg-local.theirs{align-self:flex-start;background:var(--cell-bg);border:1px solid var(--cell-border);border-bottom-left-radius:4px;}
+    .chat-name-local{font-size:10px;font-weight:700;opacity:.55;margin-bottom:3px;}
+    .chat-input-row-local{display:flex;gap:8px;padding:10px 14px 8px;border-top:1px solid var(--box-border);flex-shrink:0;}
+    .chat-disclaimer-local{font-size:10px;opacity:.4;text-align:center;padding:4px 14px max(8px,env(safe-area-inset-bottom));line-height:1.4;flex-shrink:0;}
+    .chat-input-local{flex:1;padding:9px 13px;background:var(--cell-bg);border:1px solid var(--cell-border);border-radius:11px;color:var(--text-color);font-size:14px;outline:none;transition:border-color .2s;}
+    .chat-input-local:focus{border-color:var(--accent);}
+    .chat-send-local{border:none;background:var(--btn-active-bg);color:var(--btn-active-color);width:42px;height:42px;border-radius:11px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .toast-local{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,23,42,.92);color:#fff;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:600;z-index:700;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap;backdrop-filter:blur(8px);}
+    .toast-local.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    body.dark-mode .toast-local{background:rgba(255,255,255,.12);}
+
+    /* MOBILES QUERFORMAT (Landscape Optimierung) */
+    @media (max-height: 550px) and (orientation: landscape) {
+      .container {
+        padding: 50px 12px 6px;
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      .game-box {
+        max-width: 680px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 14px;
+        align-items: center;
+      }
+
+      .title-section {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 0;
+        gap: 8px;
+      }
+
+      .title {
+        font-size: 26px;
+      }
+
+      .score-box {
+        padding: 6px 10px;
+        min-width: 80px;
+      }
+
+      .score-value {
+        font-size: 18px;
+      }
+
+      .opponent-bar {
+        margin-bottom: 6px;
+        padding: 8px 12px;
+      }
+
+      .multi-scoreboard {
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+        width: 100%;
+      }
+
+      .multi-score-box {
+        padding: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .multi-score-label {
+        margin-bottom: 0;
+        font-size: 11px;
+      }
+
+      .multi-score-value {
+        font-size: 18px;
+      }
+
+      .controls {
+        margin-top: 8px;
+        gap: 6px;
+      }
+
+      button {
+        padding: 8px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+
+      .message {
+        margin-top: 6px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .game-box {
+        padding: 16px;
+      }
+      .title {
+        font-size: 28px;
+      }
+      .score-box {
+        min-width: 70px;
+        padding: 6px 8px;
+      }
+      .score-value {
+        font-size: 18px;
+      }
+      .cell, .tile {
+        border-radius: 12px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="background"></div>
 
-<div class="game-container">
-
-  <div class="top-bar">
-
-    <div class="title">
-      2048
+  <!-- Navigation Header -->
+  <div class="game-header">
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menü</a>
+    <span class="mode-badge" id="modeBadge">Solo</span>
+    <div class="header-right">
+      <button id="chat-btn" title="Chat" style="display:none;">💬<span class="chat-badge-hdr" id="chatBadgeHdr"></span></button>
+      <button id="mute-btn" title="Ton stummschalten">🔊</button>
     </div>
-
-    <div class="score-box">
-
-      <div class="score-label">
-        SCORE
-      </div>
-
-      <div class="score" id="score">
-        0
-      </div>
-
-    </div>
-
   </div>
 
-  <div class="board" id="board"></div>
+  <div class="container">
+    <div class="game-box">
 
-  <div class="controls">
+      <div class="title-section">
+        <div class="title">2048</div>
+        
+        <!-- Opponent bar (online mode only) -->
+        <div class="opponent-bar" id="opponentBar">
+          <div class="opp-avatar" id="oppAvatar">?</div>
+          <div>
+            <div class="opp-name" id="oppName">Gegner</div>
+            <div class="opp-role" id="oppRole">O</div>
+          </div>
+        </div>
 
-    <button id="trashBtn">
-      🗑 Delete
-      (<span id="trashCount">3</span>)
-    </button>
+        <!-- Solo Score Box -->
+        <div class="score-box" id="soloScoreBox">
+          <div class="score-label">Score</div>
+          <div class="score-value" id="score">0</div>
+        </div>
+      </div>
 
-    <button id="mergeBtn">
-      Merge
-      (<span id="mergeCount">3</span>)
-    </button>
+      <!-- Multiplayer/Bot Scoreboard -->
+      <div class="multi-scoreboard" id="scoreboard" style="display:none;">
+        <div class="multi-score-box">
+          <div class="multi-score-label" id="p1Label">👤 Du</div>
+          <div class="multi-score-value" id="p1Score">0</div>
+        </div>
+        <div class="multi-score-box">
+          <div class="multi-score-label" id="p2Label">Gegner</div>
+          <div class="multi-score-value" id="p2Score">0</div>
+        </div>
+      </div>
 
-    <button id="restartBtn">
-      Restart
-    </button>
+      <div class="board-wrapper">
+        <div class="board" id="board">
+          <div class="grid-cells">
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          </div>
+          <div class="tiles-container" id="tiles-container"></div>
+          
+          <!-- Game Screen Overlay -->
+          <div class="overlay" id="overlay">
+            <div class="overlay-title" id="overlay-title">Game Over</div>
+            <div class="overlay-sub" id="overlay-sub">Keine Züge mehr!</div>
+            <button class="overlay-btn" id="overlay-btn">Nochmal versuchen</button>
+          </div>
+        </div>
+      </div>
 
+      <div class="message" id="message"></div>
+
+      <!-- Controls Wrapper -->
+      <div class="controls four-buttons" id="controlsWrap">
+        <button id="trashBtn">🗑 Löschen (<span id="trashCount">3</span>)</button>
+        <button id="mergeBtn">Merge (<span id="mergeCount">3</span>)</button>
+        <button id="undoBtn">Undo</button>
+        <button id="restartBtn">Restart</button>
+      </div>
+
+    </div>
   </div>
 
-  <div class="message" id="message"></div>
+  <!-- Local Chat (for multiplayer) -->
+  <div class="chat-overlay-local" id="chatOverlay"></div>
+  <div class="chat-drawer-local" id="chatDrawer">
+    <div class="chat-header-local">
+      <span class="chat-title-local">💬 Chat – <span id="chatWith">Gegner</span></span>
+      <button class="chat-close-local" id="chatClose">✕</button>
+    </div>
+    <div class="chat-messages-local" id="chatMessages"></div>
+    <div class="chat-input-row-local">
+      <input type="text" class="chat-input-local" id="chatInput" placeholder="Nachricht…" maxlength="200">
+      <button class="chat-send-local" id="chatSend">➤</button>
+    </div>
+    <p class="chat-disclaimer-local">Chats werden lokal auf deinem Gerät gespeichert (max. 100 Nachrichten, ältere werden automatisch gelöscht). Keine Haftung für Chat-Inhalte.</p>
+  </div>
 
-</div>
+  <div class="toast-local" id="toast"></div>
 
-<script>
-const board = document.getElementById('board');
+  <script src="../../multiplayer.js"></script>
+  <script>
+    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
 
-const scoreElement =
-  document.getElementById('score');
+    const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
+    const myName    = localStorage.getItem('playerName') || 'Du';
+    const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest
 
-const messageElement =
-  document.getElementById('message');
+    const board = document.getElementById('board');
+    const tilesContainer = document.getElementById('tiles-container');
+    const scoreElement = document.getElementById('score');
+    const messageElement = document.getElementById('message');
+    const restartBtn = document.getElementById('restartBtn');
+    const trashBtn = document.getElementById('trashBtn');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const trashCountElement = document.getElementById('trashCount');
+    const mergeCountElement = document.getElementById('mergeCount');
+    const muteBtn = document.getElementById('mute-btn');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlaySub = document.getElementById('overlay-sub');
+    const overlayBtn = document.getElementById('overlay-btn');
+    const backBtn = document.getElementById('backBtn');
+    const controlsWrap = document.getElementById('controlsWrap');
+    const modeBadge = document.getElementById('modeBadge');
+    
+    // Opponent info
+    const opponentBar = document.getElementById('opponentBar');
+    const oppAvatar = document.getElementById('oppAvatar');
+    const oppName = document.getElementById('oppName');
+    const oppRole = document.getElementById('oppRole');
 
-const restartBtn =
-  document.getElementById('restartBtn');
+    // Scoreboard for Multiplayer/Bot
+    const soloScoreBox = document.getElementById('soloScoreBox');
+    const scoreboard = document.getElementById('scoreboard');
+    const p1Label = document.getElementById('p1Label');
+    const p2Label = document.getElementById('p2Label');
+    const p1ScoreEl = document.getElementById('p1Score');
+    const p2ScoreEl = document.getElementById('p2Score');
 
-const trashBtn =
-  document.getElementById('trashBtn');
+    // Chat elements
+    const chatBtn = document.getElementById('chat-btn');
+    const chatBadgeHdr = document.getElementById('chatBadgeHdr');
+    const chatOverlay = document.getElementById('chatOverlay');
+    const chatDrawer = document.getElementById('chatDrawer');
+    const chatClose = document.getElementById('chatClose');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatWith = document.getElementById('chatWith');
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+    const toast = document.getElementById('toast');
 
-const mergeBtn =
-  document.getElementById('mergeBtn');
+    let grid = [];
+    let score = 0;
+    let tileId = 0;
+    
+    // Multiplayer/Bot specific scoring
+    const scores = { X: 0, O: 0 };
+    let currentPlayer = 'X'; // X is host, O is guest/bot
+    let myTurn = true;
+    let mySymbol = 'X';
+    let unreadChat = 0;
+    let chatHistory = [];
 
-const trashCountElement =
-  document.getElementById('trashCount');
+    // Game Mode modifiers
+    let deleteMode = false;
+    let mergeMode = false;
+    let trashUses = 3;
+    let mergeUses = 3;
 
-const mergeCountElement =
-  document.getElementById('mergeCount');
+    // Undo State
+    let prevGrid = null;
+    let prevScore = 0;
+    let prevTrashUses = 3;
+    let prevMergeUses = 3;
 
-let grid = [];
+    let isMuted = false;
+    let gameActive = true;
+    let hasReachedWin = false;
+    let isMoving = false; // Lock swipe inputs during animation
 
-let score = 0;
+    // Track Tile DOM Elements by ID
+    const tileDomElements = new Map();
 
-let tileId = 0;
+    // Theme Engine setup
+    function applyTheme() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.body.classList.toggle('dark-mode', theme === 'dark');
+    }
+    applyTheme();
 
-let tileMap = [];
+    // Load mute state
+    if (localStorage.getItem('mute') === 'true') {
+      isMuted = true;
+      muteBtn.textContent = '🔇';
+    }
 
-let deleteMode = false;
+    muteBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      localStorage.setItem('mute', isMuted);
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    });
 
-let mergeMode = false;
+    /* ═══════════════════════════════════════════════════════
+       SOUND SYNTHESIS (Web Audio API)
+    ══════════════════════════════════════════════════════ */
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
 
-let trashUses = 3;
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, initAudio, { once: true, passive: true });
+    });
 
-let mergeUses = 3;
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        const now = audioCtx.currentTime;
+        
+        if (type === 'slide') {
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+          gainNode.gain.setValueAtTime(0.04, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'merge') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gainNode.gain.setValueAtTime(0.06, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'win') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.1);
+          osc.frequency.setValueAtTime(783.99, now + 0.2);
+          osc.frequency.setValueAtTime(1046.50, now + 0.3);
+          gainNode.gain.setValueAtTime(0.08, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+          osc.start(now);
+          osc.stop(now + 0.55);
+        } else if (type === 'over') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+          gainNode.gain.setValueAtTime(0.06, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'spawn') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(750, now + 0.05);
+          gainNode.gain.setValueAtTime(0.02, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'delete') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(280, now);
+          osc.frequency.linearRampToValueAtTime(90, now + 0.15);
+          gainNode.gain.setValueAtTime(0.06, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'click') {
+          osc.frequency.setValueAtTime(550, now);
+          gainNode.gain.setValueAtTime(0.04, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        }
+      } catch (e) {
+        console.warn('AudioContext error:', e);
+      }
+    }
 
-function createEmptyGrid(){
+    /* ═══════════════════════════════════════════════════════
+       GAME SYSTEM
+    ══════════════════════════════════════════════════════ */
+    function createEmptyGrid() {
+      return [
+        [null, null, null, null],
+        [null, null, null, null],
+        [null, null, null, null],
+        [null, null, null, null]
+      ];
+    }
 
-  return [
-    [0,0,0,0],
-    [0,0,0,0],
-    [0,0,0,0],
-    [0,0,0,0]
-  ];
+    function initMode() {
+      if (gameMode === 'solo') {
+        modeBadge.textContent = '🎮 Solo';
+        soloScoreBox.style.display = 'block';
+        scoreboard.style.display = 'none';
+        opponentBar.classList.remove('show');
+        controlsWrap.className = 'controls four-buttons';
+        undoBtn.style.display = 'block';
+        trashBtn.style.display = 'block';
+        mergeBtn.style.display = 'block';
+        myTurn = true;
+      } else if (gameMode === 'bot') {
+        modeBadge.textContent = '🤖 vs. Bot';
+        soloScoreBox.style.display = 'none';
+        scoreboard.style.display = 'flex';
+        opponentBar.classList.remove('show');
+        controlsWrap.className = 'controls'; // only restart button
+        undoBtn.style.display = 'none';
+        trashBtn.style.display = 'none';
+        mergeBtn.style.display = 'none';
 
-}
+        p1Label.textContent = '👤 Du';
+        p2Label.textContent = '🤖 Bot';
+        
+        mySymbol = 'X';
+        myTurn = true;
+        currentPlayer = 'X';
+        scores.X = 0;
+        scores.O = 0;
+      } else if (gameMode === 'multi') {
+        modeBadge.textContent = '📡 Online';
+        soloScoreBox.style.display = 'none';
+        scoreboard.style.display = 'flex';
+        chatBtn.style.display = 'flex';
+        controlsWrap.className = 'controls';
+        undoBtn.style.display = 'none';
+        trashBtn.style.display = 'none';
+        mergeBtn.style.display = 'none';
 
-function init(){
+        mySymbol = mpRole;
+        myTurn = (mySymbol === 'X');
+        currentPlayer = 'X';
+        scores.X = 0;
+        scores.O = 0;
 
-  grid = createEmptyGrid();
+        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        localStorage.setItem('lastOpponent', opponent);
+        chatWith.textContent = opponent;
+        oppAvatar.textContent = opponent[0].toUpperCase();
+        oppName.textContent = opponent;
+        oppRole.textContent = `Spielt ${mySymbol === 'X' ? 'O' : 'X'}`;
+        opponentBar.classList.add('show');
 
-  tileMap = createEmptyGrid();
+        p1Label.textContent = mySymbol === 'X' ? '👤 Du (X)' : `👤 ${opponent} (X)`;
+        p2Label.textContent = mySymbol === 'O' ? '👤 Du (O)' : `👤 ${opponent} (O)`;
 
-  score = 0;
+        try { chatHistory = JSON.parse(localStorage.getItem(`chat2048_${opponent}`) || '[]'); } catch {}
+        renderChatHistory();
 
-  tileId = 0;
+        setupMultiplayerEvents();
+      }
+    }
 
-  trashUses = 3;
+    function init() {
+      grid = createEmptyGrid();
+      tilesContainer.innerHTML = '';
+      tileDomElements.clear();
 
-  mergeUses = 3;
+      score = 0;
+      scores.X = 0;
+      scores.O = 0;
+      currentPlayer = 'X';
+      
+      tileId = 0;
+      trashUses = 3;
+      mergeUses = 3;
+      deleteMode = false;
+      mergeMode = false;
+      gameActive = true;
+      hasReachedWin = false;
+      isMoving = false;
 
-  deleteMode = false;
+      prevGrid = null;
+      prevScore = 0;
+      prevTrashUses = 3;
+      prevMergeUses = 3;
 
-  mergeMode = false;
+      overlay.classList.remove('visible');
+      messageElement.textContent = '';
 
-  updateButtons();
+      initMode();
 
-  addRandomTile();
-  addRandomTile();
+      addRandomTile();
+      addRandomTile();
+      
+      updateButtons();
+      syncTileDOM();
+      updateBoardInteractivity();
+    }
 
-  render();
+    function updateButtons() {
+      if (gameMode === 'solo') {
+        trashCountElement.textContent = trashUses;
+        mergeCountElement.textContent = mergeUses;
+        trashBtn.classList.toggle('active', deleteMode);
+        mergeBtn.classList.toggle('active', mergeMode);
+        undoBtn.classList.toggle('disabled', !prevGrid);
+        trashBtn.classList.toggle('disabled', trashUses <= 0);
+        mergeBtn.classList.toggle('disabled', mergeUses <= 0);
+        document.body.classList.toggle('delete-active', deleteMode);
+        document.body.classList.toggle('merge-active', mergeMode);
+      }
+    }
 
-  messageElement.textContent = '';
-
-}
-
-function updateButtons(){
-
-  trashCountElement.textContent =
-    trashUses;
-
-  mergeCountElement.textContent =
-    mergeUses;
-
-  trashBtn.classList.toggle(
-    'active',
-    deleteMode
-  );
-
-  mergeBtn.classList.toggle(
-    'active',
-    mergeMode
-  );
-
-  trashBtn.classList.toggle(
-    'disabled',
-    trashUses <= 0
-  );
-
-  mergeBtn.classList.toggle(
-    'disabled',
-    mergeUses <= 0
-  );
-
-}
-
-function addRandomTile(){
-
-  const empty = [];
-
-  for(let r=0;r<4;r++){
-
-    for(let c=0;c<4;c++){
-
-      if(grid[r][c]===0){
-
-        empty.push({r,c});
-
+    function addRandomTile() {
+      const empty = [];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (grid[r][c] === null) {
+            empty.push({ r, c });
+          }
+        }
       }
 
+      if (empty.length === 0) return;
+
+      const spot = empty[Math.floor(Math.random() * empty.length)];
+      const value = Math.random() < 0.9 ? 2 : 4;
+
+      grid[spot.r][spot.c] = {
+        id: ++tileId,
+        value: value,
+        mergedFrom: null,
+        isMerged: false
+      };
     }
 
-  }
-
-  if(!empty.length) return;
-
-  const spot =
-    empty[
-      Math.floor(
-        Math.random()*empty.length
-      )
-    ];
-
-  const value =
-    Math.random()<0.9 ? 2 : 4;
-
-  grid[spot.r][spot.c] = value;
-
-  tileMap[spot.r][spot.c] = ++tileId;
-
-}
-
-function render(){
-
-  board.innerHTML = '';
-
-  const boardSize =
-    board.clientWidth;
-
-  const gap = 12;
-
-  const padding = 12;
-
-  const tileSize =
-    (boardSize - padding*2 - gap*3) / 4;
-
-  for(let r=0;r<4;r++){
-
-    for(let c=0;c<4;c++){
-
-      const bg =
-        document.createElement('div');
-
-      bg.className = 'cell';
-
-      board.appendChild(bg);
-
-    }
-
-  }
-
-  for(let r=0;r<4;r++){
-
-    for(let c=0;c<4;c++){
-
-      const value = grid[r][c];
-
-      if(value===0) continue;
-
-      const tile =
-        document.createElement('div');
-
-      tile.className =
-        `tile tile-${value} new`;
-
-      tile.style.width =
-        tileSize + 'px';
-
-      tile.style.height =
-        tileSize + 'px';
-
-      tile.style.left =
-        (
-          padding +
-          c*(tileSize+gap)
-        ) + 'px';
-
-      tile.style.top =
-        (
-          padding +
-          r*(tileSize+gap)
-        ) + 'px';
-
-      tile.style.fontSize =
-        value >= 1024
-          ? '34px'
-          : value >= 128
-          ? '40px'
-          : '46px';
-
-      tile.textContent = value;
-
-      tile.dataset.row = r;
-      tile.dataset.col = c;
-
-      tile.addEventListener(
-        'click',
-        () => tileClick(r,c)
+    function copyGrid(matrix) {
+      return matrix.map(row => 
+        row.map(cell => cell ? { ...cell } : null)
       );
-
-      board.appendChild(tile);
-
     }
 
-  }
-
-  scoreElement.textContent =
-    score;
-
-  if(hasWon()){
-
-    messageElement.textContent =
-      'You reached 2048!';
-
-  }
-  else if(!canMove()){
-
-    messageElement.textContent =
-      'Game Over';
-
-  }
-
-}
-
-function tileClick(r,c){
-
-  if(deleteMode){
-
-    if(grid[r][c]!==0 &&
-       trashUses > 0){
-
-      grid[r][c] = 0;
-
-      tileMap[r][c] = 0;
-
-      trashUses--;
-
-      deleteMode = false;
-
-      updateButtons();
-
-      render();
-
-    }
-
-    return;
-
-  }
-
-  if(mergeMode){
-
-    const value = grid[r][c];
-
-    if(value!==0 &&
-       mergeUses > 0){
-
-      let total = 0;
-
-      const positions = [];
-
-      for(let y=0;y<4;y++){
-
-        for(let x=0;x<4;x++){
-
-          if(grid[y][x]===value){
-
-            total += value;
-
-            positions.push({
-              y,x
+    function syncTileDOM() {
+      const containerWidth = tilesContainer.clientWidth;
+      const gap = 12;
+      const tileSize = (containerWidth - gap * 3) / 4;
+      const currentIds = new Set();
+      
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const tile = grid[r][c];
+          if (!tile) continue;
+          
+          currentIds.add(tile.id);
+          
+          let el = tileDomElements.get(tile.id);
+          if (!el) {
+            el = document.createElement('div');
+            el.textContent = tile.value;
+            el.dataset.id = tile.id;
+            
+            el.addEventListener('click', (e) => {
+              const row = parseInt(e.currentTarget.dataset.row);
+              const col = parseInt(e.currentTarget.dataset.col);
+              tileClick(row, col);
             });
-
+            
+            tilesContainer.appendChild(el);
+            tileDomElements.set(tile.id, el);
+            
+            if (tile.isMerged) {
+              el.className = `tile tile-${tile.value} merged-pop`;
+            } else {
+              el.className = `tile tile-${tile.value} new`;
+            }
+          } else {
+            el.textContent = tile.value;
+            el.className = `tile tile-${tile.value}`;
+          }
+          
+          el.dataset.row = r;
+          el.dataset.col = c;
+          
+          el.style.width = tileSize + 'px';
+          el.style.height = tileSize + 'px';
+          el.style.left = c * (tileSize + gap) + 'px';
+          el.style.top = r * (tileSize + gap) + 'px';
+          
+          const baseFontSize = tileSize * 0.45;
+          if (tile.value >= 1024) {
+            el.style.fontSize = (baseFontSize * 0.72) + 'px';
+          } else if (tile.value >= 128) {
+            el.style.fontSize = (baseFontSize * 0.85) + 'px';
+          } else {
+            el.style.fontSize = baseFontSize + 'px';
           }
 
+          // Visual cue for who can move in multiplayer
+          const isMyTurnNow = (gameMode !== 'multi') || (currentPlayer === mySymbol);
+          el.classList.toggle('waiting-turn', !isMyTurnNow);
         }
-
       }
-
-      let finalValue = 2;
-
-      while(finalValue*2 <= total){
-
-        finalValue *= 2;
-
+      
+      // Clean up orphaned DOM elements
+      for (const [id, el] of tileDomElements.entries()) {
+        if (!currentIds.has(id)) {
+          el.remove();
+          tileDomElements.delete(id);
+        }
       }
+      
+      if (gameMode === 'solo') {
+        scoreElement.textContent = score;
+      } else {
+        p1ScoreEl.textContent = scores.X;
+        p2ScoreEl.textContent = scores.O;
+      }
+      updateButtons();
+    }
 
-      positions.forEach(pos => {
-
-        grid[pos.y][pos.x] = 0;
-        tileMap[pos.y][pos.x] = 0;
-
+    function updateBoardInteractivity() {
+      if (gameMode !== 'multi') return;
+      const isMyTurnNow = (currentPlayer === mySymbol) && gameActive;
+      
+      // Update tile styling
+      tileDomElements.forEach((el) => {
+        el.classList.toggle('waiting-turn', !isMyTurnNow);
       });
 
-      grid[r][c] = finalValue;
+      if (isMyTurnNow) {
+        messageElement.textContent = `✅ Du bist dran (${mySymbol})`;
+      } else {
+        messageElement.textContent = `⏳ ${gameMP.opponent || 'Gegner'} ist dran…`;
+      }
+    }
 
-      tileMap[r][c] = ++tileId;
+    function animateMovements(oldGrid, newGrid) {
+      const containerWidth = tilesContainer.clientWidth;
+      const gap = 12;
+      const tileSize = (containerWidth - gap * 3) / 4;
 
-      mergeUses--;
+      function getCoords(r, c) {
+        return {
+          left: c * (tileSize + gap) + 'px',
+          top: r * (tileSize + gap) + 'px'
+        };
+      }
 
+      const targets = new Map();
+      
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const tile = newGrid[r][c];
+          if (!tile) continue;
+          
+          if (tile.mergedFrom) {
+            targets.set(tile.mergedFrom[0], { r, c });
+            targets.set(tile.mergedFrom[1], { r, c });
+          } else {
+            targets.set(tile.id, { r, c });
+          }
+        }
+      }
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const tile = oldGrid[r][c];
+          if (!tile) continue;
+          
+          const dest = targets.get(tile.id);
+          if (dest) {
+            const el = tileDomElements.get(tile.id);
+            if (el) {
+              const coords = getCoords(dest.r, dest.c);
+              el.style.left = coords.left;
+              el.style.top = coords.top;
+            }
+          }
+        }
+      }
+    }
+
+    function tileClick(r, c) {
+      if (gameMode !== 'solo') return; // powerups are disabled in Multi/Bot mode
+      
+      if (deleteMode) {
+        if (grid[r][c] !== null && trashUses > 0) {
+          playSound('delete');
+          
+          prevGrid = copyGrid(grid);
+          prevScore = score;
+          prevTrashUses = trashUses;
+          prevMergeUses = mergeUses;
+
+          grid[r][c] = null;
+          trashUses--;
+          deleteMode = false;
+          isMoving = false;
+          
+          updateButtons();
+          syncTileDOM();
+          
+          if (!canMove() && grid.flat().filter(x => x).length === 16) {
+            messageElement.textContent = 'Game Over';
+            showOverlay('over');
+          }
+        }
+        return;
+      }
+
+      if (mergeMode) {
+        const targetTile = grid[r][c];
+        if (targetTile !== null && mergeUses > 0) {
+          const value = targetTile.value;
+          let total = 0;
+          const positions = [];
+
+          for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < 4; x++) {
+              if (grid[y][x] && grid[y][x].value === value) {
+                total += value;
+                positions.push({ y, x });
+              }
+            }
+          }
+
+          if (positions.length <= 1) {
+            mergeMode = false;
+            updateButtons();
+            return;
+          }
+
+          playSound('merge');
+          
+          prevGrid = copyGrid(grid);
+          prevScore = score;
+          prevTrashUses = trashUses;
+          prevMergeUses = mergeUses;
+
+          let finalValue = 2;
+          while (finalValue * 2 <= total) {
+            finalValue *= 2;
+          }
+
+          positions.forEach(pos => {
+            grid[pos.y][pos.x] = null;
+          });
+
+          grid[r][c] = {
+            id: ++tileId,
+            value: finalValue,
+            mergedFrom: null,
+            isMerged: true
+          };
+
+          mergeUses--;
+          mergeMode = false;
+          isMoving = false;
+
+          updateButtons();
+          syncTileDOM();
+
+          if (hasWon()) {
+            messageElement.textContent = 'Du hast 2048 erreicht!';
+            if (!hasReachedWin) {
+              showOverlay('win');
+            }
+          }
+        }
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SLIDE MOVEMENT LOGIC
+    ══════════════════════════════════════════════════════ */
+    function slideRowLeft(row) {
+      const newRow = [null, null, null, null];
+      let targetCol = 0;
+      let rowScore = 0;
+      let rowMoved = false;
+
+      for (let c = 0; c < 4; c++) {
+        const tile = row[c];
+        if (!tile) continue;
+
+        let nextTile = null;
+        let nextCol = -1;
+        for (let x = c + 1; x < 4; x++) {
+          if (row[x]) {
+            nextTile = row[x];
+            nextCol = x;
+            break;
+          }
+        }
+
+        if (nextTile && nextTile.value === tile.value) {
+          const newVal = tile.value * 2;
+          newRow[targetCol] = {
+            id: ++tileId,
+            value: newVal,
+            mergedFrom: [tile.id, nextTile.id],
+            isMerged: true
+          };
+          rowScore += newVal;
+          rowMoved = true;
+          c = nextCol; // skip merged
+        } else {
+          newRow[targetCol] = {
+            id: tile.id,
+            value: tile.value,
+            mergedFrom: null,
+            isMerged: false
+          };
+          if (c !== targetCol) {
+            rowMoved = true;
+          }
+        }
+        targetCol++;
+      }
+
+      return { newRow, rowScore, rowMoved };
+    }
+
+    // Pure slide simulator for Bot evaluation without mutating tileId or global values
+    function slideRowLeftSim(row) {
+      const newRow = [null, null, null, null];
+      let targetCol = 0;
+      let rowScore = 0;
+      let rowMoved = false;
+
+      for (let c = 0; c < 4; c++) {
+        const tile = row[c];
+        if (!tile) continue;
+
+        let nextTile = null;
+        let nextCol = -1;
+        for (let x = c + 1; x < 4; x++) {
+          if (row[x]) {
+            nextTile = row[x];
+            nextCol = x;
+            break;
+          }
+        }
+
+        if (nextTile && nextTile.value === tile.value) {
+          const newVal = tile.value * 2;
+          newRow[targetCol] = {
+            id: 0,
+            value: newVal,
+            mergedFrom: null,
+            isMerged: false
+          };
+          rowScore += newVal;
+          rowMoved = true;
+          c = nextCol;
+        } else {
+          newRow[targetCol] = {
+            id: tile.id,
+            value: tile.value,
+            mergedFrom: null,
+            isMerged: false
+          };
+          if (c !== targetCol) {
+            rowMoved = true;
+          }
+        }
+        targetCol++;
+      }
+
+      return { newRow, rowScore, rowMoved };
+    }
+
+    function rotate90CW(matrix) {
+      const result = Array.from({length: 4}, () => Array(4).fill(null));
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          result[c][3 - r] = matrix[r][c];
+        }
+      }
+      return result;
+    }
+
+    function rotate90CCW(matrix) {
+      const result = Array.from({length: 4}, () => Array(4).fill(null));
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          result[3 - c][r] = matrix[r][c];
+        }
+      }
+      return result;
+    }
+
+    function rotate180(matrix) {
+      const result = Array.from({length: 4}, () => Array(4).fill(null));
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          result[3 - r][3 - c] = matrix[r][c];
+        }
+      }
+      return result;
+    }
+
+    function getNextState(direction) {
+      let tempGrid = copyGrid(grid);
+
+      if (direction === 'up') {
+        tempGrid = rotate90CCW(tempGrid);
+      } else if (direction === 'right') {
+        tempGrid = rotate180(tempGrid);
+      } else if (direction === 'down') {
+        tempGrid = rotate90CW(tempGrid);
+      }
+
+      let moved = false;
+      let slideScore = 0;
+      const newTempGrid = [];
+
+      for (let r = 0; r < 4; r++) {
+        const row = tempGrid[r];
+        const { newRow, rowScore, rowMoved } = slideRowLeft(row);
+        newTempGrid.push(newRow);
+        if (rowMoved) moved = true;
+        slideScore += rowScore;
+      }
+
+      let newGrid = newTempGrid;
+
+      if (direction === 'up') {
+        newGrid = rotate90CW(newGrid);
+      } else if (direction === 'right') {
+        newGrid = rotate180(newGrid);
+      } else if (direction === 'down') {
+        newGrid = rotate90CCW(newGrid);
+      }
+
+      return { newGrid, slideScore, moved };
+    }
+
+    // Next State Simulation for Bot Heuristics
+    function getNextStateSim(direction, targetGrid) {
+      let tempGrid = copyGrid(targetGrid);
+
+      if (direction === 'up') {
+        tempGrid = rotate90CCW(tempGrid);
+      } else if (direction === 'right') {
+        tempGrid = rotate180(tempGrid);
+      } else if (direction === 'down') {
+        tempGrid = rotate90CW(tempGrid);
+      }
+
+      let moved = false;
+      let slideScore = 0;
+      const newTempGrid = [];
+
+      for (let r = 0; r < 4; r++) {
+        const row = tempGrid[r];
+        const { newRow, rowScore, rowMoved } = slideRowLeftSim(row);
+        newTempGrid.push(newRow);
+        if (rowMoved) moved = true;
+        slideScore += rowScore;
+      }
+
+      let newGrid = newTempGrid;
+
+      if (direction === 'up') {
+        newGrid = rotate90CW(newGrid);
+      } else if (direction === 'right') {
+        newGrid = rotate180(newGrid);
+      } else if (direction === 'down') {
+        newGrid = rotate90CCW(newGrid);
+      }
+
+      return { newGrid, slideScore, moved };
+    }
+
+    function move(direction) {
+      if (deleteMode || mergeMode || !gameActive || isMoving) return;
+
+      // Online: verify turn
+      if (gameMode === 'multi' && currentPlayer !== mySymbol) return;
+
+      const { newGrid, slideScore, moved } = getNextState(direction);
+
+      if (!moved) return;
+
+      isMoving = true;
+
+      if (gameMode === 'solo') {
+        prevGrid = copyGrid(grid);
+        prevScore = score;
+        prevTrashUses = trashUses;
+        prevMergeUses = mergeUses;
+      }
+
+      animateMovements(grid, newGrid);
+
+      grid = newGrid;
+      
+      if (gameMode === 'solo') {
+        score += slideScore;
+      } else {
+        scores[currentPlayer] += slideScore;
+      }
+
+      // Sync move to multiplayer
+      if (gameMode === 'multi') {
+        gameMP.send('move', { game: '2048', data: { direction, grid, scores } });
+      }
+      
+      setTimeout(() => {
+        addRandomTile();
+
+        if (slideScore > 0) {
+          playSound('merge');
+        } else {
+          playSound('slide');
+        }
+
+        syncTileDOM();
+
+        // Clear animation flags
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            if (grid[r][c]) {
+              grid[r][c].mergedFrom = null;
+              grid[r][c].isMerged = false;
+            }
+          }
+        }
+
+        if (hasWon()) {
+          endGame();
+          return;
+        } else if (!canMove()) {
+          endGame();
+          return;
+        }
+
+        // Toggle turn
+        if (gameMode === 'multi' || gameMode === 'bot') {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          
+          if (gameMode === 'bot' && currentPlayer === 'O') {
+            board.style.pointerEvents = 'none';
+            messageElement.textContent = '🤖 Bot denkt…';
+            setTimeout(() => {
+              const botDir = getBotMove();
+              
+              const botResult = getNextState(botDir);
+              if (botResult.moved) {
+                animateMovements(grid, botResult.newGrid);
+                grid = botResult.newGrid;
+                scores.O += botResult.slideScore;
+                
+                setTimeout(() => {
+                  addRandomTile();
+                  playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
+                  syncTileDOM();
+                  
+                  // Clear animations
+                  for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                      if (grid[r][c]) {
+                        grid[r][c].mergedFrom = null;
+                        grid[r][c].isMerged = false;
+                      }
+                    }
+                  }
+                  
+                  board.style.pointerEvents = 'auto';
+
+                  if (hasWon() || !canMove()) {
+                    endGame();
+                    return;
+                  }
+                  
+                  currentPlayer = 'X';
+                  updateBoardInteractivity();
+                }, 140);
+              } else {
+                board.style.pointerEvents = 'auto';
+                currentPlayer = 'X';
+                updateBoardInteractivity();
+              }
+            }, 500);
+          } else {
+            updateBoardInteractivity();
+          }
+        }
+
+        isMoving = false;
+      }, 140);
+    }
+
+    // Bot move decision heuristic
+    function getBotMove() {
+      const directions = ['down', 'left', 'right', 'up'];
+      let bestDir = 'down';
+      let maxScore = -1;
+      let maxEmpty = -1;
+      
+      for (let dir of directions) {
+        const { newGrid, slideScore, moved } = getNextStateSim(dir, grid);
+        if (moved) {
+          const emptyCount = newGrid.flat().filter(v => v === null).length;
+          // Prefer slide with mergers, secondary prefer empty cells
+          if (slideScore > maxScore || (slideScore === maxScore && emptyCount > maxEmpty)) {
+            maxScore = slideScore;
+            maxEmpty = emptyCount;
+            bestDir = dir;
+          }
+        }
+      }
+      return bestDir;
+    }
+
+    function hasWon() {
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (grid[r][c] && grid[r][c].value >= 2048) return true;
+        }
+      }
+      return false;
+    }
+
+    function canMove() {
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (grid[r][c] === null) return true;
+          if (c < 3 && grid[r][c+1] && grid[r][c].value === grid[r][c+1].value) return true;
+          if (r < 3 && grid[r+1][c] && grid[r][c].value === grid[r+1][c].value) return true;
+        }
+      }
+      return false;
+    }
+
+    function endGame() {
+      gameActive = false;
+      isMoving = false;
+      
+      if (gameMode === 'solo') {
+        const won = hasWon();
+        overlayTitle.textContent = won ? '🎉 Gewonnen!' : 'Game Over';
+        overlaySub.textContent = won ? 'Du hast 2048 erreicht!' : 'Keine Züge mehr!';
+        overlayBtn.textContent = won ? 'Weiterspielen' : 'Nochmal versuchen';
+        playSound(won ? 'win' : 'over');
+        overlay.classList.add('visible');
+        if (won) gameActive = true; // Let them keep playing
+      } else {
+        // Multi/Bot comparison of scores
+        let winnerMsg = "";
+        let won = false;
+        
+        if (gameMode === 'bot') {
+          won = scores.X > scores.O;
+          winnerMsg = won ? `🎉 Du hast gewonnen! (${scores.X} vs ${scores.O})` : `🤖 Bot hat gewonnen! (${scores.O} vs ${scores.X})`;
+        } else {
+          const iWon = (mySymbol === 'X' && scores.X > scores.O) || (mySymbol === 'O' && scores.O > scores.X);
+          const draw = scores.X === scores.O;
+          won = iWon;
+          
+          if (draw) {
+            winnerMsg = `👔 Unentschieden! (${scores.X} : ${scores.O})`;
+          } else {
+            winnerMsg = iWon ? `🎉 Du hast gewonnen! (${scores.X} vs ${scores.O})` : `😔 ${gameMP.opponent || 'Gegner'} gewinnt! (${scores.O} vs ${scores.X})`;
+          }
+        }
+        
+        overlayTitle.textContent = won ? '🎉 Sieg!' : 'Spiel beendet';
+        overlaySub.textContent = winnerMsg;
+        overlayBtn.textContent = 'Nochmal spielen';
+        playSound(won ? 'win' : 'over');
+        overlay.classList.add('visible');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       INTERACTIVE SCREEN OVERLAY
+    ══════════════════════════════════════════════════════ */
+    overlayBtn.addEventListener('click', () => {
+      overlay.classList.remove('visible');
+      if (!gameActive) {
+        restartGame(true);
+      } else {
+        hasReachedWin = true; // let solo player continue
+      }
+    });
+
+    function restartGame(sendNotify = true) {
+      if (gameMode === 'multi') {
+        myTurn = (mySymbol === 'X');
+        if (sendNotify) {
+          gameMP.send('restart_game', { game: '2048' });
+        }
+      }
+      init();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       INPUTS (KEYBOARD & TOUCH SWIPES)
+    ══════════════════════════════════════════════════════ */
+    window.addEventListener('keydown', e => {
+      if (!gameActive || isMoving) return;
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          move('left');
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          move('right');
+          break;
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          move('up');
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          move('down');
+          break;
+      }
+    });
+
+    let startX = 0;
+    let startY = 0;
+
+    board.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    board.addEventListener('touchend', e => {
+      if (deleteMode || mergeMode || !gameActive || isMoving) return;
+
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 40) move('right');
+        else if (dx < -40) move('left');
+      } else {
+        if (dy > 40) move('down');
+        else if (dy < -40) move('up');
+      }
+    }, { passive: true });
+
+    /* ═══════════════════════════════════════════════════════
+       CONTROLS BINDINGS
+    ══════════════════════════════════════════════════════ */
+    trashBtn.addEventListener('click', () => {
+      if (trashUses <= 0 || gameMode !== 'solo') return;
+      playSound('click');
+      deleteMode = !deleteMode;
       mergeMode = false;
+      updateButtons();
+    });
+
+    mergeBtn.addEventListener('click', () => {
+      if (mergeUses <= 0 || gameMode !== 'solo') return;
+      playSound('click');
+      mergeMode = !mergeMode;
+      deleteMode = false;
+      updateButtons();
+    });
+
+    undoBtn.addEventListener('click', () => {
+      if (!prevGrid || gameMode !== 'solo') return;
+      playSound('click');
+      grid = prevGrid;
+      score = prevScore;
+      trashUses = prevTrashUses;
+      mergeUses = prevMergeUses;
+      prevGrid = null;
+      isMoving = false;
+
+      messageElement.textContent = '';
+      overlay.classList.remove('visible');
+      gameActive = true;
 
       updateButtons();
+      syncTileDOM();
+    });
 
-      render();
+    restartBtn.addEventListener('click', () => {
+      playSound('click');
+      restartGame(true);
+    });
 
+    window.addEventListener('resize', () => {
+      syncTileDOM();
+    });
+
+    /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
+    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler;
+
+    function setupMultiplayerEvents() {
+      onMoveHandler = ({ game, data }) => {
+        if (game !== '2048') return;
+        
+        isMoving = true;
+        const oldGrid = copyGrid(grid);
+        animateMovements(oldGrid, data.grid);
+        
+        grid = data.grid;
+        scores.X = data.scores.X;
+        scores.O = data.scores.O;
+
+        setTimeout(() => {
+          playSound(JSON.stringify(oldGrid) !== JSON.stringify(grid) ? 'slide' : 'click');
+          syncTileDOM();
+          
+          // Clear animations
+          for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+              if (grid[r][c]) {
+                grid[r][c].mergedFrom = null;
+                grid[r][c].isMerged = false;
+              }
+            }
+          }
+
+          if (hasWon() || !canMove()) {
+            endGame();
+            return;
+          }
+
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          updateBoardInteractivity();
+          isMoving = false;
+        }, 140);
+      };
+
+      onChatHandler = ({ text, name }) => {
+        addChatMsg(text, name, false);
+        if (!chatDrawer.classList.contains('open')) {
+          unreadChat++;
+          chatBadgeHdr.textContent = unreadChat;
+          chatBadgeHdr.style.display = 'flex';
+        }
+      };
+
+      onDisconnectedHandler = () => {
+        showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+        gameActive = false;
+        messageElement.textContent = '⚡ Verbindung unterbrochen';
+      };
+
+      onMenuHandler = () => {
+        showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
+      };
+
+      onRestartHandler = (data) => {
+        if (data && data.game === '2048') {
+          restartGame(false);
+          showToast(`${gameMP.opponent || 'Gegner'} hat das Spiel neu gestartet.`);
+        }
+      };
+
+      gameMP.on('move', onMoveHandler);
+      gameMP.on('chat', onChatHandler);
+      gameMP.on('disconnected', onDisconnectedHandler);
+      gameMP.on('menu', onMenuHandler);
+      gameMP.on('restart_game', onRestartHandler);
     }
 
-  }
+    // Clean up WebRTC listeners when iframe is closed/unloaded to prevent dead object references
+    window.addEventListener('unload', () => {
+      if (gameMode === 'multi' && gameMP) {
+        if (onMoveHandler) gameMP.off('move', onMoveHandler);
+        if (onChatHandler) gameMP.off('chat', onChatHandler);
+        if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
+        if (onMenuHandler) gameMP.off('menu', onMenuHandler);
+        if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
+      }
+    });
 
-}
+    /* ── Back button: send 'menu' message, don't disconnect ── */
+    backBtn.addEventListener('click', (e) => {
+      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
+        e.preventDefault();
+        window.parent.closeGameFrame();
+      } else {
+        if (gameMode === 'multi' && gameMP.isConnected()) {
+          gameMP.send('menu');
+        }
+      }
+    });
 
-function slide(row){
+    /* ── Local Chat ── */
+    chatBtn.addEventListener('click', openChat);
+    chatClose.addEventListener('click', closeChat);
+    chatOverlay.addEventListener('click', closeChat);
 
-  row = row.filter(v=>v);
-
-  for(let i=0;i<row.length-1;i++){
-
-    if(row[i]===row[i+1]){
-
-      row[i] *= 2;
-
-      score += row[i];
-
-      row[i+1] = 0;
-
+    function openChat() {
+      chatOverlay.classList.add('open');
+      chatDrawer.classList.add('open');
+      unreadChat = 0;
+      chatBadgeHdr.style.display = 'none';
+      setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
+    }
+    function closeChat() {
+      chatOverlay.classList.remove('open');
+      chatDrawer.classList.remove('open');
     }
 
-  }
+    chatSend.addEventListener('click', sendChat);
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
-  row = row.filter(v=>v);
-
-  while(row.length<4){
-
-    row.push(0);
-
-  }
-
-  return row;
-
-}
-
-function rotateClockwise(matrix){
-
-  return matrix[0].map((_,i)=>
-    matrix.map(row=>row[i]).reverse()
-  );
-
-}
-
-function move(direction){
-
-  if(deleteMode || mergeMode) return;
-
-  const old =
-    JSON.stringify(grid);
-
-  if(direction==='up'){
-
-    grid =
-      rotateClockwise(grid);
-
-    grid =
-      rotateClockwise(grid);
-
-    grid =
-      rotateClockwise(grid);
-
-  }
-
-  if(direction==='right'){
-
-    grid =
-      grid.map(row=>
-        row.reverse()
-      );
-
-  }
-
-  if(direction==='down'){
-
-    grid =
-      rotateClockwise(grid);
-
-  }
-
-  grid = grid.map(slide);
-
-  if(direction==='up'){
-
-    grid =
-      rotateClockwise(grid);
-
-  }
-
-  if(direction==='right'){
-
-    grid =
-      grid.map(row=>
-        row.reverse()
-      );
-
-  }
-
-  if(direction==='down'){
-
-    grid =
-      rotateClockwise(grid);
-
-    grid =
-      rotateClockwise(grid);
-
-    grid =
-      rotateClockwise(grid);
-
-  }
-
-  if(JSON.stringify(grid)!==old){
-
-    addRandomTile();
-
-    render();
-
-  }
-
-}
-
-function hasWon(){
-
-  return grid.flat().includes(2048);
-
-}
-
-function canMove(){
-
-  for(let r=0;r<4;r++){
-
-    for(let c=0;c<4;c++){
-
-      if(grid[r][c]===0)
-        return true;
-
-      if(
-        c<3 &&
-        grid[r][c]===grid[r][c+1]
-      ) return true;
-
-      if(
-        r<3 &&
-        grid[r][c]===grid[r+1][c]
-      ) return true;
-
+    function sendChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      if (gameMode === 'multi' && gameMP.isConnected()) {
+        gameMP.send('chat', { text, name: myName });
+        if (window.parent && window.parent.addChatMessageFromGame) {
+          window.parent.addChatMessageFromGame(text, myName, true);
+        }
+      }
+      addChatMsg(text, myName, true);
+      chatInput.value = '';
     }
 
-  }
-
-  return false;
-
-}
-
-window.addEventListener(
-  'keydown',
-  e => {
-
-    switch(e.key){
-
-      case 'ArrowLeft':
-        move('left');
-        break;
-
-      case 'ArrowRight':
-        move('right');
-        break;
-
-      case 'ArrowUp':
-        move('up');
-        break;
-
-      case 'ArrowDown':
-        move('down');
-        break;
-
+    function addChatMsg(text, name, mine) {
+      const msg = { text, name, mine };
+      chatHistory.push(msg);
+      if (chatHistory.length > 100) chatHistory.shift();
+      const key = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      try { localStorage.setItem(`chat2048_${key}`, JSON.stringify(chatHistory)); } catch {}
+      if (chatDrawer.classList.contains('open')) {
+        appendBubble(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
     }
 
-  }
-);
-
-let startX = 0;
-let startY = 0;
-
-board.addEventListener(
-  'touchstart',
-  e => {
-
-    startX =
-      e.touches[0].clientX;
-
-    startY =
-      e.touches[0].clientY;
-
-  },
-  {passive:true}
-);
-
-board.addEventListener(
-  'touchend',
-  e => {
-
-    if(deleteMode || mergeMode)
-      return;
-
-    const dx =
-      e.changedTouches[0].clientX
-      - startX;
-
-    const dy =
-      e.changedTouches[0].clientY
-      - startY;
-
-    if(
-      Math.abs(dx) >
-      Math.abs(dy)
-    ){
-
-      if(dx > 40)
-        move('right');
-
-      else if(dx < -40)
-        move('left');
-
-    }
-    else{
-
-      if(dy > 40)
-        move('down');
-
-      else if(dy < -40)
-        move('up');
-
+    function renderChatHistory() {
+      chatMessages.innerHTML = '';
+      chatHistory.forEach(m => appendBubble(m));
     }
 
-  },
-  {passive:true}
-);
+    function appendBubble({ text, name, mine }) {
+      const div = document.createElement('div');
+      div.className = `chat-msg-local ${mine ? 'mine' : 'theirs'}`;
+      if (!mine) {
+        const n = document.createElement('div');
+        n.className = 'chat-name-local';
+        n.textContent = name;
+        div.appendChild(n);
+      }
+      const t = document.createElement('div');
+      t.textContent = text;
+      div.appendChild(t);
+      chatMessages.appendChild(div);
+    }
 
-trashBtn.addEventListener(
-  'click',
-  () => {
+    /* ── Toast ── */
+    let toastTimer;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 
-    if(trashUses <= 0)
-      return;
-
-    deleteMode =
-      !deleteMode;
-
-    mergeMode = false;
-
-    updateButtons();
-
-  }
-);
-
-mergeBtn.addEventListener(
-  'click',
-  () => {
-
-    if(mergeUses <= 0)
-      return;
-
-    mergeMode =
-      !mergeMode;
-
-    deleteMode = false;
-
-    updateButtons();
-
-  }
-);
-
-restartBtn.addEventListener(
-  'click',
-  init
-);
-
-window.addEventListener(
-  'resize',
-  render
-);
-
-init();
-</script>
-
+    // Start Game
+    init();
+  </script>
 </body>
 </html>
