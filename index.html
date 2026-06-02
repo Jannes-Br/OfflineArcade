@@ -30,17 +30,9 @@
           <span class="player-name-display" id="playerNameDisplay">...</span>
         </div>
         <div class="header-actions">
-          <button id="theme-btn" title="Theme wechseln">☀️</button>
           <button id="random-btn" title="Zufälliges Spiel">🎲</button>
           <button id="settings-btn" title="Einstellungen">⚙️</button>
         </div>
-      </div>
-
-      <!-- Modus-Tabs -->
-      <div class="mode-tabs" id="modeTabs">
-        <button class="mode-tab active" data-mode="solo" id="tabSolo">🎮 Solo</button>
-        <button class="mode-tab" data-mode="bot"  id="tabBot">🤖 vs. Bot</button>
-        <button class="mode-tab" data-mode="multi" id="tabMulti">📡 Multiplayer</button>
       </div>
     </header>
 
@@ -61,7 +53,7 @@
           <span>📡</span> Verbindung erstellen
         </button>
         <button class="lobby-btn" id="joinLobbyBtn">
-          <span>📷</span> Beitreten (QR / Code)
+          <span>📷</span> Beitreten (QR scannen)
         </button>
       </div>
       <p class="lobby-hint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
@@ -78,9 +70,7 @@
             <div class="game-content">
               <div class="game-title">Escape Road</div>
               <div class="game-description">Escape the police and survive the chase.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 0,72 MB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 0,72 MB</span></div>
             </div>
           </a>
 
@@ -90,9 +80,7 @@
             <div class="game-content">
               <div class="game-title">Drive Mad</div>
               <div class="game-description">Drive carefully across crazy obstacles.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 355 KB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 355 KB</span></div>
             </div>
           </a>
 
@@ -102,9 +90,7 @@
             <div class="game-content">
               <div class="game-title">Block Smasher</div>
               <div class="game-description">Smash blocks and survive as long as possible.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 62,5 KB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 62,5 KB</span></div>
             </div>
           </a>
 
@@ -115,9 +101,7 @@
             <div class="game-content">
               <div class="game-title">Tic Tac Toe</div>
               <div class="game-description">Play against friends or a smart AI bot.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 24,3 KB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 24,3 KB</span></div>
             </div>
           </a>
 
@@ -127,9 +111,7 @@
             <div class="game-content">
               <div class="game-title">2048</div>
               <div class="game-description">Merge numbers and reach 2048.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 10,8 KB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 10,8 KB</span></div>
             </div>
           </a>
 
@@ -139,15 +121,20 @@
             <div class="game-content">
               <div class="game-title">Pong</div>
               <div class="game-description">Play against friends or an impossible AI.</div>
-              <div class="game-meta">
-                <span class="game-size">💾 11,6 KB</span>
-              </div>
+              <div class="game-meta"><span class="game-size">💾 11,6 KB</span></div>
             </div>
           </a>
 
         </div>
       </div>
     </main>
+
+    <!-- ═══════════════════════════ MODE TABS (under games) ══════════ -->
+    <div class="mode-tabs" id="modeTabs">
+      <button class="mode-tab active" data-mode="solo"  id="tabSolo">🎮 Solo</button>
+      <button class="mode-tab"        data-mode="bot"   id="tabBot">🤖 vs. Bot</button>
+      <button class="mode-tab"        data-mode="multi" id="tabMulti">📡 Multiplayer</button>
+    </div>
 
     <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
     <div class="instructions-wrap" id="instructionsWrap">
@@ -167,6 +154,10 @@
           <div class="instr-item">
             <div class="instr-icon">📡</div>
             <div><strong>Multiplayer</strong> – Verbinde dich per QR-Code mit einem Freund im gleichen WLAN.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">📶</div>
+            <div>Spiele sind <strong>offline spielbar</strong>, sobald die Seite einmal mit Internet geöffnet wurde.</div>
           </div>
           <div class="instr-item">
             <div class="instr-icon">1️⃣</div>
@@ -190,12 +181,6 @@
         <div class="install-title">⚠️ Add to Home Screen</div>
         <div class="install-text" id="install-text">
           Offline features work best when OfflineArcade is added to your home screen.
-        </div>
-      </div>
-      <div id="offline-message-box">
-        <span class="offline-icon">ℹ️</span>
-        <div class="offline-message-text">
-          Spiele offline spielbar, sobald einmal mit Internet geöffnet.
         </div>
       </div>
       <div id="app-info">
@@ -243,7 +228,7 @@
     </div>
   </div>
 
-  <!-- Host QR Modal (Step 1: Show host offer QR) -->
+  <!-- Host QR Modal -->
   <div class="modal-overlay" id="hostQrOverlay">
     <div class="modal-box">
       <button class="modal-close" id="hostQrClose">✕</button>
@@ -258,7 +243,7 @@
     </div>
   </div>
 
-  <!-- Guest Join Modal (Step 2: Guest scans & shows answer QR) -->
+  <!-- Guest Join Modal -->
   <div class="modal-overlay" id="guestJoinOverlay">
     <div class="modal-box">
       <button class="modal-close" id="guestJoinClose">✕</button>
@@ -281,7 +266,7 @@
     </div>
   </div>
 
-  <!-- Host Scan Guest QR Modal (Step 3: Host scans guest answer) -->
+  <!-- Host Scan Guest QR Modal -->
   <div class="modal-overlay" id="hostScanOverlay">
     <div class="modal-box">
       <button class="modal-close" id="hostScanClose">✕</button>
@@ -296,7 +281,7 @@
     </div>
   </div>
 
-  <!-- Game Suggestion Toast (Host sees when guest suggests) -->
+  <!-- Game Suggestion Toast -->
   <div class="suggest-toast" id="suggestToast" style="display:none;">
     <span id="suggestText">Dein Gegner schlägt ein Spiel vor…</span>
   </div>
@@ -313,6 +298,7 @@
       <input type="text" id="chatInput" class="chat-input" placeholder="Nachricht…" maxlength="200">
       <button class="chat-send-btn" id="chatSend">➤</button>
     </div>
+    <p class="chat-disclaimer">Chats werden lokal auf deinem Gerät gespeichert (max. 100 Nachrichten, ältere werden automatisch gelöscht). Keine Haftung für Chat-Inhalte.</p>
   </div>
 
   <!-- Toast Notification -->
