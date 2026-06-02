@@ -2,14 +2,14 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v77';
+const CACHE_VERSION = 'v71';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
 function randomName() {
-  const adj = ['Cool','Swift','Brave','Wild','Neon','Dark','Epic','Turbo','Ultra','Hyper','Mega','Star'];
-  const noun= ['Fox','Wolf','Hawk','Panda','Tiger','Eagle','Ninja','Rocket','Pixel','Storm','Blaze','Ghost'];
-  const num = Math.floor(Math.random() * 90) + 10;
+  const adj  = ['Cool','Swift','Brave','Wild','Neon','Dark','Epic','Turbo','Ultra','Hyper','Mega','Star'];
+  const noun = ['Fox','Wolf','Hawk','Panda','Tiger','Eagle','Ninja','Rocket','Pixel','Storm','Blaze','Ghost'];
+  const num  = Math.floor(Math.random() * 90) + 10;
   return adj[Math.floor(Math.random()*adj.length)] + noun[Math.floor(Math.random()*noun.length)] + num;
 }
 
@@ -24,59 +24,56 @@ function showToast(msg, ms = 2800) {
 }
 
 /* ── State ── */
-let currentMode   = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
-let playerName    = localStorage.getItem('playerName') || '';
-let unreadChat    = 0;
-let chatHistory   = {};  // key: opponentName → [{mine, text, ts}]
-let scanStream    = null;
-let scanInterval  = null;
-let hostQrRendered= false;
+let currentMode    = localStorage.getItem('gameMode') || 'solo';
+let playerName     = localStorage.getItem('playerName') || '';
+let unreadChat     = 0;
+let chatHistory    = {};
+let scanStream     = null;
+let scanInterval   = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Element refs ── */
-  const versionEl        = document.getElementById('version');
-  const statusDot        = document.getElementById('status-dot');
-  const onlineStatusEl   = document.getElementById('online-status');
-  const reloadBtn        = document.getElementById('reload-btn');
-  const randomBtn        = document.getElementById('random-btn');
-  const themeBtn         = document.getElementById('theme-btn');
-  const settingsBtn      = document.getElementById('settings-btn');
-  const nameDisplay      = document.getElementById('playerNameDisplay');
-  const modeTabs         = document.querySelectorAll('.mode-tab');
-  const gameGrid         = document.getElementById('gameGrid');
-  const gameCards        = document.querySelectorAll('.game-card');
-  const lobbyPanel       = document.getElementById('lobbyPanel');
-  const connectionBar    = document.getElementById('connectionBar');
-  const connAvatar       = document.getElementById('connAvatar');
-  const connName         = document.getElementById('connName');
-  const disconnectBtn    = document.getElementById('disconnectBtn');
-  const createLobbyBtn   = document.getElementById('createLobbyBtn');
-  const joinLobbyBtn     = document.getElementById('joinLobbyBtn');
-  const chatFab          = document.getElementById('chatFab');
-  const chatBadge        = document.getElementById('chatBadge');
-  const suggestToast     = document.getElementById('suggestToast');
-  const suggestText      = document.getElementById('suggestText');
-  const instructToggle   = document.getElementById('instructionsToggle');
-  const instructBody     = document.getElementById('instructionsBody');
+  const versionEl         = document.getElementById('version');
+  const statusDot         = document.getElementById('status-dot');
+  const onlineStatusEl    = document.getElementById('online-status');
+  const reloadBtn         = document.getElementById('reload-btn');
+  const randomBtn         = document.getElementById('random-btn');
+  const settingsBtn       = document.getElementById('settings-btn');
+  const nameDisplay       = document.getElementById('playerNameDisplay');
+  const modeTabs          = document.querySelectorAll('.mode-tab');
+  const gameCards         = document.querySelectorAll('.game-card');
+  const lobbyPanel        = document.getElementById('lobbyPanel');
+  const connectionBar     = document.getElementById('connectionBar');
+  const connAvatar        = document.getElementById('connAvatar');
+  const connName          = document.getElementById('connName');
+  const disconnectBtn     = document.getElementById('disconnectBtn');
+  const createLobbyBtn    = document.getElementById('createLobbyBtn');
+  const joinLobbyBtn      = document.getElementById('joinLobbyBtn');
+  const chatFab           = document.getElementById('chatFab');
+  const chatBadge         = document.getElementById('chatBadge');
+  const suggestToast      = document.getElementById('suggestToast');
+  const suggestText       = document.getElementById('suggestText');
+  const instructToggle    = document.getElementById('instructionsToggle');
+  const instructBody      = document.getElementById('instructionsBody');
 
   /* Settings */
-  const settingsOverlay       = document.getElementById('settingsOverlay');
-  const settingsDrawer        = document.getElementById('settingsDrawer');
-  const settingsClose         = document.getElementById('settingsClose');
-  const nameInput             = document.getElementById('nameInput');
-  const nameSaveBtn           = document.getElementById('nameSaveBtn');
-  const themeToggleDrawer     = document.getElementById('themeToggleDrawer');
-  const settingsDisconnectWrap= document.getElementById('settingsDisconnectWrap');
-  const settingsDisconnectBtn = document.getElementById('settingsDisconnectBtn');
+  const settingsOverlay        = document.getElementById('settingsOverlay');
+  const settingsDrawer         = document.getElementById('settingsDrawer');
+  const settingsClose          = document.getElementById('settingsClose');
+  const nameInput              = document.getElementById('nameInput');
+  const nameSaveBtn            = document.getElementById('nameSaveBtn');
+  const themeToggleDrawer      = document.getElementById('themeToggleDrawer');
+  const settingsDisconnectWrap = document.getElementById('settingsDisconnectWrap');
+  const settingsDisconnectBtn  = document.getElementById('settingsDisconnectBtn');
 
   /* Host QR Modal */
-  const hostQrOverlay  = document.getElementById('hostQrOverlay');
-  const hostQrClose    = document.getElementById('hostQrClose');
-  const hostQrSubtitle = document.getElementById('hostQrSubtitle');
-  const hostQrCanvas   = document.getElementById('hostQrCanvas');
+  const hostQrOverlay   = document.getElementById('hostQrOverlay');
+  const hostQrClose     = document.getElementById('hostQrClose');
+  const hostQrSubtitle  = document.getElementById('hostQrSubtitle');
+  const hostQrCanvas    = document.getElementById('hostQrCanvas');
   const hostScanGuestBtn= document.getElementById('hostScanGuestBtn');
-  const hostSpinner    = document.getElementById('hostSpinner');
+  const hostSpinner     = document.getElementById('hostSpinner');
 
   /* Guest Join Modal */
   const guestJoinOverlay = document.getElementById('guestJoinOverlay');
@@ -95,17 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const hostScanCanvas  = document.getElementById('hostScanCanvas');
 
   /* Chat */
-  const chatOverlay    = document.getElementById('chatOverlay');
-  const chatDrawer     = document.getElementById('chatDrawer');
-  const chatClose      = document.getElementById('chatClose');
-  const chatMessages   = document.getElementById('chatMessages');
-  const chatPartnerName= document.getElementById('chatPartnerName');
-  const chatInput      = document.getElementById('chatInput');
-  const chatSend       = document.getElementById('chatSend');
+  const chatOverlay     = document.getElementById('chatOverlay');
+  const chatDrawer      = document.getElementById('chatDrawer');
+  const chatClose       = document.getElementById('chatClose');
+  const chatMessages    = document.getElementById('chatMessages');
+  const chatPartnerName = document.getElementById('chatPartnerName');
+  const chatInput       = document.getElementById('chatInput');
+  const chatSend        = document.getElementById('chatSend');
 
   /* ══════════════════ INIT ══════════════════ */
 
-  /* Service Worker */
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
       reg.addEventListener('updatefound', () => {
@@ -122,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   versionEl.textContent = CACHE_VERSION;
 
-  /* Player name */
   if (!playerName) {
     playerName = randomName();
     localStorage.setItem('playerName', playerName);
@@ -130,47 +125,39 @@ document.addEventListener('DOMContentLoaded', () => {
   nameDisplay.textContent = playerName;
   nameInput.value = playerName;
 
-  /* Theme */
   applyTheme();
-
-  /* Mode tabs */
   setMode(currentMode, false);
-
-  /* Online status */
   updateOnlineStatus();
   window.addEventListener('online',  updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
 
-  /* Load chat history */
   try { chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}'); } catch {}
 
   /* ══════════════════ THEME ══════════════════ */
   function applyTheme() {
     const t = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('dark-mode', t === 'dark');
-    themeBtn.textContent           = t === 'dark' ? '☀️' : '🌙';
-    themeToggleDrawer.textContent  = t === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    themeToggleDrawer.textContent = t === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
   }
   function toggleTheme() {
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('theme', isDark ? 'light' : 'dark');
     applyTheme();
   }
-  themeBtn.addEventListener('click', toggleTheme);
   themeToggleDrawer.addEventListener('click', toggleTheme);
 
   /* ══════════════════ ONLINE STATUS ══════════════════ */
   function updateOnlineStatus() {
     if (navigator.onLine) {
-      statusDot.style.background  = '#22c55e';
-      statusDot.style.boxShadow   = '0 0 8px #22c55e';
-      onlineStatusEl.textContent  = 'Online';
-      reloadBtn.style.display     = 'flex';
+      statusDot.style.background = '#22c55e';
+      statusDot.style.boxShadow  = '0 0 8px #22c55e';
+      onlineStatusEl.textContent = 'Online';
+      reloadBtn.style.display    = 'flex';
     } else {
-      statusDot.style.background  = '#ef4444';
-      statusDot.style.boxShadow   = '0 0 8px #ef4444';
-      onlineStatusEl.textContent  = 'Offline';
-      reloadBtn.style.display     = 'none';
+      statusDot.style.background = '#ef4444';
+      statusDot.style.boxShadow  = '0 0 8px #ef4444';
+      onlineStatusEl.textContent = 'Offline';
+      reloadBtn.style.display    = 'none';
     }
   }
 
@@ -184,19 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMulti   = mode === 'multi';
     const connected = MP.isConnected();
 
-    /* Lobby panel: only in multi + not connected */
-    lobbyPanel.style.display      = (isMulti && !connected) ? 'block' : 'none';
-    /* Connection bar: only in multi + connected */
-    connectionBar.style.display   = (isMulti && connected) ? 'flex' : 'none';
-    /* Chat FAB */
-    chatFab.style.display         = (isMulti && connected) ? 'flex' : 'none';
-    /* Disconnect in settings */
-    settingsDisconnectWrap.style.display = (isMulti && connected) ? 'block' : 'none';
+    lobbyPanel.style.display             = (isMulti && !connected) ? 'block' : 'none';
+    connectionBar.style.display          = (isMulti &&  connected) ? 'flex'  : 'none';
+    chatFab.style.display                = (isMulti &&  connected) ? 'flex'  : 'none';
+    settingsDisconnectWrap.style.display = (isMulti &&  connected) ? 'block' : 'none';
 
-    /* Update card states */
     updateCardStates(mode, connected);
-
-    /* Save mode to localStorage so games can read it */
     localStorage.setItem('gameMode', mode);
   }
 
@@ -208,15 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateCardStates(mode, connected) {
     gameCards.forEach(card => {
       const isMP = card.dataset.multiplayer === 'true';
-      /* Remove any existing solo badge */
-      const oldBadge = card.querySelector('.solo-badge');
-      if (oldBadge) oldBadge.remove();
+      const old  = card.querySelector('.solo-badge');
+      if (old) old.remove();
 
       if (mode === 'multi' && connected && !isMP) {
-        /* Disable non-multiplayer games */
         card.classList.add('mp-disabled');
         const badge = document.createElement('div');
-        badge.className = 'solo-badge';
+        badge.className   = 'solo-badge';
         badge.textContent = 'Solo only';
         card.appendChild(badge);
       } else {
@@ -229,19 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
   gameCards.forEach(card => {
     card.addEventListener('click', (e) => {
       if (card.classList.contains('mp-disabled')) { e.preventDefault(); return; }
-      if (currentMode !== 'multi' || !MP.isConnected()) return; // normal nav
+      if (currentMode !== 'multi' || !MP.isConnected()) return;
 
       const game = card.dataset.game;
       if (MP.role === 'guest') {
-        /* Guest suggests → host sees glow */
         e.preventDefault();
         MP.send('suggest', { game });
         showToast('Vorschlag gesendet! Warte auf den Host.');
       }
-      /* Host clicks → broadcast start to guest, then navigate */
       if (MP.role === 'host') {
-        MP.send('start', { game, role: 'O' }); // guest gets 'O'
-        /* navigate normally */
+        MP.send('start', { game, role: 'O' });
       }
     });
   });
@@ -273,10 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettings();
   }
 
-  settingsDisconnectBtn.addEventListener('click', () => {
-    closeSettings();
-    doDisconnect();
-  });
+  settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
   disconnectBtn.addEventListener('click', doDisconnect);
 
   function doDisconnect() {
@@ -287,10 +259,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
   MP.on('connected', ({ opponent }) => {
-    connAvatar.textContent = (opponent || '?')[0].toUpperCase();
-    connName.textContent   = opponent || 'Gegner';
+    connAvatar.textContent      = (opponent || '?')[0].toUpperCase();
+    connName.textContent        = opponent || 'Gegner';
     chatPartnerName.textContent = opponent || 'Gegner';
-    /* Switch UI to connected state */
     lobbyPanel.style.display    = 'none';
     connectionBar.style.display = 'flex';
     chatFab.style.display       = 'flex';
@@ -306,17 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('suggest', ({ game }) => {
-    /* Highlight the suggested game card */
-    gameCards.forEach(c => {
-      c.classList.toggle('suggested', c.dataset.game === game);
-    });
-    suggestText.textContent = `${MP.opponent} schlägt ${game} vor!`;
+    gameCards.forEach(c => c.classList.toggle('suggested', c.dataset.game === game));
+    suggestText.textContent    = `${MP.opponent} schlägt ${game} vor!`;
     suggestToast.style.display = 'block';
     setTimeout(() => { suggestToast.style.display = 'none'; }, 4000);
   });
 
   MP.on('start', ({ game }) => {
-    /* Guest navigates to the game */
     localStorage.setItem('mpRole', 'O');
     window.location.href = `games/${game}/index.html`;
   });
@@ -325,8 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
     addChatMessage(text, name, false);
     if (!chatDrawer.classList.contains('open')) {
       unreadChat++;
-      chatBadge.textContent = unreadChat;
-      chatBadge.style.display = 'flex';
+      chatBadge.textContent    = unreadChat;
+      chatBadge.style.display  = 'flex';
     }
   });
 
@@ -336,18 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function onDisconnected() {
-    connectionBar.style.display = 'none';
-    chatFab.style.display       = 'none';
+    connectionBar.style.display          = 'none';
+    chatFab.style.display                = 'none';
     settingsDisconnectWrap.style.display = 'none';
-    gameCards.forEach(c => { c.classList.remove('mp-disabled', 'suggested'); });
-    const oldBadges = document.querySelectorAll('.solo-badge');
-    oldBadges.forEach(b => b.remove());
+    gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
+    document.querySelectorAll('.solo-badge').forEach(b => b.remove());
     if (currentMode === 'multi') lobbyPanel.style.display = 'block';
   }
 
   /* ══════════════════ HOST FLOW ══════════════════ */
   createLobbyBtn.addEventListener('click', async () => {
-    hostQrCanvas.innerHTML = '';
+    hostQrCanvas.innerHTML         = '';
     hostScanGuestBtn.style.display = 'none';
     hostSpinner.style.display      = 'block';
     hostQrSubtitle.textContent     = 'QR-Code wird erstellt…';
@@ -355,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const encoded = await MP.createOffer(playerName);
-      hostSpinner.style.display = 'none';
+      hostSpinner.style.display  = 'none';
       hostQrSubtitle.textContent = 'Lass deinen Freund diesen QR-Code scannen:';
       renderQR(hostQrCanvas, encoded);
       hostScanGuestBtn.style.display = 'flex';
@@ -369,11 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModal(hostQrOverlay);
     openModal(hostScanOverlay);
     startCamera(hostVideo, hostScanCanvas, async (decoded) => {
-      stopCamera(scanStream);
+      stopCamera();
       closeModal(hostScanOverlay);
       try {
         await MP.receiveAnswer(decoded);
-        /* 'connected' event will fire automatically */
       } catch(e) {
         showToast('❌ QR-Code konnte nicht gelesen werden.');
         openModal(hostQrOverlay);
@@ -381,15 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  hostQrClose.addEventListener('click', () => {
-    closeModal(hostQrOverlay);
-    MP.disconnect();
-  });
-  hostScanClose.addEventListener('click', () => {
-    stopCamera(scanStream);
-    closeModal(hostScanOverlay);
-    MP.disconnect();
-  });
+  hostQrClose.addEventListener('click',  () => { closeModal(hostQrOverlay);  MP.disconnect(); });
+  hostScanClose.addEventListener('click', () => { stopCamera(); closeModal(hostScanOverlay); MP.disconnect(); });
 
   /* ══════════════════ GUEST FLOW ══════════════════ */
   joinLobbyBtn.addEventListener('click', () => {
@@ -397,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     guestAnswerStep.style.display = 'none';
     openModal(guestJoinOverlay);
     startCamera(guestVideo, guestScanCanvas, async (decoded) => {
-      stopCamera(scanStream);
+      stopCamera();
       guestScanStep.style.display   = 'none';
       guestAnswerStep.style.display = 'block';
       guestAnswerQr.innerHTML       = '';
@@ -406,63 +364,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const answer = await MP.receiveOffer(decoded, playerName);
         guestSpinner.style.display = 'none';
         renderQR(guestAnswerQr, answer);
-        /* Wait for host to scan — 'connected' event fires on DC open */
       } catch(e) {
         guestSpinner.textContent = '❌ Fehler. Bitte erneut scannen.';
       }
     });
   });
 
-  guestJoinClose.addEventListener('click', () => {
-    stopCamera(scanStream);
-    closeModal(guestJoinOverlay);
-    MP.disconnect();
-  });
+  guestJoinClose.addEventListener('click', () => { stopCamera(); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ QR HELPERS ══════════════════ */
   function renderQR(container, text) {
     container.innerHTML = '';
     new QRCode(container, {
       text,
-      width:  220,
-      height: 220,
-      correctLevel: QRCode.CorrectLevel.M
+      width:        240,
+      height:       240,
+      correctLevel: QRCode.CorrectLevel.L   // Lowest correction → smallest/clearest QR
     });
   }
 
-  /* ─── CAMERA / SCANNER ─── */
+  /* ══════════════════ CAMERA / SCANNER ══════════════════ */
   function startCamera(videoEl, canvasEl, onResult) {
+    if (typeof jsQR === 'undefined') {
+      showToast('❌ QR-Scanner nicht geladen.');
+      return;
+    }
+
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 640 } }
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     }).then(stream => {
       scanStream = stream;
       videoEl.srcObject = stream;
-      videoEl.play();
 
       let found = false;
-      scanInterval = setInterval(() => {
-        if (found || videoEl.readyState < 2) return;
-        const ctx = canvasEl.getContext('2d');
-        canvasEl.width  = videoEl.videoWidth;
-        canvasEl.height = videoEl.videoHeight;
-        ctx.drawImage(videoEl, 0, 0);
-        const img = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
-        const code = jsQR(img.data, img.width, img.height);
-        if (code && code.data) {
-          found = true;
-          clearInterval(scanInterval);
-          onResult(code.data);
+
+      const tick = () => {
+        // Wait until the video has actual pixel data
+        if (!found && videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+          try {
+            const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+            canvasEl.width  = videoEl.videoWidth;
+            canvasEl.height = videoEl.videoHeight;
+            ctx.drawImage(videoEl, 0, 0);
+            const imgData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+            const code = jsQR(imgData.data, imgData.width, imgData.height, {
+              inversionAttempts: 'dontInvert'
+            });
+            if (code && code.data) {
+              found = true;
+              onResult(code.data);
+              return; // stop rAF loop
+            }
+          } catch (err) {
+            // Silently ignore frame errors, keep scanning
+          }
         }
-      }, 200);
-    }).catch(() => {
-      showToast('❌ Kamera-Zugriff verweigert.');
-    });
+        if (!found) scanInterval = requestAnimationFrame(tick);
+      };
+
+      // Start scanning only after video plays
+      videoEl.onloadedmetadata = () => {
+        videoEl.play().then(() => {
+          scanInterval = requestAnimationFrame(tick);
+        }).catch(() => showToast('❌ Kamera konnte nicht gestartet werden.'));
+      };
+
+    }).catch(() => showToast('❌ Kamera-Zugriff verweigert.'));
   }
 
-  function stopCamera(stream) {
-    clearInterval(scanInterval);
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    scanStream = null;
+  function stopCamera() {
+    if (scanInterval) { cancelAnimationFrame(scanInterval); scanInterval = null; }
+    if (scanStream)   { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
   }
 
   /* ══════════════════ MODAL HELPERS ══════════════════ */
@@ -470,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeModal(el) { el.classList.remove('open'); }
   function closeAllModals() {
     [hostQrOverlay, guestJoinOverlay, hostScanOverlay].forEach(closeModal);
-    stopCamera(scanStream);
+    stopCamera();
   }
 
   /* ══════════════════ CHAT ══════════════════ */
@@ -503,16 +475,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addChatMessage(text, name, mine) {
-    const opponent = MP.opponent || 'Gegner';
-    const key = opponent;
+    const key = MP.opponent || 'Gegner';
     if (!chatHistory[key]) chatHistory[key] = [];
-    const msg = { text, name, mine, ts: Date.now() };
-    chatHistory[key].push(msg);
-    if (chatHistory[key].length > 100) chatHistory[key].shift();
+    chatHistory[key].push({ text, name, mine, ts: Date.now() });
+    if (chatHistory[key].length > 100) chatHistory[key].shift(); // keep max 100
     try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch {}
 
     if (chatDrawer.classList.contains('open')) {
-      appendChatBubble(msg);
+      appendChatBubble({ text, name, mine });
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   }
@@ -528,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     div.className = `chat-msg ${mine ? 'mine' : 'theirs'}`;
     if (!mine) {
       const n = document.createElement('div');
-      n.className = 'chat-msg-name';
+      n.className   = 'chat-msg-name';
       n.textContent = name;
       div.appendChild(n);
     }
@@ -544,12 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function startLuckySpin() {
     const cards = [...document.querySelectorAll('.game-card:not(.mp-disabled)')];
     if (!cards.length) return;
-    randomBtn.disabled = true; randomBtn.style.opacity = '0.5';
+    randomBtn.disabled     = true;
+    randomBtn.style.opacity = '0.5';
     cards.forEach(c => c.classList.remove('highlighted'));
 
-    let idx = 0;
-    let steps = 14 + Math.floor(Math.random() * 8);
-    let delay = 60;
+    let idx = 0, steps = 14 + Math.floor(Math.random() * 8), delay = 60;
 
     function spin() {
       cards.forEach(c => c.classList.remove('highlighted'));
@@ -571,7 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
           else {
             winner.classList.add('highlighted');
             setTimeout(() => {
-              randomBtn.disabled = false; randomBtn.style.opacity = '1';
+              randomBtn.disabled      = false;
+              randomBtn.style.opacity = '1';
               winner.classList.remove('highlighted');
               winner.click();
             }, 900);
@@ -610,10 +580,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   (function checkInstall() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isInstalled = window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
-    const info = document.getElementById('install-info');
-    const text = document.getElementById('install-text');
+    const isIOS      = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInstalled= window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
+    const info       = document.getElementById('install-info');
+    const text       = document.getElementById('install-text');
     if (isInstalled) { info.style.display = 'none'; return; }
     info.style.display = 'block';
     if (isIOS) text.innerHTML = `Tippe auf ⎙ in Safari und wähle <strong>„Zum Home-Bildschirm"</strong>.`;
