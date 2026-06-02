@@ -2,8 +2,8 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v84';
-const MULTIPLAYER_GAMES = ['tic-tac-toe'];
+const CACHE_VERSION = 'v85';
+const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048'];
 
 /* ── Random name generator ── */
 function randomName() {
@@ -618,3 +618,24 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
 });
+
+{
+  "name": "OfflineArcade",
+  "short_name": "OfflineArcade",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#181921",
+  "theme_color": "#4cc9f0",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
