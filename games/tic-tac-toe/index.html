@@ -1,517 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Tic Tac Toe</title>
+  <title>Tic Tac Toe – OfflineArcade</title>
 
   <style>
+    /* ── Variables ── */
     :root {
-      /* LIGHT MODE VARIABLES (Default) */
       --bg-color: #f8fafc;
       --text-color: #0f172a;
       --text-gradient: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
-      
-      --bg-radial-1: rgba(59, 130, 246, 0.08);
-      --bg-radial-2: rgba(147, 51, 234, 0.08);
-      --bg-linear: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-      
-      --box-bg: rgba(255, 255, 255, 0.7);
-      --box-border: rgba(0, 0, 0, 0.08);
-      --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-      
-      --btn-bg: rgba(0, 0, 0, 0.04);
-      --btn-border: rgba(0, 0, 0, 0.08);
+      --bg-radial-1: rgba(59,130,246,0.08);
+      --bg-radial-2: rgba(147,51,234,0.08);
+      --bg-linear: linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);
+      --box-bg: rgba(255,255,255,0.7);
+      --box-border: rgba(0,0,0,0.08);
+      --box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+      --btn-bg: rgba(0,0,0,0.04);
+      --btn-border: rgba(0,0,0,0.08);
       --btn-color: #0f172a;
-      --btn-hover-bg: rgba(0, 0, 0, 0.08);
-      --btn-hover-border: rgba(59, 130, 246, 0.4);
+      --btn-hover-bg: rgba(0,0,0,0.08);
+      --btn-hover-border: rgba(59,130,246,0.4);
       --btn-active-bg: #3b82f6;
       --btn-active-color: white;
-      
-      --cell-bg: rgba(0, 0, 0, 0.03);
-      --cell-hover-bg: rgba(0, 0, 0, 0.06);
-      --cell-border: rgba(0, 0, 0, 0.06);
-      
-      --score-bg: rgba(0, 0, 0, 0.03);
-      --score-border: rgba(0, 0, 0, 0.04);
+      --cell-bg: rgba(0,0,0,0.03);
+      --cell-hover-bg: rgba(0,0,0,0.06);
+      --cell-border: rgba(0,0,0,0.06);
+      --score-bg: rgba(0,0,0,0.03);
+      --score-border: rgba(0,0,0,0.04);
       --score-title: #475569;
       --winner-color: #3b82f6;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.35);
     }
-
     body.dark-mode {
-      /* DARK MODE VARIABLES */
       --bg-color: #0f172a;
       --text-color: #ffffff;
-      --text-gradient: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-      
-      --bg-radial-1: rgba(76, 201, 240, 0.18);
-      --bg-radial-2: rgba(99, 102, 241, 0.18);
-      --bg-linear: linear-gradient(180deg, #111827 0%, #0b1120 100%);
-      
-      --box-bg: rgba(255, 255, 255, 0.06);
-      --box-border: rgba(255, 255, 255, 0.08);
-      --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-      
-      --btn-bg: rgba(255, 255, 255, 0.08);
-      --btn-border: rgba(255, 255, 255, 0.1);
+      --text-gradient: linear-gradient(135deg,#ffffff 0%,#cbd5e1 100%);
+      --bg-radial-1: rgba(76,201,240,0.18);
+      --bg-radial-2: rgba(99,102,241,0.18);
+      --bg-linear: linear-gradient(180deg,#111827 0%,#0b1120 100%);
+      --box-bg: rgba(255,255,255,0.06);
+      --box-border: rgba(255,255,255,0.08);
+      --box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      --btn-bg: rgba(255,255,255,0.08);
+      --btn-border: rgba(255,255,255,0.1);
       --btn-color: #ffffff;
-      --btn-hover-bg: rgba(255, 255, 255, 0.16);
-      --btn-hover-border: rgba(76, 201, 240, 0.4);
-      --btn-active-bg: #3b82f6;
-      --btn-active-color: #ffffff;
-      
-      --cell-bg: rgba(255, 255, 255, 0.05);
-      --cell-hover-bg: rgba(255, 255, 255, 0.1);
-      --cell-border: rgba(255, 255, 255, 0.06);
-      
-      --score-bg: rgba(255, 255, 255, 0.04);
-      --score-border: rgba(255, 255, 255, 0.05);
+      --btn-hover-bg: rgba(255,255,255,0.16);
+      --btn-hover-border: rgba(76,201,240,0.4);
+      --btn-active-bg: #38bdf8;
+      --btn-active-color: #0f172a;
+      --cell-bg: rgba(255,255,255,0.05);
+      --cell-hover-bg: rgba(255,255,255,0.1);
+      --cell-border: rgba(255,255,255,0.06);
+      --score-bg: rgba(255,255,255,0.04);
+      --score-border: rgba(255,255,255,0.05);
       --score-title: #94a3b8;
       --winner-color: #4cc9f0;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56,189,248,0.35);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text-color);background:var(--bg-color);transition:color .3s,background-color .3s;}
+    body{position:fixed;inset:0;}
+
+    .background{position:fixed;inset:0;background:radial-gradient(circle at top right,var(--bg-radial-1),transparent 35%),radial-gradient(circle at bottom left,var(--bg-radial-2),transparent 35%),var(--bg-linear);z-index:0;transition:background .4s;}
+
+    /* ── Header ── */
+    .game-header{position:fixed;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) 16px 10px;display:flex;justify-content:space-between;align-items:center;z-index:100;pointer-events:none;}
+    .back-btn,#mute-btn,#chat-btn{pointer-events:auto;border:none;background:var(--box-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--box-border);color:var(--text-color);padding:8px 14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;transition:transform .2s,background-color .2s,border-color .2s;box-shadow:0 4px 12px rgba(0,0,0,.05);}
+    #mute-btn,#chat-btn{width:38px;height:38px;padding:0;font-size:16px;position:relative;}
+    .back-btn:hover,#mute-btn:hover,#chat-btn:hover{transform:translateY(-2px);background:var(--btn-hover-bg);border-color:var(--btn-hover-border);}
+    .back-btn:active,#mute-btn:active,#chat-btn:active{transform:scale(.95);}
+    .header-right{display:flex;gap:8px;pointer-events:auto;}
+    .chat-badge-hdr{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;border:2px solid var(--bg-color);}
+
+    /* Mode badge shown in header */
+    .mode-badge{pointer-events:none;background:var(--btn-active-bg);color:var(--btn-active-color);padding:6px 12px;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.4px;}
+
+    /* ── Container ── */
+    .container{position:relative;z-index:1;width:100%;height:100%;display:flex;justify-content:center;align-items:center;padding:72px 16px 20px;}
+
+    /* ── Game Box ── */
+    .game-box{width:100%;max-width:420px;background:var(--box-bg);border:1px solid var(--box-border);border-radius:28px;padding:24px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--box-shadow);transition:background-color .3s,border-color .3s,box-shadow .3s;}
+    .title{text-align:center;font-size:34px;font-weight:800;margin-bottom:4px;background:var(--text-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .subtitle{text-align:center;color:var(--score-title);margin-bottom:18px;font-size:13px;}
+
+    /* ── Difficulty (bot only) ── */
+    .difficulty-select{display:flex;gap:8px;margin-bottom:14px;}
+    button{border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;transition:background-color .2s,transform .1s,border-color .2s,color .2s;}
+    .diff-btn{flex:1;background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--btn-color);}
+    .diff-btn.active{background:var(--btn-active-bg);color:var(--btn-active-color);border-color:var(--btn-active-bg);box-shadow:0 4px 12px var(--accent-glow);}
+    .diff-btn:hover{background:var(--btn-hover-bg);border-color:var(--btn-hover-border);}
+
+    /* ── Board ── */
+    .board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+    .cell{aspect-ratio:1;background:var(--cell-bg);border:1px solid var(--cell-border);border-radius:20px;display:flex;justify-content:center;align-items:center;font-size:48px;font-weight:800;cursor:pointer;transition:transform .2s,background-color .2s,border-color .2s;user-select:none;}
+    .cell:hover:not(.taken){transform:scale(1.03);background:var(--cell-hover-bg);border-color:var(--btn-hover-border);}
+    .cell.taken{cursor:default;}
+    @keyframes popIn{0%{transform:scale(.5);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+    .cell.pop{animation:popIn .22s cubic-bezier(.175,.885,.32,1.275) forwards;}
+    @keyframes winGlow{0%,100%{box-shadow:0 0 10px rgba(59,130,246,.4);background:rgba(59,130,246,.1);transform:scale(1)}50%{box-shadow:0 0 25px rgba(59,130,246,.8);background:rgba(59,130,246,.3);transform:scale(1.05)}}
+    @keyframes winGlowDark{0%,100%{box-shadow:0 0 10px rgba(76,201,240,.4);background:rgba(76,201,240,.1);transform:scale(1)}50%{box-shadow:0 0 25px rgba(76,201,240,.8);background:rgba(76,201,240,.3);transform:scale(1.05)}}
+    .cell.win{animation:winGlow .8s infinite ease-in-out;border-color:#3b82f6!important;color:white!important;z-index:2;}
+    body.dark-mode .cell.win{animation:winGlowDark .8s infinite ease-in-out;border-color:#4cc9f0!important;}
+    .x{color:#3b82f6;text-shadow:0 0 10px rgba(59,130,246,.2);}
+    body.dark-mode .x{color:#38bdf8;text-shadow:0 0 10px rgba(56,189,248,.3);}
+    .o{color:#ef4444;text-shadow:0 0 10px rgba(239,68,68,.2);}
+    body.dark-mode .o{color:#f43f5e;text-shadow:0 0 10px rgba(244,63,94,.3);}
+
+    /* Waiting indicator (online: other player's turn) */
+    .cell.waiting-turn{opacity:.4;cursor:not-allowed;}
+    .cell.waiting-turn:hover{transform:none;background:var(--cell-bg);}
+
+    /* ── Status ── */
+    .status{text-align:center;margin-top:14px;font-size:15px;font-weight:700;color:var(--text-color);min-height:24px;}
+
+    /* ── Online opponent indicator ── */
+    .opponent-bar{display:none;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(56,189,248,.08));border:1px solid rgba(34,197,94,.25);border-radius:16px;}
+    .opponent-bar.show{display:flex;}
+    .opp-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
+    .opp-name{font-size:13px;font-weight:700;}
+    .opp-role{font-size:11px;opacity:.55;margin-top:1px;}
+
+    /* ── Scoreboard ── */
+    .scoreboard{display:flex;justify-content:space-between;gap:10px;margin-top:16px;}
+    .score{flex:1;background:var(--score-bg);border:1px solid var(--score-border);padding:10px;border-radius:16px;text-align:center;transition:background-color .3s,border-color .3s;}
+    .score-title{color:var(--score-title);margin-bottom:4px;font-size:12px;font-weight:600;}
+    .score-value{font-size:22px;font-weight:800;}
+
+    /* ── Controls ── */
+    .controls{margin-top:16px;display:flex;gap:10px;}
+    .control-btn{flex:1;background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--btn-color);}
+    .control-btn:hover{background:var(--btn-hover-bg);border-color:var(--btn-hover-border);transform:translateY(-1px);}
+    .control-btn:active{transform:scale(.97);}
+
+    /* ── Landscape ── */
+    @media(max-height:550px) and (orientation:landscape){
+      .container{padding:55px 12px 10px;height:auto;min-height:100vh;}
+      .game-box{max-width:680px;display:grid;grid-template-columns:1fr 1.1fr;gap:20px;padding:16px;align-items:center;}
+      .title-section{display:flex;flex-direction:column;justify-content:center;}
+      .title{font-size:22px;}
+      .subtitle{font-size:12px;margin-bottom:8px;}
+      .difficulty-select{margin-bottom:6px;gap:6px;}
+      button{padding:8px 10px;font-size:13px;border-radius:10px;}
+      .board{margin-top:0;gap:8px;}
+      .cell{font-size:34px;border-radius:14px;}
+      .scoreboard{margin-top:8px;gap:6px;}
+      .score{padding:6px;border-radius:12px;}
+      .score-title{font-size:11px;margin-bottom:2px;}
+      .score-value{font-size:16px;}
+      .controls{margin-top:8px;gap:6px;}
+      .status{margin-top:8px;font-size:14px;}
+      .opponent-bar{margin-bottom:8px;}
+    }
+    @media(max-width:360px){
+      .game-box{padding:16px;}
+      .title{font-size:26px;}
+      .cell{font-size:36px;}
     }
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      color: var(--text-color);
-      background: var(--bg-color);
-      transition: color 0.3s ease, background-color 0.3s ease;
-    }
-
-    body {
-      position: fixed;
-      inset: 0;
-    }
-
-    .background {
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(
-          circle at top right,
-          var(--bg-radial-1),
-          transparent 35%
-        ),
-        radial-gradient(
-          circle at bottom left,
-          var(--bg-radial-2),
-          transparent 35%
-        ),
-        var(--bg-linear);
-      z-index: 0;
-      transition: background 0.4s ease;
-    }
-
-    /* Fixed Navigation Header */
-    .game-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: max(16px, env(safe-area-inset-top)) 24px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 100;
-      pointer-events: none;
-    }
-
-    .back-btn,
-    #mute-btn {
-      pointer-events: auto;
-      border: none;
-      background: var(--box-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--box-border);
-      color: var(--text-color);
-      padding: 8px 14px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    #mute-btn {
-      width: 38px;
-      height: 38px;
-      padding: 0;
-      font-size: 16px;
-    }
-
-    .back-btn:hover,
-    #mute-btn:hover {
-      transform: translateY(-2px);
-      background: var(--btn-hover-bg);
-      border-color: var(--btn-hover-border);
-    }
-
-    .back-btn:active,
-    #mute-btn:active {
-      transform: scale(0.95);
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 70px 16px 20px;
-    }
-
-    .game-box {
-      width: 100%;
-      max-width: 420px;
-      background: var(--box-bg);
-      border: 1px solid var(--box-border);
-      border-radius: 28px;
-      padding: 24px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--box-shadow);
-      transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 34px;
-      font-weight: 800;
-      margin-bottom: 4px;
-      background: var(--text-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: var(--score-title);
-      margin-bottom: 20px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .mode-select,
-    .difficulty-select {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    button {
-      border: none;
-      border-radius: 14px;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s, border-color 0.2s, color 0.2s;
-    }
-
-    .mode-btn,
-    .diff-btn {
-      flex: 1;
-      background: var(--btn-bg);
-      border: 1px solid var(--btn-border);
-      color: var(--btn-color);
-    }
-
-    .mode-btn.active,
-    .diff-btn.active {
-      background: var(--btn-active-bg);
-      color: var(--btn-active-color);
-      border-color: var(--btn-active-bg);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-
-    body.dark-mode .mode-btn.active,
-    body.dark-mode .diff-btn.active {
-      box-shadow: 0 4px 12px rgba(76, 201, 240, 0.2);
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .cell {
-      aspect-ratio: 1;
-      background: var(--cell-bg);
-      border: 1px solid var(--cell-border);
-      border-radius: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 48px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
-    }
-
-    .cell:hover {
-      transform: scale(1.03);
-      background: var(--cell-hover-bg);
-      border-color: var(--btn-hover-border);
-    }
-
-    /* Pop-In Plop Animation für X/O */
-    @keyframes popIn {
-      0% { transform: scale(0.5); opacity: 0; }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .cell.pop {
-      animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-
-    /* Juiciges Gewinn-Glühen */
-    @keyframes winGlow {
-      0% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1); transform: scale(1); }
-      50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); background: rgba(59, 130, 246, 0.3); transform: scale(1.05); }
-      100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1); transform: scale(1); }
-    }
-
-    @keyframes winGlowDark {
-      0% { box-shadow: 0 0 10px rgba(76, 201, 240, 0.4); background: rgba(76, 201, 240, 0.1); transform: scale(1); }
-      50% { box-shadow: 0 0 25px rgba(76, 201, 240, 0.8); background: rgba(76, 201, 240, 0.3); transform: scale(1.05); }
-      100% { box-shadow: 0 0 10px rgba(76, 201, 240, 0.4); background: rgba(76, 201, 240, 0.1); transform: scale(1); }
-    }
-
-    .cell.win {
-      animation: winGlow 0.8s infinite ease-in-out;
-      border-color: #3b82f6 !important;
-      color: white !important;
-      z-index: 2;
-    }
-
-    body.dark-mode .cell.win {
-      animation: winGlowDark 0.8s infinite ease-in-out;
-      border-color: #4cc9f0 !important;
-    }
-
-    .x {
-      color: #3b82f6;
-      text-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
-    }
-
-    body.dark-mode .x {
-      color: #38bdf8;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-    }
-
-    .o {
-      color: #ef4444;
-      text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
-    }
-
-    body.dark-mode .o {
-      color: #f43f5e;
-      text-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
-    }
-
-    .status {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-color);
-    }
-
-    .scoreboard {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .score {
-      flex: 1;
-      background: var(--score-bg);
-      border: 1px solid var(--score-border);
-      padding: 10px;
-      border-radius: 16px;
-      text-align: center;
-      transition: background-color 0.3s, border-color 0.3s;
-    }
-
-    .score-title {
-      color: var(--score-title);
-      margin-bottom: 4px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .score-value {
-      font-size: 22px;
-      font-weight: 800;
-    }
-
-    .controls {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-    }
-
-    .control-btn {
-      flex: 1;
-      background: var(--btn-bg);
-      border: 1px solid var(--btn-border);
-      color: var(--btn-color);
-    }
-
-    .control-btn:hover {
-      background: var(--btn-hover-bg);
-      border-color: var(--btn-hover-border);
-      transform: translateY(-1px);
-    }
-
-    .control-btn:active {
-      transform: scale(0.97);
-    }
-
-    /* MOBILES QUERFORMAT (Landscape Optimierung) */
-    @media (max-height: 550px) and (orientation: landscape) {
-      .container {
-        padding: 55px 12px 10px;
-        height: auto;
-        min-height: 100vh;
-      }
-      
-      .game-box {
-        max-width: 680px;
-        display: grid;
-        grid-template-columns: 1fr 1.1fr;
-        gap: 20px;
-        padding: 16px;
-        align-items: center;
-      }
-      
-      .title-section {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      
-      .title {
-        font-size: 24px;
-      }
-      
-      .subtitle {
-        font-size: 12px;
-        margin-bottom: 10px;
-      }
-      
-      .mode-select,
-      .difficulty-select {
-        margin-bottom: 8px;
-        gap: 6px;
-      }
-      
-      button {
-        padding: 8px 10px;
-        font-size: 13px;
-        border-radius: 10px;
-      }
-      
-      .board {
-        margin-top: 0;
-        gap: 8px;
-      }
-      
-      .cell {
-        font-size: 34px;
-        border-radius: 14px;
-      }
-      
-      .scoreboard {
-        margin-top: 8px;
-        gap: 6px;
-      }
-      
-      .score {
-        padding: 6px;
-        border-radius: 12px;
-      }
-      
-      .score-title {
-        font-size: 11px;
-        margin-bottom: 2px;
-      }
-      
-      .score-value {
-        font-size: 16px;
-      }
-      
-      .controls {
-        margin-top: 8px;
-        gap: 6px;
-      }
-      
-      .status {
-        margin-top: 8px;
-        font-size: 14px;
-      }
-    }
-
-    @media (max-width: 360px) {
-      .game-box {
-        padding: 16px;
-      }
-      
-      .title {
-        font-size: 26px;
-      }
-      
-      .cell {
-        font-size: 36px;
-      }
-    }
+    /* ── Chat overlay (inline, not main.js dependent) ── */
+    .chat-overlay-local{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .chat-overlay-local.open{opacity:1;pointer-events:auto;}
+    .chat-drawer-local{position:fixed;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--box-bg);border-left:1px solid var(--box-border);z-index:400;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.2);}
+    .chat-drawer-local.open{transform:translateX(0);}
+    .chat-header-local{display:flex;align-items:center;justify-content:space-between;padding:max(52px,env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--box-border);flex-shrink:0;}
+    .chat-title-local{font-size:16px;font-weight:800;}
+    .chat-close-local{border:1px solid var(--btn-border);background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--text-color);width:30px;height:30px;border-radius:9px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .chat-messages-local{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+    .chat-msg-local{max-width:80%;padding:8px 13px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;}
+    .chat-msg-local.mine{align-self:flex-end;background:var(--btn-active-bg);color:var(--btn-active-color);border-bottom-right-radius:4px;}
+    .chat-msg-local.theirs{align-self:flex-start;background:var(--cell-bg);border:1px solid var(--cell-border);border-bottom-left-radius:4px;}
+    .chat-name-local{font-size:10px;font-weight:700;opacity:.55;margin-bottom:3px;}
+    .chat-input-row-local{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--box-border);padding-bottom:max(10px,env(safe-area-inset-bottom));flex-shrink:0;}
+    .chat-input-local{flex:1;padding:9px 13px;background:var(--cell-bg);border:1px solid var(--cell-border);border-radius:11px;color:var(--text-color);font-size:14px;outline:none;transition:border-color .2s;}
+    .chat-input-local:focus{border-color:var(--accent);}
+    .chat-send-local{border:none;background:var(--btn-active-bg);color:var(--btn-active-color);width:42px;height:42px;border-radius:11px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .toast-local{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,23,42,.92);color:#fff;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:600;z-index:700;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap;backdrop-filter:blur(8px);}
+    .toast-local.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    body.dark-mode .toast-local{background:rgba(255,255,255,.12);}
   </style>
 </head>
 <body>
   <div class="background"></div>
 
-  <!-- Navigation Header -->
+  <!-- Header -->
   <div class="game-header">
-    <a href="../../index.html" class="back-btn" title="Zurück zum Hauptmenü">← Menü</a>
-    <button id="mute-btn" title="Ton stummschalten">🔊</button>
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menü</a>
+    <span class="mode-badge" id="modeBadge">Solo</span>
+    <div class="header-right">
+      <button id="chat-btn" title="Chat" style="display:none;">💬<span class="chat-badge-hdr" id="chatBadgeHdr"></span></button>
+      <button id="mute-btn" title="Ton stummschalten">🔊</button>
+    </div>
   </div>
 
   <div class="container">
     <div class="game-box">
-
       <div class="title-section">
         <div class="title">Tic Tac Toe</div>
-        <div class="subtitle">Play against a friend or smart AI.</div>
+        <div class="subtitle" id="subtitle">Play against a friend or smart AI.</div>
 
-        <div class="mode-select">
-          <button class="mode-btn active" id="pvpBtn">2 Players</button>
-          <button class="mode-btn" id="botBtn">VS Bot</button>
+        <!-- Opponent bar (online mode only) -->
+        <div class="opponent-bar" id="opponentBar">
+          <div class="opp-avatar" id="oppAvatar">?</div>
+          <div>
+            <div class="opp-name" id="oppName">Gegner</div>
+            <div class="opp-role" id="oppRole">O</div>
+          </div>
         </div>
 
+        <!-- Difficulty (bot mode only) -->
         <div class="difficulty-select" id="difficultyBox" style="display:none;">
           <button class="diff-btn active" data-diff="easy">Easy</button>
           <button class="diff-btn" data-diff="medium">Medium</button>
@@ -521,12 +222,10 @@
 
       <div>
         <div class="board" id="board"></div>
-
         <div class="status" id="status">X Turn</div>
-
         <div class="scoreboard">
           <div class="score">
-            <div class="score-title">X Wins</div>
+            <div class="score-title" id="xLabel">X Wins</div>
             <div class="score-value" id="xScore">0</div>
           </div>
           <div class="score">
@@ -534,385 +233,350 @@
             <div class="score-value" id="drawScore">0</div>
           </div>
           <div class="score">
-            <div class="score-title">O Wins</div>
+            <div class="score-title" id="oLabel">O Wins</div>
             <div class="score-value" id="oScore">0</div>
           </div>
         </div>
-
         <div class="controls">
           <button class="control-btn" id="restartBtn">Restart</button>
           <button class="control-btn" id="resetBtn">Reset Score</button>
         </div>
       </div>
-
     </div>
   </div>
 
+  <!-- Local Chat (for multiplayer) -->
+  <div class="chat-overlay-local" id="chatOverlay"></div>
+  <div class="chat-drawer-local" id="chatDrawer">
+    <div class="chat-header-local">
+      <span class="chat-title-local">💬 Chat – <span id="chatWith">Gegner</span></span>
+      <button class="chat-close-local" id="chatClose">✕</button>
+    </div>
+    <div class="chat-messages-local" id="chatMessages"></div>
+    <div class="chat-input-row-local">
+      <input type="text" class="chat-input-local" id="chatInput" placeholder="Nachricht…" maxlength="200">
+      <button class="chat-send-local" id="chatSend">➤</button>
+    </div>
+  </div>
+
+  <div class="toast-local" id="toast"></div>
+
+  <script src="../../multiplayer.js"></script>
   <script>
-    const board = document.getElementById('board');
-    const statusText = document.getElementById('status');
-    const pvpBtn = document.getElementById('pvpBtn');
-    const botBtn = document.getElementById('botBtn');
+    /* ══════════════════════════════════════════════════════
+       Tic Tac Toe – 3 Modi: solo | bot | multi
+       Modus kommt aus localStorage('gameMode')
+       ══════════════════════════════════════════════════════ */
+
+    const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
+    const myName    = localStorage.getItem('playerName') || 'Du';
+    const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest (only used in multi)
+
+    /* ── Elements ── */
+    const boardEl       = document.getElementById('board');
+    const statusText    = document.getElementById('status');
     const difficultyBox = document.getElementById('difficultyBox');
-    const restartBtn = document.getElementById('restartBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const diffButtons = document.querySelectorAll('.diff-btn');
-    const muteBtn = document.getElementById('mute-btn');
+    const diffButtons   = document.querySelectorAll('.diff-btn');
+    const restartBtn    = document.getElementById('restartBtn');
+    const resetBtn      = document.getElementById('resetBtn');
+    const muteBtn       = document.getElementById('mute-btn');
+    const modeBadge     = document.getElementById('modeBadge');
+    const subtitle      = document.getElementById('subtitle');
+    const opponentBar   = document.getElementById('opponentBar');
+    const oppAvatar     = document.getElementById('oppAvatar');
+    const oppName       = document.getElementById('oppName');
+    const oppRole       = document.getElementById('oppRole');
+    const chatBtn       = document.getElementById('chat-btn');
+    const chatBadgeHdr  = document.getElementById('chatBadgeHdr');
+    const chatOverlay   = document.getElementById('chatOverlay');
+    const chatDrawer    = document.getElementById('chatDrawer');
+    const chatClose     = document.getElementById('chatClose');
+    const chatMessages  = document.getElementById('chatMessages');
+    const chatWith      = document.getElementById('chatWith');
+    const chatInput     = document.getElementById('chatInput');
+    const chatSend      = document.getElementById('chatSend');
+    const xLabel        = document.getElementById('xLabel');
+    const oLabel        = document.getElementById('oLabel');
+    const xScoreEl      = document.getElementById('xScore');
+    const oScoreEl      = document.getElementById('oScore');
+    const drawScoreEl   = document.getElementById('drawScore');
+    const backBtn       = document.getElementById('backBtn');
+    const toast         = document.getElementById('toast');
 
-    const xScoreEl = document.getElementById('xScore');
-    const oScoreEl = document.getElementById('oScore');
-    const drawScoreEl = document.getElementById('drawScore');
+    /* ── Game state ── */
+    let cells        = [];
+    let boardState   = Array(9).fill('');
+    let currentPlayer= 'X';
+    let gameActive   = true;
+    let difficulty   = 'easy';
+    let isMuted      = false;
+    let myTurn       = true; // for online mode
+    let mySymbol     = 'X';  // X or O in online mode
+    let unreadChat   = 0;
+    let chatHistory  = [];
 
-    let cells = [];
-    let boardState = ['', '', '', '', '', '', '', '', ''];
-    let currentPlayer = 'X';
-    let gameActive = true;
-    let gameMode = 'pvp';
-    let difficulty = 'easy';
-    let isMuted = false;
-
-    let scores = {
-      X: 0,
-      O: 0,
-      draw: 0
-    };
+    const scores = { X: 0, O: 0, draw: 0 };
 
     const winPatterns = [
-      [0,1,2], [3,4,5], [6,7,8], // Horizontal
-      [0,3,6], [1,4,7], [2,5,8], // Vertical
-      [0,4,8], [2,4,6]           // Diagonal
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
     ];
 
-    // Theme anwenden
-    function applyTheme() {
-      const theme = localStorage.getItem('theme') || 'dark';
-      if (theme === 'light') {
-        document.body.classList.remove('dark-mode');
-      } else {
-        document.body.classList.add('dark-mode');
-      }
-    }
-    applyTheme();
+    /* ── Theme ── */
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.body.classList.toggle('dark-mode', theme === 'dark');
 
-    // Mute Status aus localStorage laden
-    if (localStorage.getItem('mute') === 'true') {
-      isMuted = true;
-      muteBtn.textContent = '🔇';
-    }
-
+    /* ── Mute ── */
+    if (localStorage.getItem('mute') === 'true') { isMuted = true; muteBtn.textContent = '🔇'; }
     muteBtn.addEventListener('click', () => {
       isMuted = !isMuted;
       localStorage.setItem('mute', isMuted);
       muteBtn.textContent = isMuted ? '🔇' : '🔊';
     });
 
-    // Sound-Synthese mit Web Audio API
-    function playSound(type) {
-      if (isMuted) return;
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        const now = audioCtx.currentTime;
-        
-        if (type === 'x') {
-          osc.frequency.setValueAtTime(523.25, now); // C5
-          gainNode.gain.setValueAtTime(0.08, now);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-          osc.start(now);
-          osc.stop(now + 0.1);
-        } else if (type === 'o') {
-          osc.frequency.setValueAtTime(392.00, now); // G4
-          gainNode.gain.setValueAtTime(0.08, now);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-          osc.start(now);
-          osc.stop(now + 0.1);
-        } else if (type === 'win') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(261.63, now); // C4
-          osc.frequency.setValueAtTime(329.63, now + 0.08); // E4
-          osc.frequency.setValueAtTime(392.00, now + 0.16); // G4
-          osc.frequency.setValueAtTime(523.25, now + 0.24); // C5
-          
-          gainNode.gain.setValueAtTime(0.12, now);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
-          osc.start(now);
-          osc.stop(now + 0.45);
-        } else if (type === 'draw') {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220.00, now); // A3
-          osc.frequency.linearRampToValueAtTime(110.00, now + 0.35);
-          
-          gainNode.gain.setValueAtTime(0.08, now);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        }
-      } catch (e) {
-        console.warn('AudioContext Fehler:', e);
+    /* ── Init based on mode ── */
+    function initMode() {
+      if (gameMode === 'solo') {
+        modeBadge.textContent    = '🎮 Solo';
+        subtitle.textContent     = '2 Spieler auf einem Gerät.';
+        difficultyBox.style.display = 'none';
+        myTurn = true;
+        xLabel.textContent = 'X Wins';
+        oLabel.textContent = 'O Wins';
+      } else if (gameMode === 'bot') {
+        modeBadge.textContent   = '🤖 vs. Bot';
+        subtitle.textContent    = 'Du vs. KI – viel Erfolg!';
+        difficultyBox.style.display = 'flex';
+        mySymbol = 'X'; myTurn = true;
+        xLabel.textContent = '👤 Du';
+        oLabel.textContent = '🤖 Bot';
+      } else if (gameMode === 'multi') {
+        modeBadge.textContent   = '📡 Online';
+        subtitle.textContent    = '';
+        difficultyBox.style.display = 'none';
+        chatBtn.style.display   = 'flex';
+
+        mySymbol  = mpRole; // X=host, O=guest
+        myTurn    = (mySymbol === 'X'); // X starts
+
+        const opponent = MP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        localStorage.setItem('lastOpponent', opponent);
+        chatWith.textContent    = opponent;
+        oppAvatar.textContent   = opponent[0].toUpperCase();
+        oppName.textContent     = opponent;
+        oppRole.textContent     = `Spielt ${mySymbol === 'X' ? 'O' : 'X'}`;
+        opponentBar.classList.add('show');
+
+        xLabel.textContent = mySymbol === 'X' ? '👤 Du (X)' : `👤 ${opponent} (X)`;
+        oLabel.textContent = mySymbol === 'O' ? '👤 Du (O)' : `👤 ${opponent} (O)`;
+
+        /* Load local chat history */
+        try { chatHistory = JSON.parse(localStorage.getItem(`chat_${opponent}`) || '[]'); } catch {}
+        renderChatHistory();
+
+        setupMultiplayerEvents();
       }
     }
 
+    /* ── Board ── */
     function createBoard() {
-      board.innerHTML = '';
+      boardEl.innerHTML = '';
       cells = [];
-      boardState = ['', '', '', '', '', '', '', '', ''];
+      boardState = Array(9).fill('');
+      currentPlayer = 'X';
+      gameActive = true;
+      statusText.textContent = currentPlayer + ' Turn';
+      updateBoardInteractivity();
 
       for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
-        cell.classList.add('cell');
+        cell.className = 'cell';
         cell.dataset.index = i;
-
         cell.addEventListener('click', () => handleMove(i));
-
-        board.appendChild(cell);
+        boardEl.appendChild(cell);
         cells.push(cell);
       }
     }
 
-    function handleMove(index) {
-      if (!gameActive) {
-        restartGame();
-        return;
+    function updateBoardInteractivity() {
+      if (gameMode !== 'multi') return;
+      const myTurnNow = (currentPlayer === mySymbol) && gameActive;
+      cells.forEach(c => {
+        if (c.textContent !== '') return;
+        c.classList.toggle('waiting-turn', !myTurnNow);
+      });
+      if (myTurnNow) {
+        statusText.textContent = '✅ Du bist dran (' + mySymbol + ')';
+      } else {
+        statusText.textContent = '⏳ ' + (MP.opponent || 'Gegner') + ' ist dran…';
       }
+    }
 
+    /* ── Move handler ── */
+    function handleMove(index) {
+      if (!gameActive) { restartGame(); return; }
       if (boardState[index] !== '') return;
+
+      /* In multi: only allow move when it's my turn */
+      if (gameMode === 'multi' && currentPlayer !== mySymbol) return;
 
       makeMove(index, currentPlayer);
 
-      const winningPattern = checkWinnerState(boardState, currentPlayer);
-
-      if (winningPattern) {
-        statusText.textContent = currentPlayer + ' Wins! Tap board to play again';
-        
-        winningPattern.forEach(idx => {
-          cells[idx].classList.add('win');
-        });
-
-        scores[currentPlayer]++;
-        updateScores();
-        gameActive = false;
-        playSound('win');
-        return;
+      /* Send move to opponent in online mode */
+      if (gameMode === 'multi') {
+        MP.send('move', { game: 'tic-tac-toe', data: { cell: index } });
       }
 
-      if (isDrawState(boardState)) {
-        statusText.textContent = 'Draw! Tap board to play again';
-        scores.draw++;
-        updateScores();
-        gameActive = false;
-        playSound('draw');
-        return;
-      }
+      const win = checkWinner(boardState, currentPlayer);
+      if (win) { endGame(win, currentPlayer); return; }
+      if (boardState.every(c => c !== '')) { endDraw(); return; }
 
       currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-      statusText.textContent = currentPlayer + ' Turn';
 
       if (gameMode === 'bot' && currentPlayer === 'O') {
-        // Klick während Bot-Zug sperren
-        board.style.pointerEvents = 'none';
-        setTimeout(() => {
-          botMove();
-          board.style.pointerEvents = 'auto';
-        }, 350);
+        boardEl.style.pointerEvents = 'none';
+        statusText.textContent = '🤖 Bot denkt…';
+        setTimeout(() => { botMove(); boardEl.style.pointerEvents = 'auto'; }, 350);
+      } else {
+        if (gameMode === 'multi') {
+          updateBoardInteractivity();
+        } else {
+          statusText.textContent = currentPlayer + ' Turn';
+        }
       }
     }
 
     function makeMove(index, player) {
       boardState[index] = player;
       cells[index].textContent = player;
-      cells[index].classList.add(player.toLowerCase());
-      cells[index].classList.add('pop');
+      cells[index].classList.add(player.toLowerCase(), 'pop', 'taken');
       playSound(player.toLowerCase());
     }
 
-    // --- VERBESSERTE INTELLIGENTE KI LOGIK ---
+    function endGame(pattern, winner) {
+      pattern.forEach(i => cells[i].classList.add('win'));
+      scores[winner]++;
+      updateScores();
+      gameActive = false;
+      playSound('win');
+
+      if (gameMode === 'multi') {
+        const iWon = winner === mySymbol;
+        statusText.textContent = iWon ? '🎉 Du gewonnen!' : `😔 ${MP.opponent} gewonnen!`;
+      } else if (gameMode === 'bot') {
+        statusText.textContent = winner === 'X' ? '🎉 Du gewonnen!' : '🤖 Bot gewinnt!';
+      } else {
+        statusText.textContent = winner + ' Wins! Nochmal tippen';
+      }
+    }
+
+    function endDraw() {
+      scores.draw++;
+      updateScores();
+      gameActive = false;
+      statusText.textContent = 'Unentschieden! Nochmal tippen';
+      playSound('draw');
+    }
+
+    function restartGame() {
+      if (gameMode === 'multi') {
+        myTurn = (mySymbol === 'X');
+      }
+      createBoard();
+      if (gameMode === 'multi') updateBoardInteractivity();
+    }
+
+    function updateScores() {
+      xScoreEl.textContent    = scores.X;
+      oScoreEl.textContent    = scores.O;
+      drawScoreEl.textContent = scores.draw;
+    }
+
+    /* ── Bot Logic ── */
     function botMove() {
       if (!gameActive) return;
-
       let move;
-
-      if (difficulty === 'easy') {
-        // Easy: 90% rein zufällig, 10% schaut nach Gewinnen/Blocken
-        move = Math.random() < 0.1 ? getTacticalMove() : getRandomMove();
-      } else if (difficulty === 'medium') {
-        // Medium: Schaut immer nach Gewinnen/Blocken. Wenn nichts frei ist, 50% Mitte/Ecken, 50% zufällig
-        move = getMediumMove();
-      } else if (difficulty === 'hard') {
-        // Hard: Unbesiegbar per Minimax
-        move = getBestMinimaxMove();
-      }
-
+      if (difficulty === 'easy')   move = Math.random() < 0.1 ? getTacticalMove() : getRandomMove();
+      else if (difficulty === 'medium') move = getMediumMove();
+      else move = getBestMinimaxMove();
       handleMove(move);
     }
 
     function getRandomMove() {
-      const empty = boardState
-        .map((cell, idx) => cell === '' ? idx : null)
-        .filter(v => v !== null);
-      return empty[Math.floor(Math.random() * empty.length)];
+      const empty = boardState.map((c,i) => c===''?i:null).filter(v=>v!==null);
+      return empty[Math.floor(Math.random()*empty.length)];
     }
-
     function getTacticalMove() {
-      // 1. Kann Bot ('O') sofort gewinnen?
-      for (let i = 0; i < 9; i++) {
-        if (boardState[i] === '') {
-          boardState[i] = 'O';
-          if (checkWinnerState(boardState, 'O')) {
-            boardState[i] = '';
-            return i;
-          }
-          boardState[i] = '';
-        }
-      }
-      // 2. Muss Bot den Spieler ('X') blockieren?
-      for (let i = 0; i < 9; i++) {
-        if (boardState[i] === '') {
-          boardState[i] = 'X';
-          if (checkWinnerState(boardState, 'X')) {
-            boardState[i] = '';
-            return i;
-          }
-          boardState[i] = '';
-        }
-      }
+      for (let i=0;i<9;i++){if(boardState[i]===''){boardState[i]='O';if(checkWinner(boardState,'O')){boardState[i]='';return i;}boardState[i]='';}}
+      for (let i=0;i<9;i++){if(boardState[i]===''){boardState[i]='X';if(checkWinner(boardState,'X')){boardState[i]='';return i;}boardState[i]='';}}
       return getRandomMove();
     }
-
     function getMediumMove() {
-      // Gewinnen oder Blockieren
-      const tactical = getTacticalMove();
-      
-      // Prüfen ob getTacticalMove einen intelligenten Zug (Gewinn/Block) gefunden hat.
-      boardState[tactical] = 'O';
-      const isTacticalValue = checkWinnerState(boardState, 'O') !== null;
-      boardState[tactical] = '';
-      
-      boardState[tactical] = 'X';
-      const isBlockValue = checkWinnerState(boardState, 'X') !== null;
-      boardState[tactical] = '';
-
-      if (isTacticalValue || isBlockValue) {
-        return tactical;
-      }
-
-      // 50% Chance, strategisch Mitte oder Ecken zu nehmen
-      if (Math.random() < 0.5) {
-        if (boardState[4] === '') return 4; // Mitte
-        
-        const corners = [0, 2, 6, 8].filter(idx => boardState[idx] === '');
-        if (corners.length > 0) {
-          return corners[Math.floor(Math.random() * corners.length)];
-        }
-      }
-
+      const t=getTacticalMove();
+      boardState[t]='O'; const isTac=checkWinner(boardState,'O')!==null; boardState[t]='';
+      boardState[t]='X'; const isBlk=checkWinner(boardState,'X')!==null; boardState[t]='';
+      if(isTac||isBlk) return t;
+      if(Math.random()<0.5){if(boardState[4]==='')return 4;const c=[0,2,6,8].filter(i=>boardState[i]==='');if(c.length)return c[Math.floor(Math.random()*c.length)];}
       return getRandomMove();
     }
-
     function getBestMinimaxMove() {
-      let bestScore = -Infinity;
-      let move;
-
-      for (let i = 0; i < 9; i++) {
-        if (boardState[i] === '') {
-          boardState[i] = 'O';
-          let score = minimax(boardState, 0, false);
-          boardState[i] = '';
-
-          if (score > bestScore) {
-            bestScore = score;
-            move = i;
-          }
-        }
-      }
+      let best=-Infinity,move=0;
+      for(let i=0;i<9;i++){if(boardState[i]===''){boardState[i]='O';const s=minimax(boardState,0,false);boardState[i]='';if(s>best){best=s;move=i;}}}
       return move;
     }
-
-    // Minimax auf reinem JS-Array (extrem schnell, verhindert Lag)
-    function minimax(board, depth, isMaximizing) {
-      if (checkWinnerState(board, 'O')) return 10 - depth;
-      if (checkWinnerState(board, 'X')) return depth - 10;
-      if (isDrawState(board)) return 0;
-
-      if (isMaximizing) {
-        let bestScore = -Infinity;
-        for (let i = 0; i < 9; i++) {
-          if (board[i] === '') {
-            board[i] = 'O';
-            let score = minimax(board, depth + 1, false);
-            board[i] = '';
-            bestScore = Math.max(score, bestScore);
-          }
-        }
-        return bestScore;
-      } else {
-        let bestScore = Infinity;
-        for (let i = 0; i < 9; i++) {
-          if (board[i] === '') {
-            board[i] = 'X';
-            let score = minimax(board, depth + 1, true);
-            board[i] = '';
-            bestScore = Math.min(score, bestScore);
-          }
-        }
-        return bestScore;
-      }
+    function minimax(b,d,max) {
+      if(checkWinner(b,'O')) return 10-d;
+      if(checkWinner(b,'X')) return d-10;
+      if(b.every(c=>c!=='')) return 0;
+      if(max){let best=-Infinity;for(let i=0;i<9;i++){if(b[i]===''){b[i]='O';best=Math.max(best,minimax(b,d+1,false));b[i]='';}}return best;}
+      else{let best=Infinity;for(let i=0;i<9;i++){if(b[i]===''){b[i]='X';best=Math.min(best,minimax(b,d+1,true));b[i]='';}}return best;}
     }
-
-    function checkWinnerState(board, player) {
-      for (const pattern of winPatterns) {
-        if (pattern.every(index => board[index] === player)) {
-          return pattern;
-        }
-      }
+    function checkWinner(b, player) {
+      for (const p of winPatterns) { if(p.every(i=>b[i]===player)) return p; }
       return null;
     }
 
-    function isDrawState(board) {
-      return board.every(cell => cell !== '');
+    /* ── Multiplayer Events ── */
+    function setupMultiplayerEvents() {
+      MP.on('move', ({ data }) => {
+        const { cell } = data;
+        makeMove(cell, currentPlayer);
+        const win = checkWinner(boardState, currentPlayer);
+        if (win) { endGame(win, currentPlayer); return; }
+        if (boardState.every(c=>c!=='')) { endDraw(); return; }
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateBoardInteractivity();
+      });
+
+      MP.on('chat', ({ text, name }) => {
+        addChatMsg(text, name, false);
+        if (!chatDrawer.classList.contains('open')) {
+          unreadChat++;
+          chatBadgeHdr.textContent = unreadChat;
+          chatBadgeHdr.style.display = 'flex';
+        }
+      });
+
+      MP.on('disconnected', () => {
+        showToast(`${MP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+        gameActive = false;
+        statusText.textContent = '⚡ Verbindung unterbrochen';
+      });
+
+      MP.on('menu', () => {
+        showToast(`${MP.opponent || 'Gegner'} ist zurück im Menü.`);
+      });
     }
 
-    function restartGame() {
-      currentPlayer = 'X';
-      gameActive = true;
-      statusText.textContent = 'X Turn';
-      createBoard();
-    }
-
-    function updateScores() {
-      xScoreEl.textContent = scores.X;
-      oScoreEl.textContent = scores.O;
-      drawScoreEl.textContent = scores.draw;
-    }
-
-    restartBtn.addEventListener('click', restartGame);
-
-    resetBtn.addEventListener('click', () => {
-      scores = { X: 0, O: 0, draw: 0 };
-      updateScores();
-      restartGame();
+    /* ── Back button ── */
+    backBtn.addEventListener('click', (e) => {
+      if (gameMode === 'multi' && MP.isConnected()) {
+        MP.send('menu');
+      }
     });
 
-    pvpBtn.addEventListener('click', () => {
-      gameMode = 'pvp';
-      pvpBtn.classList.add('active');
-      botBtn.classList.remove('active');
-      difficultyBox.style.display = 'none';
-      restartGame();
-    });
-
-    botBtn.addEventListener('click', () => {
-      gameMode = 'bot';
-      botBtn.classList.add('active');
-      pvpBtn.classList.remove('active');
-      difficultyBox.style.display = 'flex';
-      restartGame();
-    });
-
+    /* ── Difficulty ── */
     diffButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         diffButtons.forEach(b => b.classList.remove('active'));
@@ -922,6 +586,109 @@
       });
     });
 
+    restartBtn.addEventListener('click', restartGame);
+    resetBtn.addEventListener('click', () => {
+      Object.keys(scores).forEach(k => scores[k]=0);
+      updateScores(); restartGame();
+    });
+
+    /* ── Chat ── */
+    chatBtn.addEventListener('click', openChat);
+    chatClose.addEventListener('click', closeChat);
+    chatOverlay.addEventListener('click', closeChat);
+
+    function openChat() {
+      chatOverlay.classList.add('open');
+      chatDrawer.classList.add('open');
+      unreadChat = 0;
+      chatBadgeHdr.style.display = 'none';
+      setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
+    }
+    function closeChat() {
+      chatOverlay.classList.remove('open');
+      chatDrawer.classList.remove('open');
+    }
+
+    chatSend.addEventListener('click', sendChat);
+    chatInput.addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
+
+    function sendChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      if (gameMode === 'multi' && MP.isConnected()) MP.send('chat', { text, name: myName });
+      addChatMsg(text, myName, true);
+      chatInput.value = '';
+    }
+
+    function addChatMsg(text, name, mine) {
+      const msg = { text, name, mine };
+      chatHistory.push(msg);
+      if (chatHistory.length > 100) chatHistory.shift();
+      const key = MP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      try { localStorage.setItem(`chat_${key}`, JSON.stringify(chatHistory)); } catch {}
+      if (chatDrawer.classList.contains('open')) {
+        appendBubble(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+
+    function renderChatHistory() {
+      chatMessages.innerHTML = '';
+      chatHistory.forEach(m => appendBubble(m));
+    }
+
+    function appendBubble({ text, name, mine }) {
+      const div = document.createElement('div');
+      div.className = `chat-msg-local ${mine?'mine':'theirs'}`;
+      if (!mine) {
+        const n = document.createElement('div');
+        n.className = 'chat-name-local';
+        n.textContent = name;
+        div.appendChild(n);
+      }
+      const t = document.createElement('div');
+      t.textContent = text;
+      div.appendChild(t);
+      chatMessages.appendChild(div);
+    }
+
+    /* ── Toast ── */
+    let toastTimer;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    /* ── Sound ── */
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain= ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+        if (type==='x')    { osc.frequency.value=523.25; gain.gain.setValueAtTime(.08,now); gain.gain.exponentialRampToValueAtTime(.01,now+.1); osc.start(now); osc.stop(now+.1); }
+        else if(type==='o'){ osc.frequency.value=392.00; gain.gain.setValueAtTime(.08,now); gain.gain.exponentialRampToValueAtTime(.01,now+.1); osc.start(now); osc.stop(now+.1); }
+        else if(type==='win'){
+          osc.type='triangle';
+          [261.63,329.63,392.00,523.25].forEach((f,i)=>osc.frequency.setValueAtTime(f,now+i*.08));
+          gain.gain.setValueAtTime(.12,now); gain.gain.exponentialRampToValueAtTime(.01,now+.45);
+          osc.start(now); osc.stop(now+.45);
+        }
+        else if(type==='draw'){
+          osc.type='sawtooth';
+          osc.frequency.setValueAtTime(220,now); osc.frequency.linearRampToValueAtTime(110,now+.35);
+          gain.gain.setValueAtTime(.08,now); gain.gain.exponentialRampToValueAtTime(.01,now+.35);
+          osc.start(now); osc.stop(now+.35);
+        }
+      } catch(e) {}
+    }
+
+    /* ── Start ── */
+    initMode();
     createBoard();
   </script>
 </body>
