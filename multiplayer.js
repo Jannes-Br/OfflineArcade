@@ -1,23 +1,20 @@
 /* ============================================================
    OfflineArcade – Multiplayer Core (WebRTC P2P, no server)
-   ============================================================
-   Flow:
-   1. Host calls MP.createOffer()  → base64 string → show as QR
-   2. Guest scans QR  → MP.receiveOffer(str) → base64 string → show as QR
-   3. Host scans QR   → MP.receiveAnswer(str) → P2P connected
-   After that everything goes over the DataChannel (no internet).
    ============================================================ */
 
 const MP = (() => {
-  let pc   = null;
-  let dc   = null;
-  let role = null;
+  /* ---- state ---- */
+  let pc   = null;   // RTCPeerConnection
+  let dc   = null;   // RTCDataChannel
+  let role = null;   // 'host' | 'guest'
   let opponentName = null;
   let myName       = null;
   const listeners  = {};
 
+  /* No STUN servers → pure local-network (LAN / same WiFi) P2P */
   const ICE_CONFIG = { iceServers: [] };
 
+  /* ---- event bus ---- */
   function on(event, cb) {
     if (!listeners[event]) listeners[event] = [];
     listeners[event].push(cb);
@@ -30,6 +27,7 @@ const MP = (() => {
     (listeners[event] || []).forEach(cb => { try { cb(data); } catch(e) {} });
   }
 
+  /* ---- send helper ---- */
   function send(type, data = {}) {
     if (!dc || dc.readyState !== 'open') return false;
     try { dc.send(JSON.stringify({ type, ...data })); return true; }
@@ -40,16 +38,18 @@ const MP = (() => {
     return !!(dc && dc.readyState === 'open');
   }
 
+  /* ---- ICE gathering: wait until complete or timeout ---- */
   function waitForICE(peerConn) {
     return new Promise(resolve => {
       if (peerConn.iceGatheringState === 'complete') { resolve(); return; }
       const done = () => { if (peerConn.iceGatheringState === 'complete') resolve(); };
       peerConn.addEventListener('icegatheringstatechange', done);
+      /* Fallback: after 6 s take whatever we have */
       setTimeout(resolve, 6000);
     });
   }
 
-  /* SDP minifier: strips IPv6/TCP/relay candidates → small QR codes */
+  /* ---- SDP minifier: strip fat, keep only what we need ---- */
   function minifySDP(sdp) {
     return sdp.split('\n').filter(line => {
       if (!line.startsWith('a=candidate:')) return true;
@@ -60,6 +60,7 @@ const MP = (() => {
     }).join('\n');
   }
 
+  /* ---- encode / decode SDP ---- */
   function encode(obj) {
     if (obj.sdp) obj = { ...obj, sdp: minifySDP(obj.sdp) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
@@ -68,6 +69,7 @@ const MP = (() => {
     return JSON.parse(decodeURIComponent(escape(atob(str))));
   }
 
+  /* ---- shared PC setup ---- */
   function setupPC(peerConn) {
     peerConn.onconnectionstatechange = () => {
       const s = peerConn.connectionState;
@@ -76,6 +78,7 @@ const MP = (() => {
     };
   }
 
+  /* ---- shared DC setup ---- */
   function setupDC(chan) {
     dc = chan;
     dc.onopen = () => {
@@ -102,30 +105,50 @@ const MP = (() => {
     emit('disconnected', { opponent: opponentName });
   }
 
+  /* ---- PUBLIC API ---- */
   async function createOffer(name) {
-    myName = name; role = 'host';
+    myName = name;
+    role   = 'host';
+
     pc = new RTCPeerConnection(ICE_CONFIG);
     setupPC(pc);
+
     const chan = pc.createDataChannel('game', { ordered: true });
     setupDC(chan);
+
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     await waitForICE(pc);
-    return encode({ sdp: pc.localDescription.sdp, type: pc.localDescription.type, name: myName });
+
+    return encode({
+      sdp:  pc.localDescription.sdp,
+      type: pc.localDescription.type,
+      name: myName
+    });
   }
 
   async function receiveOffer(encodedOffer, name) {
-    myName = name; role = 'guest';
+    myName = name;
+    role   = 'guest';
+
     const data = decode(encodedOffer);
     opponentName = data.name;
+
     pc = new RTCPeerConnection(ICE_CONFIG);
     setupPC(pc);
+
     pc.ondatachannel = (e) => setupDC(e.channel);
+
     await pc.setRemoteDescription({ type: data.type, sdp: data.sdp });
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     await waitForICE(pc);
-    return encode({ sdp: pc.localDescription.sdp, type: pc.localDescription.type, name: myName });
+
+    return encode({
+      sdp:  pc.localDescription.sdp,
+      type: pc.localDescription.type,
+      name: myName
+    });
   }
 
   async function receiveAnswer(encodedAnswer) {
@@ -138,15 +161,20 @@ const MP = (() => {
     send('disconnect');
     try { if (dc) dc.close(); } catch {}
     try { if (pc) pc.close(); } catch {}
-    dc = null; pc = null; role = null; opponentName = null;
+    dc   = null;
+    pc   = null;
+    role = null;
+    opponentName = null;
     emit('disconnected', {});
   }
 
-  return {
+  const instance = {
     on, off, send, isConnected,
     createOffer, receiveOffer, receiveAnswer, disconnect,
     get role()     { return role; },
     get opponent() { return opponentName; },
     get myName()   { return myName; }
   };
+  window.MP = instance;
+  return instance;
 })();
