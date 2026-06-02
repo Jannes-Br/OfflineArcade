@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v71';
+const CACHE_VERSION = 'v79';
 const MULTIPLAYER_GAMES = ['tic-tac-toe'];
 
 /* ── Random name generator ── */
