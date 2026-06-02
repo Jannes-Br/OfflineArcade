@@ -1,107 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>OfflineArcade</title>
-  
+  <meta name="description" content="Spielesammlung – offline spielbar. Tic Tac Toe, 2048, Pong und mehr.">
+
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-512.png">
   <link rel="icon" type="image/png" href="assets/favicon.png">
-  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f172a">
-  
+
   <link rel="stylesheet" href="style.css">
+  <script defer src="assets/qrcode.min.js"></script>
+  <script defer src="assets/jsqr.min.js"></script>
+  <script defer src="multiplayer.js"></script>
   <script defer src="main.js"></script>
 </head>
 <body class="dark-mode">
   <div class="background"></div>
 
   <div class="app">
+    <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
     <header>
       <div class="header-main">
-        <h1>OfflineArcade</h1>
+        <div class="header-left">
+          <h1>OfflineArcade</h1>
+          <span class="player-name-display" id="playerNameDisplay">...</span>
+        </div>
         <div class="header-actions">
           <button id="theme-btn" title="Theme wechseln">☀️</button>
           <button id="random-btn" title="Zufälliges Spiel">🎲</button>
+          <button id="settings-btn" title="Einstellungen">⚙️</button>
         </div>
       </div>
-      <p class="subtitle">Offline gaming platform</p>
+
+      <!-- Modus-Tabs -->
+      <div class="mode-tabs" id="modeTabs">
+        <button class="mode-tab active" data-mode="solo" id="tabSolo">🎮 Solo</button>
+        <button class="mode-tab" data-mode="bot"  id="tabBot">🤖 vs. Bot</button>
+        <button class="mode-tab" data-mode="multi" id="tabMulti">📡 Multiplayer</button>
+      </div>
     </header>
 
+    <!-- ═══════════════════════════ CONNECTION BAR ════════════════════ -->
+    <div class="connection-bar" id="connectionBar" style="display:none;">
+      <div class="conn-avatar" id="connAvatar">?</div>
+      <div class="conn-info">
+        <span class="conn-name" id="connName">Gegner</span>
+        <span class="conn-status">● Verbunden</span>
+      </div>
+      <button class="conn-disconnect" id="disconnectBtn" title="Verbindung trennen">✕</button>
+    </div>
+
+    <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
+    <div class="lobby-panel" id="lobbyPanel" style="display:none;">
+      <div class="lobby-actions">
+        <button class="lobby-btn primary" id="createLobbyBtn">
+          <span>📡</span> Verbindung erstellen
+        </button>
+        <button class="lobby-btn" id="joinLobbyBtn">
+          <span>📷</span> Beitreten (QR / Code)
+        </button>
+      </div>
+      <p class="lobby-hint">Erstelle eine Verbindung und lass deinen Freund den QR-Code scannen.</p>
+    </div>
+
+    <!-- ═══════════════════════════ MAIN CONTENT ══════════════════════ -->
     <main>
       <div class="games-wrapper">
-        <div class="game-grid">
-          
+        <div class="game-grid" id="gameGrid">
+
           <!-- Escape Road -->
-          <a class="game-card" href="games/escape-road/index.html" data-game="escape-road">
+          <a class="game-card" href="games/escape-road/index.html" data-game="escape-road" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/escape-road.png" alt="Escape Road">
             <div class="game-content">
               <div class="game-title">Escape Road</div>
               <div class="game-description">Escape the police and survive the chase.</div>
               <div class="game-meta">
-                <span class="game-size">💾 0,72151 MB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 18 MB) -->
+                <span class="game-size">💾 0,72 MB</span>
               </div>
             </div>
           </a>
 
           <!-- Drive Mad -->
-          <a class="game-card" href="games/drive-mad/index.html" data-game="drive-mad">
+          <a class="game-card" href="games/drive-mad/index.html" data-game="drive-mad" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/drive-mad.png" alt="Drive Mad">
             <div class="game-content">
               <div class="game-title">Drive Mad</div>
               <div class="game-description">Drive carefully across crazy obstacles.</div>
               <div class="game-meta">
-                <span class="game-size">💾 355 KB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 22 MB) -->
+                <span class="game-size">💾 355 KB</span>
               </div>
             </div>
           </a>
 
           <!-- Block Smasher -->
-          <a class="game-card" href="games/block-smasher/index.html" data-game="block-smasher">
+          <a class="game-card" href="games/block-smasher/index.html" data-game="block-smasher" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/block-smasher.png" alt="Block Smasher">
             <div class="game-content">
               <div class="game-title">Block Smasher</div>
               <div class="game-description">Smash blocks and survive as long as possible.</div>
               <div class="game-meta">
-                <span class="game-size">💾 62.5 KB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 1.2 MB) -->
+                <span class="game-size">💾 62,5 KB</span>
               </div>
             </div>
           </a>
 
-          <!-- Tic Tac Toe -->
-          <a class="game-card" href="games/tic-tac-toe/index.html" data-game="tic-tac-toe">
+          <!-- Tic Tac Toe – Multiplayer-fähig -->
+          <a class="game-card" href="games/tic-tac-toe/index.html" data-game="tic-tac-toe" data-multiplayer="true">
+            <div class="mp-badge">Multiplayer</div>
             <img class="game-thumb" src="assets/thumbnails/tic-tac-toe.png" alt="Tic Tac Toe">
             <div class="game-content">
               <div class="game-title">Tic Tac Toe</div>
               <div class="game-description">Play against friends or a smart AI bot.</div>
               <div class="game-meta">
-                <span class="game-size">💾 24.3 KB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 120 KB) -->
+                <span class="game-size">💾 24,3 KB</span>
               </div>
             </div>
           </a>
 
           <!-- 2048 -->
-          <a class="game-card" href="games/2048/index.html" data-game="2048">
+          <a class="game-card" href="games/2048/index.html" data-game="2048" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/2048.png" alt="2048">
             <div class="game-content">
               <div class="game-title">2048</div>
               <div class="game-description">Merge numbers and reach 2048.</div>
               <div class="game-meta">
-                <span class="game-size">💾 10.8 KB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 350 KB) -->
+                <span class="game-size">💾 10,8 KB</span>
               </div>
             </div>
           </a>
 
           <!-- Pong -->
-          <a class="game-card" href="games/pong/index.html" data-game="pong">
+          <a class="game-card" href="games/pong/index.html" data-game="pong" data-multiplayer="false">
             <img class="game-thumb" src="assets/thumbnails/pong.png" alt="Pong">
             <div class="game-content">
               <div class="game-title">Pong</div>
               <div class="game-description">Play against friends or an impossible AI.</div>
               <div class="game-meta">
-                <span class="game-size">💾 11.6 KB</span> <!-- HIER DIE GRÖSSE EINTRAGEN (z.B. 150 KB) -->
+                <span class="game-size">💾 11,6 KB</span>
               </div>
             </div>
           </a>
@@ -110,37 +149,173 @@
       </div>
     </main>
 
+    <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
+    <div class="instructions-wrap" id="instructionsWrap">
+      <button class="instructions-toggle" id="instructionsToggle">
+        ℹ️ So funktioniert OfflineArcade <span class="instr-arrow">▾</span>
+      </button>
+      <div class="instructions-body" id="instructionsBody">
+        <div class="instr-grid">
+          <div class="instr-item">
+            <div class="instr-icon">🎮</div>
+            <div><strong>Solo</strong> – Alleine oder zu zweit auf einem Gerät spielen.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">🤖</div>
+            <div><strong>vs. Bot</strong> – Tritt gegen eine KI auf deinem Gerät an.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">📡</div>
+            <div><strong>Multiplayer</strong> – Verbinde dich per QR-Code mit einem Freund im gleichen WLAN.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">1️⃣</div>
+            <div>Drücke <strong>„Verbindung erstellen"</strong> – ein QR-Code erscheint.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">2️⃣</div>
+            <div>Dein Freund scannt den QR → sein Gerät zeigt einen zweiten QR.</div>
+          </div>
+          <div class="instr-item">
+            <div class="instr-icon">3️⃣</div>
+            <div>Du scannst seinen QR → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════ FOOTER ════════════════════════════ -->
     <div class="footer">
-      <!-- Install Guide (A2HS) -->
       <div id="install-info">
         <div class="install-title">⚠️ Add to Home Screen</div>
         <div class="install-text" id="install-text">
           Offline features work best when OfflineArcade is added to your home screen.
         </div>
       </div>
-
-      <!-- Offline Info Message -->
       <div id="offline-message-box">
         <span class="offline-icon">ℹ️</span>
         <div class="offline-message-text">
-          Spiele sind offline spielbar, sobald sie einmal mit Internet geöffnet wurden. Für neue Spiel-Versionen einfach nochmal mit Internet öffnen.
+          Spiele offline spielbar, sobald einmal mit Internet geöffnet.
         </div>
       </div>
-
-      <!-- App Info & Version & Reload -->
       <div id="app-info">
         <div class="info-left">
           <div class="status-row">
             <div id="status-dot"></div>
             <span id="online-status">Online</span>
           </div>
-          <div class="version-row">
-            Version: <span id="version"></span>
-          </div>
+          <div class="version-row">Version: <span id="version"></span></div>
         </div>
         <button id="reload-btn">↻</button>
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════ CHAT FLOATING BUTTON ══════════════════ -->
+  <button class="chat-fab" id="chatFab" style="display:none;" title="Chat öffnen">
+    💬
+    <span class="chat-badge" id="chatBadge" style="display:none;">0</span>
+  </button>
+
+  <!-- ═══════════════════════════ MODALS ════════════════════════════ -->
+
+  <!-- Settings Drawer -->
+  <div class="overlay" id="settingsOverlay"></div>
+  <div class="drawer" id="settingsDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title">⚙️ Einstellungen</span>
+      <button class="drawer-close" id="settingsClose">✕</button>
+    </div>
+    <div class="drawer-body">
+      <label class="setting-label">Spielername</label>
+      <div class="setting-row">
+        <input type="text" id="nameInput" class="setting-input" maxlength="20" placeholder="Dein Name...">
+        <button class="setting-save-btn" id="nameSaveBtn">✓</button>
+      </div>
+      <label class="setting-label" style="margin-top:18px;">Design</label>
+      <div class="setting-row">
+        <button class="setting-theme-btn" id="themeToggleDrawer">☀️ Light Mode</button>
+      </div>
+      <div id="settingsDisconnectWrap" style="display:none; margin-top:18px;">
+        <label class="setting-label">Multiplayer</label>
+        <button class="setting-danger-btn" id="settingsDisconnectBtn">Verbindung trennen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Host QR Modal (Step 1: Show host offer QR) -->
+  <div class="modal-overlay" id="hostQrOverlay">
+    <div class="modal-box">
+      <button class="modal-close" id="hostQrClose">✕</button>
+      <div class="modal-title">📡 Verbindung erstellen</div>
+      <p class="modal-subtitle" id="hostQrSubtitle">QR-Code wird erstellt…</p>
+      <div id="hostQrCanvas" class="qr-wrap"></div>
+      <p class="modal-hint">Lass deinen Freund diesen QR-Code scannen.<br>Danach scannst du seinen.</p>
+      <button class="modal-btn" id="hostScanGuestBtn" style="display:none;">
+        📷 Gast-QR scannen
+      </button>
+      <div class="qr-spinner" id="hostSpinner">⏳ ICE wird gesammelt…</div>
+    </div>
+  </div>
+
+  <!-- Guest Join Modal (Step 2: Guest scans & shows answer QR) -->
+  <div class="modal-overlay" id="guestJoinOverlay">
+    <div class="modal-box">
+      <button class="modal-close" id="guestJoinClose">✕</button>
+      <div class="modal-title" id="guestJoinTitle">📷 Beitreten</div>
+      <div id="guestScanStep">
+        <p class="modal-subtitle">Scanne den QR-Code des Hosts:</p>
+        <div class="camera-wrap" id="guestCameraWrap">
+          <video id="guestVideo" autoplay playsinline muted></video>
+          <canvas id="guestScanCanvas" style="display:none;"></canvas>
+          <div class="scan-reticle"></div>
+        </div>
+        <p class="modal-hint-small">Halte die Kamera auf den QR-Code des Hosts.</p>
+      </div>
+      <div id="guestAnswerStep" style="display:none;">
+        <p class="modal-subtitle">Zeig deinem Host diesen QR-Code:</p>
+        <div id="guestAnswerQr" class="qr-wrap"></div>
+        <p class="modal-hint">Warte bis der Host deinen QR gescannt hat.</p>
+        <div class="qr-spinner" id="guestSpinner">⏳ Warte auf Verbindung…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Host Scan Guest QR Modal (Step 3: Host scans guest answer) -->
+  <div class="modal-overlay" id="hostScanOverlay">
+    <div class="modal-box">
+      <button class="modal-close" id="hostScanClose">✕</button>
+      <div class="modal-title">📷 Gast-QR scannen</div>
+      <p class="modal-subtitle">Scanne den QR-Code deines Gastes:</p>
+      <div class="camera-wrap" id="hostCameraWrap">
+        <video id="hostVideo" autoplay playsinline muted></video>
+        <canvas id="hostScanCanvas" style="display:none;"></canvas>
+        <div class="scan-reticle"></div>
+      </div>
+      <p class="modal-hint-small">Halte die Kamera auf den QR-Code des Gastes.</p>
+    </div>
+  </div>
+
+  <!-- Game Suggestion Toast (Host sees when guest suggests) -->
+  <div class="suggest-toast" id="suggestToast" style="display:none;">
+    <span id="suggestText">Dein Gegner schlägt ein Spiel vor…</span>
+  </div>
+
+  <!-- Chat Drawer -->
+  <div class="overlay chat-overlay" id="chatOverlay"></div>
+  <div class="chat-drawer" id="chatDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title">💬 Chat – <span id="chatPartnerName">Gegner</span></span>
+      <button class="drawer-close" id="chatClose">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Nachricht…" maxlength="200">
+      <button class="chat-send-btn" id="chatSend">➤</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
 </body>
 </html>
