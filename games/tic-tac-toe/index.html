@@ -270,6 +270,9 @@
        Modus kommt aus localStorage('gameMode')
        ══════════════════════════════════════════════════════ */
 
+    // Use parent MP if available (running inside iframe), otherwise fall back to local MP
+    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName    = localStorage.getItem('playerName') || 'Du';
     const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest (only used in multi)
@@ -362,7 +365,7 @@
         mySymbol  = mpRole; // X=host, O=guest
         myTurn    = (mySymbol === 'X'); // X starts
 
-        const opponent = MP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
         localStorage.setItem('lastOpponent', opponent);
         chatWith.textContent    = opponent;
         oppAvatar.textContent   = opponent[0].toUpperCase();
@@ -411,7 +414,7 @@
       if (myTurnNow) {
         statusText.textContent = '✅ Du bist dran (' + mySymbol + ')';
       } else {
-        statusText.textContent = '⏳ ' + (MP.opponent || 'Gegner') + ' ist dran…';
+        statusText.textContent = '⏳ ' + (gameMP.opponent || 'Gegner') + ' ist dran…';
       }
     }
 
@@ -427,7 +430,7 @@
 
       /* Send move to opponent in online mode */
       if (gameMode === 'multi') {
-        MP.send('move', { game: 'tic-tac-toe', data: { cell: index } });
+        gameMP.send('move', { game: 'tic-tac-toe', data: { cell: index } });
       }
 
       const win = checkWinner(boardState, currentPlayer);
@@ -465,7 +468,7 @@
 
       if (gameMode === 'multi') {
         const iWon = winner === mySymbol;
-        statusText.textContent = iWon ? '🎉 Du gewonnen!' : `😔 ${MP.opponent} gewonnen!`;
+        statusText.textContent = iWon ? '🎉 Du gewonnen!' : `😔 ${gameMP.opponent} gewonnen!`;
       } else if (gameMode === 'bot') {
         statusText.textContent = winner === 'X' ? '🎉 Du gewonnen!' : '🤖 Bot gewinnt!';
       } else {
@@ -495,7 +498,7 @@
       drawScoreEl.textContent = scores.draw;
     }
 
-    /* ── Bot Logic (unchanged from original) ── */
+    /* ── Bot Logic ── */
     function botMove() {
       if (!gameActive) return;
       let move;
@@ -541,7 +544,7 @@
 
     /* ── Multiplayer Events ── */
     function setupMultiplayerEvents() {
-      MP.on('move', ({ data }) => {
+      gameMP.on('move', ({ data }) => {
         const { cell } = data;
         makeMove(cell, currentPlayer);
         const win = checkWinner(boardState, currentPlayer);
@@ -551,7 +554,7 @@
         updateBoardInteractivity();
       });
 
-      MP.on('chat', ({ text, name }) => {
+      gameMP.on('chat', ({ text, name }) => {
         addChatMsg(text, name, false);
         if (!chatDrawer.classList.contains('open')) {
           unreadChat++;
@@ -560,21 +563,26 @@
         }
       });
 
-      MP.on('disconnected', () => {
-        showToast(`${MP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+      gameMP.on('disconnected', () => {
+        showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
         gameActive = false;
         statusText.textContent = '⚡ Verbindung unterbrochen';
       });
 
-      MP.on('menu', () => {
-        showToast(`${MP.opponent || 'Gegner'} ist zurück im Menü.`);
+      gameMP.on('menu', () => {
+        showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
       });
     }
 
     /* ── Back button: send 'menu' message, don't disconnect ── */
     backBtn.addEventListener('click', (e) => {
-      if (gameMode === 'multi' && MP.isConnected()) {
-        MP.send('menu');
+      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
+        e.preventDefault();
+        window.parent.closeGameFrame();
+      } else {
+        if (gameMode === 'multi' && gameMP.isConnected()) {
+          gameMP.send('menu');
+        }
       }
       /* mpRole stays set; main page restores session */
     });
@@ -618,7 +626,7 @@
     function sendChat() {
       const text = chatInput.value.trim();
       if (!text) return;
-      if (gameMode === 'multi' && MP.isConnected()) MP.send('chat', { text, name: myName });
+      if (gameMode === 'multi' && gameMP.isConnected()) gameMP.send('chat', { text, name: myName });
       addChatMsg(text, myName, true);
       chatInput.value = '';
     }
@@ -627,7 +635,7 @@
       const msg = { text, name, mine };
       chatHistory.push(msg);
       if (chatHistory.length > 100) chatHistory.shift();
-      const key = MP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      const key = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
       try { localStorage.setItem(`chat_${key}`, JSON.stringify(chatHistory)); } catch {}
       if (chatDrawer.classList.contains('open')) {
         appendBubble(msg);
