@@ -1,5 +1,5 @@
 /* ============================================================
-   OfflineArcade – style.css  (v73 – Layout & Frame Support)
+   OfflineArcade – style.css  (v83 – Layout & Frame Support)
    ============================================================ */
 
 /* ───────────────────────── CSS VARIABLES ────────────────────── */
@@ -139,7 +139,7 @@ h1 {
   letter-spacing: 0.3px;
 }
 .header-actions { display: flex; gap: 8px; }
-#random-btn, #settings-btn {
+#chat-header-btn, #random-btn, #settings-btn {
   border: 1px solid var(--btn-border);
   background: var(--btn-bg);
   backdrop-filter: blur(12px);
@@ -150,15 +150,26 @@ h1 {
   font-size: 20px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  position: relative; /* Für die Badge-Positionierung */
   transition: transform 0.2s, background 0.2s, border-color 0.2s;
 }
-#random-btn:hover, #settings-btn:hover {
+#chat-header-btn:hover, #random-btn:hover, #settings-btn:hover {
   background: var(--btn-hover-bg);
   border-color: var(--btn-hover-border);
   transform: translateY(-2px);
 }
 #random-btn:hover { transform: translateY(-2px) rotate(15deg); }
-#random-btn:active, #settings-btn:active { transform: scale(0.94); }
+#chat-header-btn:active, #random-btn:active, #settings-btn:active { transform: scale(0.94); }
+
+.chat-badge-header {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: #ef4444; color: #fff;
+  font-size: 10px; font-weight: 800;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-color);
+}
 
 /* ───────────────────────── CONNECTION BAR ───────────────────── */
 .connection-bar {
@@ -376,28 +387,6 @@ main {
 }
 .instr-icon { font-size: 16px; flex-shrink: 0; }
 
-/* ───────────────────────── CHAT FAB ─────────────────────────── */
-.chat-fab {
-  position: fixed; bottom: 90px; right: 18px;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
-  border: none; color: #fff; font-size: 22px;
-  cursor: pointer; z-index: 200;
-  box-shadow: 0 4px 20px var(--accent-glow);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex; align-items: center; justify-content: center;
-}
-.chat-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px var(--accent-glow); }
-.chat-fab:active { transform: scale(0.95); }
-.chat-badge {
-  position: absolute; top: -4px; right: -4px;
-  background: #ef4444; color: #fff;
-  font-size: 10px; font-weight: 800;
-  width: 18px; height: 18px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid var(--bg-color);
-}
-
 /* ───────────────────────── OVERLAY / DRAWER ─────────────────── */
 .overlay {
   position: fixed; inset: 0;
@@ -544,29 +533,6 @@ main {
 }
 @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
 
-.camera-wrap {
-  position: relative; width: 100%; border-radius: 16px; overflow: hidden;
-  background: #000; aspect-ratio: 1;
-}
-.camera-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.scan-reticle {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-}
-.scan-reticle::before {
-  content: '';
-  width: 65%; aspect-ratio: 1;
-  border: 3px solid rgba(56,189,248,0.9);
-  border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
-  animation: scanPulse 2s infinite;
-}
-@keyframes scanPulse {
-  0%,100% { border-color: rgba(56,189,248,0.9); }
-  50%      { border-color: rgba(56,189,248,0.4); }
-}
-
 /* ───────────────────────── SUGGEST TOAST ────────────────────── */
 .suggest-toast {
   position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
@@ -681,7 +647,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 #app-info {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; min-width: 160px;
-  margin-left: auto; /* Push version info to the right */
+  margin-left: auto;
 }
 .info-left { display: flex; flex-direction: column; }
 .status-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
@@ -738,7 +704,6 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   #online-status, .version-row { display: none; }
   #reload-btn { width: 30px; height: 30px; font-size: 14px; }
   .instructions-wrap { display: none; }
-  .chat-fab { bottom: 60px; width: 44px; height: 44px; font-size: 18px; }
   .connection-bar { margin: 4px 20px 0; padding: 8px 12px; }
   .lobby-panel { margin: 4px 20px 0; padding: 10px; }
 }
