@@ -1,5 +1,5 @@
 /* ============================================================
-   OfflineArcade – style.css  (Complete rewrite with Multiplayer UI)
+   OfflineArcade – style.css  (v71 – Mode tabs moved to bottom)
    ============================================================ */
 
 /* ───────────────────────── CSS VARIABLES ────────────────────── */
@@ -7,7 +7,6 @@
   --bg-color: #f8fafc;
   --text-color: #0f172a;
   --text-gradient: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
-  --subtitle-opacity: 0.8;
 
   --bg-radial-1: rgba(59, 130, 246, 0.08);
   --bg-radial-2: rgba(147, 51, 234, 0.08);
@@ -45,7 +44,6 @@ body.dark-mode {
   --bg-color: #0f172a;
   --text-color: #ffffff;
   --text-gradient: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  --subtitle-opacity: 0.7;
 
   --bg-radial-1: rgba(76, 201, 240, 0.18);
   --bg-radial-2: rgba(99, 102, 241, 0.18);
@@ -140,7 +138,7 @@ h1 {
   letter-spacing: 0.3px;
 }
 .header-actions { display: flex; gap: 8px; }
-#theme-btn, #random-btn, #settings-btn {
+#random-btn, #settings-btn {
   border: 1px solid var(--btn-border);
   background: var(--btn-bg);
   backdrop-filter: blur(12px);
@@ -153,45 +151,13 @@ h1 {
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s, background 0.2s, border-color 0.2s;
 }
-#theme-btn:hover, #random-btn:hover, #settings-btn:hover {
+#random-btn:hover, #settings-btn:hover {
   background: var(--btn-hover-bg);
   border-color: var(--btn-hover-border);
   transform: translateY(-2px);
 }
 #random-btn:hover { transform: translateY(-2px) rotate(15deg); }
-#theme-btn:active, #random-btn:active, #settings-btn:active { transform: scale(0.94); }
-
-/* ───────────────────────── MODE TABS ────────────────────────── */
-.mode-tabs {
-  display: flex; gap: 6px;
-  margin-top: 12px;
-  padding: 4px;
-  background: var(--box-bg);
-  border: 1px solid var(--box-border);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.mode-tab {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  opacity: 0.55;
-  padding: 8px 6px;
-  border-radius: 12px;
-  font-size: 13px; font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s, transform 0.15s;
-  white-space: nowrap;
-}
-.mode-tab.active {
-  background: var(--tab-active-bg);
-  color: var(--tab-active-color);
-  opacity: 1;
-  box-shadow: 0 2px 12px var(--accent-glow);
-}
-.mode-tab:not(.active):hover { opacity: 0.85; transform: translateY(-1px); }
+#random-btn:active, #settings-btn:active { transform: scale(0.94); }
 
 /* ───────────────────────── CONNECTION BAR ───────────────────── */
 .connection-bar {
@@ -265,9 +231,7 @@ h1 {
 .lobby-btn:hover { transform: translateY(-2px); }
 .lobby-btn.primary:hover { filter: brightness(1.08); }
 .lobby-btn:active { transform: scale(0.96); }
-.lobby-hint {
-  margin: 10px 0 0; font-size: 11px; opacity: 0.55; text-align: center;
-}
+.lobby-hint { margin: 10px 0 0; font-size: 11px; opacity: 0.55; text-align: center; }
 
 /* ───────────────────────── GAME GRID ────────────────────────── */
 main {
@@ -278,7 +242,7 @@ main {
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 20px 40px;
+  padding: 16px 20px 20px;
   scrollbar-width: none;
 }
 .games-wrapper::-webkit-scrollbar { display: none; }
@@ -303,13 +267,11 @@ main {
   border-color: var(--card-hover-border);
   box-shadow: var(--card-hover-shadow);
 }
-/* Multiplayer-disabled state */
 .game-card.mp-disabled {
   opacity: 0.35;
   pointer-events: none;
   filter: grayscale(0.5);
 }
-/* Suggestion glow (guest suggested this game) */
 .game-card.suggested {
   border-color: #f59e0b !important;
   box-shadow: 0 0 0 3px rgba(245,158,11,0.4), var(--card-shadow) !important;
@@ -319,15 +281,12 @@ main {
   0%,100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.3), var(--card-shadow); }
   50%      { box-shadow: 0 0 0 6px rgba(245,158,11,0.6), var(--card-shadow); }
 }
-/* Roulette highlight */
 .game-card.highlighted {
   border-color: var(--accent) !important;
   box-shadow: 0 0 25px var(--accent-glow) !important;
   transform: scale(1.06) translateY(-5px);
   background: rgba(59,130,246,0.15);
 }
-
-/* Multiplayer badge */
 .mp-badge {
   position: absolute; top: 8px; right: 8px;
   background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -336,7 +295,6 @@ main {
   letter-spacing: 0.5px; text-transform: uppercase;
   z-index: 2; box-shadow: 0 2px 8px rgba(34,197,94,0.4);
 }
-/* Solo-only badge in multiplayer mode */
 .solo-badge {
   position: absolute; top: 8px; right: 8px;
   background: rgba(0,0,0,0.45);
@@ -345,7 +303,6 @@ main {
   letter-spacing: 0.5px; text-transform: uppercase;
   z-index: 2;
 }
-
 .game-thumb { width: 100%; height: 120px; object-fit: cover; display: block; }
 .game-content { padding: 13px; }
 .game-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
@@ -358,6 +315,39 @@ main {
   font-weight: 600; transition: opacity 0.2s;
 }
 .game-card:hover .game-size { opacity: 0.95; }
+
+/* ───────────────────────── MODE TABS (below games) ──────────── */
+.mode-tabs {
+  display: flex; gap: 6px;
+  margin: 0 20px 0;
+  padding: 4px;
+  background: var(--box-bg);
+  border: 1px solid var(--box-border);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+.mode-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  opacity: 0.55;
+  padding: 8px 6px;
+  border-radius: 12px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.mode-tab.active {
+  background: var(--tab-active-bg);
+  color: var(--tab-active-color);
+  opacity: 1;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.mode-tab:not(.active):hover { opacity: 0.85; transform: translateY(-1px); }
 
 /* ───────────────────────── INSTRUCTIONS ─────────────────────── */
 .instructions-wrap {
@@ -376,9 +366,7 @@ main {
 .instructions-toggle:hover { opacity: 1; }
 .instr-arrow { transition: transform 0.3s; }
 .instructions-toggle.open .instr-arrow { transform: rotate(180deg); }
-.instructions-body {
-  display: none; padding-bottom: 6px;
-}
+.instructions-body { display: none; padding-bottom: 6px; }
 .instructions-body.open { display: block; }
 .instr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .instr-item {
@@ -441,8 +429,7 @@ main {
 }
 .drawer-title { font-size: 17px; font-weight: 800; }
 .drawer-close {
-  border: none; background: var(--btn-bg);
-  border: 1px solid var(--btn-border);
+  border: 1px solid var(--btn-border); background: var(--btn-bg);
   color: var(--text-color);
   width: 32px; height: 32px; border-radius: 10px;
   font-size: 14px; cursor: pointer;
@@ -533,11 +520,9 @@ main {
 }
 .modal-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
-/* QR code container */
 .qr-wrap {
   display: flex; align-items: center; justify-content: center;
-  margin: 12px 0;
-  padding: 16px;
+  margin: 12px 0; padding: 16px;
   background: #fff; border-radius: 16px;
   min-height: 200px;
 }
@@ -549,7 +534,6 @@ main {
 }
 @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
 
-/* Camera scanner */
 .camera-wrap {
   position: relative; width: 100%; border-radius: 16px; overflow: hidden;
   background: #000; aspect-ratio: 1;
@@ -624,9 +608,8 @@ main {
 }
 .chat-msg-name { font-size: 10px; font-weight: 700; opacity: 0.55; margin-bottom: 3px; }
 .chat-input-row {
-  display: flex; gap: 8px; padding: 12px 16px;
+  display: flex; gap: 8px; padding: 12px 16px 8px;
   border-top: 1px solid var(--box-border);
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 .chat-input {
@@ -646,6 +629,11 @@ main {
   transition: filter 0.2s, transform 0.15s;
 }
 .chat-send-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+.chat-disclaimer {
+  font-size: 10px; opacity: 0.4; text-align: center;
+  padding: 6px 16px max(10px, env(safe-area-inset-bottom));
+  line-height: 1.4; flex-shrink: 0;
+}
 
 /* ───────────────────────── TOAST ────────────────────────────── */
 .toast {
@@ -659,19 +647,17 @@ main {
   white-space: nowrap;
   backdrop-filter: blur(8px);
 }
-.toast.show {
-  opacity: 1; transform: translateX(-50%) translateY(0);
-}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 
 /* ───────────────────────── FOOTER ───────────────────────────── */
 .footer {
   display: flex; justify-content: space-between; align-items: flex-end;
   gap: 12px;
-  padding: 8px 20px max(14px, env(safe-area-inset-bottom));
-  margin-top: auto; flex-shrink: 0; z-index: 100; pointer-events: none;
+  padding: 6px 20px max(12px, env(safe-area-inset-bottom));
+  flex-shrink: 0; z-index: 100; pointer-events: none;
 }
-#install-info, #offline-message-box, #app-info {
+#install-info, #app-info {
   pointer-events: auto;
   background: var(--box-bg);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -682,12 +668,6 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 #install-info { width: 230px; padding: 12px; }
 .install-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
 .install-text { opacity: 0.75; }
-#offline-message-box {
-  display: flex; align-items: center; gap: 10px;
-  width: 290px; padding: 10px 12px; color: var(--text-color);
-}
-.offline-icon { font-size: 14px; flex-shrink: 0; }
-.offline-message-text { opacity: 0.8; font-size: 10px; }
 #app-info {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; min-width: 160px;
@@ -720,22 +700,21 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   h1 { font-size: 30px; }
   .game-card { width: 185px; }
   .game-thumb { height: 108px; }
-  #offline-message-box { width: 220px; }
   .instr-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 500px) {
   .mode-tab { font-size: 11px; padding: 8px 4px; }
 }
 @media (max-width: 900px) {
-  .footer { flex-direction: column; align-items: center; gap: 8px; padding: 8px 14px max(10px,env(safe-area-inset-bottom)); }
-  #install-info, #offline-message-box, #app-info { width: 100%; max-width: 320px; }
+  .footer { flex-direction: column; align-items: center; gap: 8px; padding: 6px 14px max(10px,env(safe-area-inset-bottom)); }
+  #install-info, #app-info { width: 100%; max-width: 320px; }
 }
 @media (max-height: 550px) {
   header { padding: max(8px,env(safe-area-inset-top)) 20px 0; }
   h1 { font-size: 24px; }
-  .mode-tabs { margin-top: 6px; }
+  .mode-tabs { margin: 0 20px; }
   .mode-tab { padding: 6px 4px; font-size: 11px; }
-  .games-wrapper { padding: 10px 20px 20px; }
+  .games-wrapper { padding: 10px 20px 14px; }
   .game-card { width: 160px; border-radius: 14px; }
   .game-thumb { height: 85px; }
   .game-content { padding: 9px; }
@@ -743,7 +722,6 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   .game-description { font-size: 10px; }
   .footer { flex-direction: row !important; justify-content: center; gap: 6px; padding: 4px 20px max(6px,env(safe-area-inset-bottom)); }
   #install-info { display: none !important; }
-  #offline-message-box { width: auto; min-width: 200px; padding: 6px 10px; border-radius: 10px; }
   #app-info { width: auto; padding: 6px 10px; border-radius: 10px; }
   .status-row { margin-bottom: 0; }
   #online-status, .version-row { display: none; }
