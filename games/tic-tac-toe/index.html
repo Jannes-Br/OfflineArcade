@@ -162,7 +162,7 @@
       .cell{font-size:36px;}
     }
 
-    /* ── Chat overlay (inline, not main.js dependent) ── */
+    /* ── Local Chat (for multiplayer) ── */
     .chat-overlay-local{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;}
     .chat-overlay-local.open{opacity:1;pointer-events:auto;}
     .chat-drawer-local{position:fixed;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--box-bg);border-left:1px solid var(--box-border);z-index:400;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.2);}
@@ -265,13 +265,13 @@
 
   <script src="../../multiplayer.js"></script>
   <script>
+    // Use parent MP if available (running inside iframe), otherwise fall back to local MP
+    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+
     /* ══════════════════════════════════════════════════════
        Tic Tac Toe – 3 Modi: solo | bot | multi
        Modus kommt aus localStorage('gameMode')
        ══════════════════════════════════════════════════════ */
-
-    // Use parent MP if available (running inside iframe), otherwise fall back to local MP
-    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
 
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName    = localStorage.getItem('playerName') || 'Du';
@@ -376,7 +376,6 @@
         xLabel.textContent = mySymbol === 'X' ? '👤 Du (X)' : `👤 ${opponent} (X)`;
         oLabel.textContent = mySymbol === 'O' ? '👤 Du (O)' : `👤 ${opponent} (O)`;
 
-        /* Load local chat history */
         try { chatHistory = JSON.parse(localStorage.getItem(`chat_${opponent}`) || '[]'); } catch {}
         renderChatHistory();
 
@@ -423,12 +422,10 @@
       if (!gameActive) { restartGame(); return; }
       if (boardState[index] !== '') return;
 
-      /* In multi: only allow move when it's my turn */
       if (gameMode === 'multi' && currentPlayer !== mySymbol) return;
 
       makeMove(index, currentPlayer);
 
-      /* Send move to opponent in online mode */
       if (gameMode === 'multi') {
         gameMP.send('move', { game: 'tic-tac-toe', data: { cell: index } });
       }
@@ -543,8 +540,10 @@
     }
 
     /* ── Multiplayer Events ── */
+    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler;
+
     function setupMultiplayerEvents() {
-      gameMP.on('move', ({ data }) => {
+      onMoveHandler = ({ data }) => {
         const { cell } = data;
         makeMove(cell, currentPlayer);
         const win = checkWinner(boardState, currentPlayer);
@@ -552,27 +551,42 @@
         if (boardState.every(c=>c!=='')) { endDraw(); return; }
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateBoardInteractivity();
-      });
+      };
 
-      gameMP.on('chat', ({ text, name }) => {
+      onChatHandler = ({ text, name }) => {
         addChatMsg(text, name, false);
         if (!chatDrawer.classList.contains('open')) {
           unreadChat++;
           chatBadgeHdr.textContent = unreadChat;
           chatBadgeHdr.style.display = 'flex';
         }
-      });
+      };
 
-      gameMP.on('disconnected', () => {
+      onDisconnectedHandler = () => {
         showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
         gameActive = false;
         statusText.textContent = '⚡ Verbindung unterbrochen';
-      });
+      };
 
-      gameMP.on('menu', () => {
+      onMenuHandler = () => {
         showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
-      });
+      };
+
+      gameMP.on('move', onMoveHandler);
+      gameMP.on('chat', onChatHandler);
+      gameMP.on('disconnected', onDisconnectedHandler);
+      gameMP.on('menu', onMenuHandler);
     }
+
+    // Clean up WebRTC listeners when iframe is closed/unloaded to prevent dead object references
+    window.addEventListener('unload', () => {
+      if (gameMode === 'multi' && gameMP) {
+        if (onMoveHandler) gameMP.off('move', onMoveHandler);
+        if (onChatHandler) gameMP.off('chat', onChatHandler);
+        if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
+        if (onMenuHandler) gameMP.off('menu', onMenuHandler);
+      }
+    });
 
     /* ── Back button: send 'menu' message, don't disconnect ── */
     backBtn.addEventListener('click', (e) => {
@@ -584,7 +598,6 @@
           gameMP.send('menu');
         }
       }
-      /* mpRole stays set; main page restores session */
     });
 
     /* ── Difficulty ── */
