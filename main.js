@@ -2,8 +2,8 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v89';
-const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048'];
+const CACHE_VERSION = 'v90';
+const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
 function randomName() {
@@ -312,13 +312,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if (settingsDisconnectBtn) settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
 
   function doDisconnect() {
+    clearTimeout(connectionTimeout);
     MP.disconnect();
     onDisconnected();
     showToast('Verbindung getrennt.');
   }
 
   /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
+  let connectionTimeout = null;
+
+  function startConnectionTimeout() {
+    clearTimeout(connectionTimeout);
+    connectionTimeout = setTimeout(() => {
+      if (!MP.isConnected()) {
+        MP.disconnect();
+        showToast('❌ Verbindungsaufbau fehlgeschlagen (Timeout).');
+        closeAllModals();
+      }
+    }, 15000); // 15 seconds timeout
+  }
+
   MP.on('connected', ({ opponent }) => {
+    clearTimeout(connectionTimeout);
     if (chatPartnerName) chatPartnerName.textContent = opponent || 'Gegner';
     closeAllModals();
     setMode(currentMode, false);
@@ -326,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('disconnected', ({ opponent }) => {
+    clearTimeout(connectionTimeout);
     MP.disconnect();
     onDisconnected();
     if (opponent) showToast(`${opponent} hat die Verbindung getrennt.`);
@@ -355,11 +371,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('disconnect', () => {
+    clearTimeout(connectionTimeout);
     onDisconnected();
     showToast('Gegner hat die Verbindung getrennt.');
   });
 
   function onDisconnected() {
+    clearTimeout(connectionTimeout);
     if (chatFab) chatFab.style.display = 'none';
     if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
     gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
@@ -426,17 +444,35 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!text) text = prompt("Füge den Verbindungscode des Gastes hier ein:");
       text = text ? text.trim() : "";
       if (!text) return;
-      closeModal(hostQrOverlay);
+      
+      // Keep Host modal open, show connection spinner
+      if (hostQrSubtitle) hostQrSubtitle.textContent = '⏳ Verbindung wird aufgebaut...';
+      if (hostCodeBox) hostCodeBox.style.display = 'none';
+      if (hostShareActions) hostShareActions.style.display = 'none';
+      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
+      if (hostSpinner) {
+        hostSpinner.textContent = '⏳ Verbinde mit Gast...';
+        hostSpinner.style.display = 'block';
+      }
+
+      startConnectionTimeout();
+
       try {
         await MP.receiveAnswer(text);
       } catch(e) {
+        clearTimeout(connectionTimeout);
         showToast('❌ Ungültiger Code.');
-        openModal(hostQrOverlay);
+        // Restore Host modal state
+        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Teile diesen Code mit deinem Gast:';
+        if (hostCodeBox) hostCodeBox.style.display = 'block';
+        if (hostShareActions) hostShareActions.style.display = 'flex';
+        if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'flex';
+        if (hostSpinner) hostSpinner.style.display = 'none';
       }
     });
   }
 
-  if (hostQrClose) hostQrClose.addEventListener('click',  () => { closeModal(hostQrOverlay);  MP.disconnect(); });
+  if (hostQrClose) hostQrClose.addEventListener('click',  () => { clearTimeout(connectionTimeout); closeModal(hostQrOverlay);  MP.disconnect(); });
 
   /* ══════════════════ GUEST FLOW ══════════════════ */
   if (joinLobbyBtn) {
@@ -454,8 +490,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (guestSpinner) guestSpinner.style.display    = 'block';
     try {
       const answer = await MP.receiveOffer(offerText, playerName);
-      if (guestSpinner) guestSpinner.style.display = 'none';
+      if (guestSpinner) {
+        guestSpinner.textContent = '⏳ Warte auf Verbindung...';
+        guestSpinner.style.display = 'block';
+      }
       if (guestAnswerCodeBox) guestAnswerCodeBox.textContent = answer;
+
+      startConnectionTimeout();
 
       if (guestCopyBtn) {
         guestCopyBtn.onclick = () => {
@@ -494,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { closeModal(guestJoinOverlay); MP.disconnect(); });
+  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
