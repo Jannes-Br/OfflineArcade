@@ -1,857 +1,1476 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pong – OfflineArcade</title>
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;800&display=swap" rel="stylesheet">
 
-<title>Pong</title>
+  <style>
+    :root {
+      --bg-color: #020617;
+      --text-color: #ffffff;
+      --box-bg: rgba(255, 255, 255, 0.03);
+      --box-border: rgba(255, 255, 255, 0.08);
+      --btn-bg: rgba(255, 255, 255, 0.06);
+      --btn-border: rgba(255, 255, 255, 0.08);
+      --btn-color: #ffffff;
+      --btn-hover-bg: rgba(255, 255, 255, 0.16);
+      --btn-hover-border: rgba(255, 255, 255, 0.2);
+      --btn-active-bg: rgba(255, 255, 255, 0.25);
+      --btn-active-color: #ffffff;
+      --accent-glow: rgba(96, 165, 250, 0.35);
+    }
 
-<link
-  href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap"
-  rel="stylesheet"
->
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-<style>
+    body {
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Fredoka', sans-serif;
+      background:
+        radial-gradient(circle at top left, #312e81 0%, transparent 40%),
+        radial-gradient(circle at bottom right, #0f766e 0%, transparent 40%),
+        #020617;
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      inset: 0;
+    }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  touch-action:none;
-  user-select:none;
-}
+    /* ── Header ── */
+    .game-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: max(16px, env(safe-area-inset-top)) 16px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
 
-body{
-  overflow:hidden;
-  width:100vw;
-  height:100vh;
-  font-family:'Fredoka',sans-serif;
-  background:
-    radial-gradient(circle at top left,#312e81 0%,transparent 40%),
-    radial-gradient(circle at bottom right,#0f766e 0%,transparent 40%),
-    #020617;
-  color:white;
-}
+    .back-btn, #mute-btn, #chat-btn {
+      pointer-events: auto;
+      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--box-border);
+      color: var(--text-color);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 
-#title{
-  position:fixed;
-  top:16px;
-  left:24px;
-  font-size:44px;
-  font-weight:700;
-  letter-spacing:1px;
-  color:white;
-  z-index:30;
-}
+    #mute-btn, #chat-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      font-size: 16px;
+      position: relative;
+    }
 
-#topbar{
-  position:fixed;
-  top:18px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:12px;
-  align-items:center;
-  z-index:30;
-}
+    .back-btn:hover, #mute-btn:hover, #chat-btn:hover {
+      transform: translateY(-2px);
+      background: var(--btn-hover-bg);
+      border-color: var(--btn-hover-border);
+    }
 
-.group{
-  display:flex;
-  gap:10px;
-  padding:8px;
-  border-radius:22px;
-  background:rgba(255,255,255,0.06);
-  backdrop-filter:blur(12px);
-}
+    .back-btn:active, #mute-btn:active, #chat-btn:active {
+      transform: scale(0.95);
+    }
 
-button{
-  border:none;
-  background:transparent;
-  color:white;
-  padding:12px 18px;
-  border-radius:16px;
-  font-size:15px;
-  font-family:'Fredoka',sans-serif;
-  cursor:pointer;
-  transition:0.2s;
-}
+    .header-right {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
 
-button.active{
-  background:rgba(255,255,255,0.16);
-}
+    .chat-badge-hdr {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg-color);
+    }
 
-#pauseBtn{
-  width:58px;
-  font-size:22px;
-  font-weight:700;
-}
+    .mode-badge {
+      pointer-events: none;
+      background: #3b82f6;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
 
-#gameWrap{
-  position:fixed;
-  left:50%;
-  top:96px;
-  transform:translateX(-50%);
-  width:95vw;
-  height:calc(100vh - 120px);
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.03);
-  backdrop-filter:blur(10px);
-}
+    /* ── Opponent bar ── */
+    .opponent-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 8px 14px;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(56, 189, 248, 0.08));
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 16px;
+      z-index: 10;
+    }
 
-canvas{
-  width:100%;
-  height:100%;
-  display:block;
-}
+    .opponent-bar.show {
+      display: flex;
+    }
 
-</style>
+    .opp-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .opp-name {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .opp-role {
+      font-size: 10px;
+      opacity: 0.6;
+    }
+
+    /* ── Container ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: max(80px, env(safe-area-inset-top) + 60px) 16px max(20px, env(safe-area-inset-bottom) + 10px);
+    }
+
+    #topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      z-index: 30;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .group {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--box-border);
+      backdrop-filter: blur(12px);
+    }
+
+    button.game-opt-btn {
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 8px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Fredoka', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button.game-opt-btn:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    button.game-opt-btn.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #pauseBtn {
+      width: 44px;
+      height: 34px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: white;
+    }
+
+    #gameWrap {
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16 / 10;
+      max-height: calc(100vh - 200px);
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--box-border);
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .overlay-sub {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 80%;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .overlay-btn {
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    .overlay-btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    .overlay-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ── Local Chat (for multiplayer) ── */
+    .chat-overlay-local{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .chat-overlay-local.open{opacity:1;pointer-events:auto;}
+    .chat-drawer-local{position:fixed;right:0;top:0;bottom:0;width:min(340px,92vw);background:rgba(15, 23, 42, 0.85);border-left:1px solid var(--box-border);z-index:400;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+    .chat-drawer-local.open{transform:translateX(0);}
+    .chat-header-local{display:flex;align-items:center;justify-content:space-between;padding:max(52px,env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--box-border);flex-shrink:0;}
+    .chat-title-local{font-size:16px;font-weight:800;color:white;}
+    .chat-close-local{border:1px solid var(--btn-border);background:var(--btn-bg);color:var(--text-color);width:30px;height:30px;border-radius:9px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .chat-messages-local{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+    .chat-msg-local{max-width:80%;padding:8px 13px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;}
+    .chat-msg-local.mine{align-self:flex-end;background:#3b82f6;color:white;border-bottom-right-radius:4px;}
+    .chat-msg-local.theirs{align-self:flex-start;background:rgba(255,255,255,0.08);border:1px solid var(--box-border);color:white;border-bottom-left-radius:4px;}
+    .chat-name-local{font-size:10px;font-weight:700;opacity:.55;margin-bottom:3px;color:rgba(255,255,255,0.7);}
+    .chat-input-row-local{display:flex;gap:8px;padding:10px 14px 8px;border-top:1px solid var(--box-border);flex-shrink:0;}
+    .chat-disclaimer-local{font-size:10px;opacity:.4;text-align:center;padding:4px 14px max(8px,env(safe-area-inset-bottom));line-height:1.4;flex-shrink:0;color:rgba(255,255,255,0.6);}
+    .chat-input-local{flex:1;padding:9px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--box-border);border-radius:11px;color:white;font-size:14px;outline:none;transition:border-color .2s;}
+    .chat-input-local:focus{border-color:#3b82f6;}
+    .chat-send-local{border:none;background:#3b82f6;color:white;width:42px;height:42px;border-radius:11px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .toast-local{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,23,42,.92);color:#fff;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:600;z-index:700;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);}
+    .toast-local.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    @media (max-width: 480px) {
+      .overlay-title {
+        font-size: 28px;
+      }
+      .group {
+        padding: 4px;
+      }
+      button.game-opt-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="title">Pong</div>
-
-<div id="topbar">
-
-  <div class="group">
-    <button id="vsBtn" class="active">
-      2 Players
-    </button>
-
-    <button id="botBtn">
-      Bot
-    </button>
+  <!-- Navigation Header -->
+  <div class="game-header">
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menü</a>
+    <span class="mode-badge" id="modeBadge">Solo</span>
+    <div class="header-right">
+      <button id="chat-btn" title="Chat" style="display:none;">💬<span class="chat-badge-hdr" id="chatBadgeHdr"></span></button>
+      <button id="mute-btn" title="Ton stummschalten">🔊</button>
+    </div>
   </div>
 
-  <div class="group">
-    <button id="normalBtn" class="active">
-      Normal
-    </button>
+  <div class="container">
 
-    <button id="fastBtn">
-      Fast
-    </button>
+    <!-- Opponent Info (Online mode only) -->
+    <div class="opponent-bar" id="opponentBar">
+      <div class="opp-avatar" id="oppAvatar">?</div>
+      <div>
+        <div class="opp-name" id="oppName">Gegner</div>
+        <div class="opp-role" id="oppRole">Verbunden</div>
+      </div>
+    </div>
 
-    <button id="superBtn">
-      Super
-    </button>
+    <div id="topbar">
+      <!-- Game Mode selector (hidden in online mode) -->
+      <div class="group" id="modeGroup">
+        <button id="vsBtn" class="game-opt-btn active">2 Players</button>
+        <button id="botBtn" class="game-opt-btn">Bot</button>
+      </div>
+
+      <!-- Speed selector (Host only in online mode) -->
+      <div class="group" id="speedGroup">
+        <button id="normalBtn" class="game-opt-btn active">Normal</button>
+        <button id="fastBtn" class="game-opt-btn">Fast</button>
+        <button id="superBtn" class="game-opt-btn">Super</button>
+      </div>
+
+      <!-- Pause button -->
+      <div class="group">
+        <button id="pauseBtn" class="game-opt-btn">II</button>
+      </div>
+    </div>
+
+    <div id="gameWrap">
+      <canvas id="game" width="800" height="500"></canvas>
+
+      <!-- Screens overlay -->
+      <div class="overlay" id="overlay">
+        <div class="overlay-title" id="overlay-title">Hold To Play</div>
+        <div class="overlay-sub" id="overlay-sub">Drücke und halte den Bildschirm (oder W/S / Pfeiltasten), um zu starten. Beide Spieler müssen halten!</div>
+        <button class="overlay-btn" id="overlay-btn" style="display:none;">Nochmal spielen</button>
+      </div>
+    </div>
+
   </div>
 
-  <div class="group">
-    <button id="pauseBtn">
-      II
-    </button>
+  <!-- Local Chat (for multiplayer) -->
+  <div class="chat-overlay-local" id="chatOverlay"></div>
+  <div class="chat-drawer-local" id="chatDrawer">
+    <div class="chat-header-local">
+      <span class="chat-title-local">💬 Chat – <span id="chatWith">Gegner</span></span>
+      <button class="chat-close-local" id="chatClose">✕</button>
+    </div>
+    <div class="chat-messages-local" id="chatMessages"></div>
+    <div class="chat-input-row-local">
+      <input type="text" class="chat-input-local" id="chatInput" placeholder="Nachricht…" maxlength="200">
+      <button class="chat-send-local" id="chatSend">➤</button>
+    </div>
+    <p class="chat-disclaimer-local">Chats werden lokal auf deinem Gerät gespeichert. Keine Haftung für Chat-Inhalte.</p>
   </div>
 
-</div>
-
-<div id="gameWrap">
-  <canvas id="game"></canvas>
-</div>
-
-<script>
-
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-
-const wrap = document.getElementById('gameWrap');
-
-const vsBtn = document.getElementById('vsBtn');
-const botBtn = document.getElementById('botBtn');
-
-const normalBtn = document.getElementById('normalBtn');
-const fastBtn = document.getElementById('fastBtn');
-const superBtn = document.getElementById('superBtn');
-
-const pauseBtn = document.getElementById('pauseBtn');
-
-let mode = 'vs';
-
-let speedMode = 'normal';
-
-let paused = false;
-
-let gameState = 'hold';
-
-let countdown = 3;
-
-let countdownTimer = 0;
-
-const paddle = {
-  width:18,
-  height:160
-};
-
-const left = {
-  x:28,
-  y:0,
-  score:0,
-  glow:0
-};
-
-const right = {
-  x:0,
-  y:0,
-  score:0,
-  glow:0
-};
-
-const ball = {
-  x:0,
-  y:0,
-  vx:0,
-  vy:0,
-  size:14,
-  trail:[]
-};
-
-let prediction = [];
-
-function resize(){
-
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-
-  right.x = canvas.width - paddle.width - 28;
-
-  if(left.y === 0 && right.y === 0){
-
-    left.y =
-      canvas.height/2 - paddle.height/2;
-
-    right.y =
-      canvas.height/2 - paddle.height/2;
-  }
-}
-
-resize();
-
-window.addEventListener('resize',resize);
-
-function getSpeed(){
-
-  if(speedMode === 'normal') return 11;
-
-  if(speedMode === 'fast') return 18;
-
-  return 24;
-}
-
-function resetBall(direction = 1){
-
-  const speed = getSpeed();
-
-  ball.x = canvas.width/2;
-  ball.y = canvas.height/2;
-
-  ball.vx = speed * direction;
-
-  ball.vy =
-    (Math.random()*6 - 3);
-
-  updatePrediction();
-}
-
-resetBall();
-
-function updatePrediction(){
-
-  prediction = [];
-
-  let px = ball.x;
-  let py = ball.y;
-
-  let vx = ball.vx;
-  let vy = ball.vy;
-
-  for(let i=0;i<80;i++){
-
-    px += vx * 0.6;
-    py += vy * 0.6;
-
-    if(py < ball.size ||
-       py > canvas.height-ball.size){
-
-      vy *= -1;
-    }
-
-    prediction.push({
-      x:px,
-      y:py
-    });
-  }
-}
-
-function startCountdown(){
-
-  gameState = 'countdown';
-
-  countdown = 3;
-
-  countdownTimer = performance.now();
-}
-
-function startGame(){
-
-  gameState = 'playing';
-}
-
-function setMode(newMode){
-
-  mode = newMode;
-
-  left.score = 0;
-  right.score = 0;
-
-  gameState = 'hold';
-
-  resetBall(Math.random()>0.5?1:-1);
-
-  vsBtn.classList.remove('active');
-  botBtn.classList.remove('active');
-
-  if(mode === 'vs'){
-    vsBtn.classList.add('active');
-  }else{
-    botBtn.classList.add('active');
-  }
-}
-
-vsBtn.onclick = () => setMode('vs');
-botBtn.onclick = () => setMode('bot');
-
-function setSpeed(newSpeed){
-
-  speedMode = newSpeed;
-
-  normalBtn.classList.remove('active');
-  fastBtn.classList.remove('active');
-  superBtn.classList.remove('active');
-
-  if(newSpeed === 'normal'){
-    normalBtn.classList.add('active');
-  }
-
-  if(newSpeed === 'fast'){
-    fastBtn.classList.add('active');
-  }
-
-  if(newSpeed === 'super'){
-    superBtn.classList.add('active');
-  }
-
-  resetBall(Math.random()>0.5?1:-1);
-}
-
-normalBtn.onclick = () => setSpeed('normal');
-fastBtn.onclick = () => setSpeed('fast');
-superBtn.onclick = () => setSpeed('super');
-
-pauseBtn.onclick = () => {
-
-  paused = !paused;
-
-  pauseBtn.textContent =
-    paused ? '▶' : 'II';
-};
-
-const touches = {};
-
-window.addEventListener('touchstart',e=>{
-
-  for(const touch of e.touches){
-
-    touches[touch.identifier] = {
-      x:touch.clientX,
-      y:touch.clientY
+  <div class="toast-local" id="toast"></div>
+
+  <script src="../../multiplayer.js"></script>
+  <script>
+    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+
+    const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
+    const myName    = localStorage.getItem('playerName') || 'Du';
+    const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const wrap = document.getElementById('gameWrap');
+
+    const vsBtn = document.getElementById('vsBtn');
+    const botBtn = document.getElementById('botBtn');
+    const normalBtn = document.getElementById('normalBtn');
+    const fastBtn = document.getElementById('fastBtn');
+    const superBtn = document.getElementById('superBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    
+    const modeBadge = document.getElementById('modeBadge');
+    const modeGroup = document.getElementById('modeGroup');
+    const speedGroup = document.getElementById('speedGroup');
+    const backBtn = document.getElementById('backBtn');
+
+    const opponentBar = document.getElementById('opponentBar');
+    const oppAvatar = document.getElementById('oppAvatar');
+    const oppName = document.getElementById('oppName');
+    const oppRole = document.getElementById('oppRole');
+
+    const chatBtn = document.getElementById('chat-btn');
+    const chatBadgeHdr = document.getElementById('chatBadgeHdr');
+    const chatOverlay = document.getElementById('chatOverlay');
+    const chatDrawer = document.getElementById('chatDrawer');
+    const chatClose = document.getElementById('chatClose');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatWith = document.getElementById('chatWith');
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+    const toast = document.getElementById('toast');
+
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlaySub = document.getElementById('overlay-sub');
+    const overlayBtn = document.getElementById('overlay-btn');
+
+    let mode = 'vs'; // vs | bot | multi
+    let speedMode = 'normal';
+    let paused = false;
+    let gameState = 'hold'; // hold | countdown | playing | gameover
+    let countdown = 3;
+    let countdownTimer = 0;
+    let isMuted = false;
+    let unreadChat = 0;
+    let chatHistory = [];
+
+    // Configuration / Dimensions (Fixed to 800x500 for perfect physics sync)
+    const cw = 800;
+    const ch = 500;
+
+    const paddle = {
+      width: 16,
+      height: 100
     };
-  }
 
-},{passive:false});
+    const left = {
+      x: 24,
+      y: 200,
+      score: 0,
+      glow: 0
+    };
 
-window.addEventListener('touchmove',e=>{
+    const right = {
+      x: 760,
+      y: 200,
+      score: 0,
+      glow: 0
+    };
 
-  if(paused) return;
+    const ball = {
+      x: 400,
+      y: 250,
+      vx: 0,
+      vy: 0,
+      size: 10,
+      trail: [],
+      currentSpeed: 0
+    };
 
-  const rect =
-    canvas.getBoundingClientRect();
+    let prediction = [];
 
-  for(const touch of e.touches){
-
-    const x =
-      touch.clientX - rect.left;
-
-    const y =
-      touch.clientY - rect.top;
-
-    if(mode === 'vs'){
-
-      if(x < canvas.width/2){
-
-        left.y =
-          y - paddle.height/2;
+    // ── Sound engine (Web Audio API) ──
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-      else{
-
-        right.y =
-          y - paddle.height/2;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
     }
-    else{
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, initAudio, { once: true, passive: true });
+    });
 
-      left.y =
-        y - paddle.height/2;
-    }
-  }
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
 
-  clamp();
-
-},{passive:false});
-
-window.addEventListener('touchend',e=>{
-
-  for(const touch of e.changedTouches){
-
-    delete touches[touch.identifier];
-  }
-
-},{passive:false});
-
-const keys = {};
-
-window.addEventListener('keydown',e=>{
-
-  keys[e.key] = true;
-
-});
-
-window.addEventListener('keyup',e=>{
-
-  keys[e.key] = false;
-
-});
-
-function clamp(){
-
-  left.y =
-    Math.max(
-      0,
-      Math.min(
-        canvas.height-paddle.height,
-        left.y
-      )
-    );
-
-  right.y =
-    Math.max(
-      0,
-      Math.min(
-        canvas.height-paddle.height,
-        right.y
-      )
-    );
-}
-
-function checkHold(){
-
-  const touchCount =
-    Object.keys(touches).length;
-
-  const keyHold =
-    keys['w'] ||
-    keys['s'] ||
-    keys['ArrowUp'] ||
-    keys['ArrowDown'];
-
-  if(mode === 'vs'){
-
-    return touchCount >= 2 || keyHold;
-  }
-
-  return touchCount >= 1 || keyHold;
-}
-
-function update(){
-
-  right.x =
-    canvas.width - paddle.width - 28;
-
-  if(paused) return;
-
-  if(keys['w']) left.y -= 10;
-  if(keys['s']) left.y += 10;
-
-  if(mode === 'vs'){
-
-    if(keys['ArrowUp']) right.y -= 10;
-    if(keys['ArrowDown']) right.y += 10;
-  }
-
-  clamp();
-
-  if(gameState === 'hold'){
-
-    if(checkHold()){
-
-      startCountdown();
+        if (type === 'bounce') {
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'hit') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'score') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(90, now + 0.3);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'countdown') {
+          osc.frequency.setValueAtTime(520, now);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'countdown-start') {
+          osc.frequency.setValueAtTime(784, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'win') {
+          osc.type = 'sine';
+          [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            osc.frequency.setValueAtTime(f, now + i * 0.1);
+          });
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        } else if (type === 'gameover') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(80, now + 0.45);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        }
+      } catch (e) {}
     }
 
-    return;
-  }
+    // ── Mute handling ──
+    if (localStorage.getItem('mute') === 'true') {
+      isMuted = true;
+      document.getElementById('mute-btn').textContent = '🔇';
+    }
+    document.getElementById('mute-btn').addEventListener('click', () => {
+      isMuted = !isMuted;
+      localStorage.setItem('mute', isMuted);
+      document.getElementById('mute-btn').textContent = isMuted ? '🔇' : '🔊';
+    });
 
-  if(gameState === 'countdown'){
+    // ── Mode Initialization ──
+    function initMode() {
+      if (gameMode === 'solo') {
+        mode = 'vs';
+        modeBadge.textContent = '🎮 Solo';
+        modeGroup.style.display = 'flex';
+        opponentBar.classList.remove('show');
+        chatBtn.style.display = 'none';
+      } else if (gameMode === 'bot') {
+        mode = 'bot';
+        modeBadge.textContent = '🤖 vs. Bot';
+        modeGroup.style.display = 'flex';
+        opponentBar.classList.remove('show');
+        chatBtn.style.display = 'none';
+        setMode('bot');
+      } else if (gameMode === 'multi') {
+        mode = 'multi';
+        modeBadge.textContent = '📡 Online';
+        modeGroup.style.display = 'none';
+        chatBtn.style.display = 'flex';
 
-    if(!checkHold() && countdown === 3){
+        // Guest cannot change speed or pause
+        if (mpRole === 'O') {
+          speedGroup.style.display = 'none';
+          pauseBtn.style.pointerEvents = 'none';
+          pauseBtn.style.opacity = '0.5';
+        }
 
+        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        localStorage.setItem('lastOpponent', opponent);
+        chatWith.textContent = opponent;
+        oppAvatar.textContent = opponent[0].toUpperCase();
+        oppName.textContent = opponent;
+        oppRole.textContent = mpRole === 'X' ? 'Host (Links)' : 'Gast (Rechts)';
+        opponentBar.classList.add('show');
+
+        try { chatHistory = JSON.parse(localStorage.getItem(`chatPong_${opponent}`) || '[]'); } catch {}
+        renderChatHistory();
+        setupMultiplayerEvents();
+      }
+      overlayBtn.addEventListener('click', () => {
+        if (gameState === 'gameover') {
+          restartGame(true);
+        }
+      });
+      updateMenuButtons();
+    }
+
+    function updateMenuButtons() {
+      // Mode Group Active class
+      vsBtn.classList.toggle('active', mode === 'vs');
+      botBtn.classList.toggle('active', mode === 'bot');
+
+      // Speed Group Active class
+      normalBtn.classList.toggle('active', speedMode === 'normal');
+      fastBtn.classList.toggle('active', speedMode === 'fast');
+      superBtn.classList.toggle('active', speedMode === 'super');
+    }
+
+    function setMode(newMode) {
+      if (gameMode === 'multi') return;
+      mode = newMode;
+      left.score = 0;
+      right.score = 0;
       gameState = 'hold';
-      return;
+      paused = false;
+      pauseBtn.textContent = 'II';
+      resetBall(Math.random() > 0.5 ? 1 : -1);
+      updateMenuButtons();
+      updateOverlay();
     }
 
-    const now = performance.now();
+    vsBtn.onclick = () => setMode('vs');
+    botBtn.onclick = () => setMode('bot');
 
-    if(now - countdownTimer > 1000){
+    function getBaseSpeed() {
+      if (speedMode === 'normal') return 8;
+      if (speedMode === 'fast') return 12;
+      return 18;
+    }
 
-      countdown--;
-
-      countdownTimer = now;
-
-      if(countdown <= 0){
-
-        startGame();
+    function setSpeed(newSpeed, sync = true) {
+      if (gameMode === 'multi' && mpRole === 'O') return; // Only Host can set speed
+      speedMode = newSpeed;
+      updateMenuButtons();
+      resetBall(Math.random() > 0.5 ? 1 : -1);
+      if (gameMode === 'multi' && mpRole === 'X' && sync) {
+        gameMP.send('speed_change', { speedMode });
       }
     }
 
-    return;
-  }
+    normalBtn.onclick = () => setSpeed('normal');
+    fastBtn.onclick = () => setSpeed('fast');
+    superBtn.onclick = () => setSpeed('super');
 
-  if(mode === 'bot'){
+    pauseBtn.onclick = () => {
+      if (gameMode === 'multi' && mpRole === 'O') return;
+      togglePause(true);
+    };
 
-    const target =
-      ball.y - paddle.height/2;
-
-    right.y +=
-      (target - right.y) * 0.25;
-
-    clamp();
-  }
-
-  ball.x += ball.vx;
-  ball.y += ball.vy;
-
-  ball.trail.push({
-    x:ball.x,
-    y:ball.y
-  });
-
-  if(ball.trail.length > 12){
-    ball.trail.shift();
-  }
-
-  if(
-    ball.y < ball.size ||
-    ball.y > canvas.height-ball.size
-  ){
-
-    ball.vy *= -1;
-  }
-
-  function hit(p,isLeft){
-
-    const paddleCenter =
-      p.y + paddle.height/2;
-
-    const offset =
-      (ball.y - paddleCenter) /
-      (paddle.height/2);
-
-    const bounce =
-      offset * 5;
-
-    const speed =
-      Math.sqrt(
-        ball.vx*ball.vx +
-        ball.vy*ball.vy
-      );
-
-    ball.vx =
-      (isLeft ? 1 : -1) *
-      speed;
-
-    ball.vy = bounce;
-
-    p.glow = 1;
-
-    updatePrediction();
-  }
-
-  if(
-    ball.x-ball.size <
-    left.x+paddle.width &&
-    ball.y > left.y &&
-    ball.y < left.y+paddle.height
-  ){
-
-    hit(left,true);
-  }
-
-  if(
-    ball.x+ball.size >
-    right.x &&
-    ball.y > right.y &&
-    ball.y < right.y+paddle.height
-  ){
-
-    hit(right,false);
-  }
-
-  if(ball.x < -50){
-
-    right.score++;
-
-    gameState = 'countdown';
-
-    countdown = 3;
-
-    countdownTimer = performance.now();
-
-    resetBall(-1);
-  }
-
-  if(ball.x > canvas.width+50){
-
-    left.score++;
-
-    gameState = 'countdown';
-
-    countdown = 3;
-
-    countdownTimer = performance.now();
-
-    resetBall(1);
-  }
-
-  left.glow *= 0.9;
-  right.glow *= 0.9;
-}
-
-function drawBackground(){
-
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  ctx.strokeStyle =
-    'rgba(255,255,255,0.08)';
-
-  ctx.setLineDash([18,18]);
-
-  ctx.beginPath();
-
-  ctx.moveTo(canvas.width/2,0);
-  ctx.lineTo(canvas.width/2,canvas.height);
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-}
-
-function drawPrediction(){
-
-  if(gameState !== 'countdown') return;
-
-  ctx.strokeStyle =
-    'rgba(255,255,255,0.28)';
-
-  ctx.lineWidth = 2;
-
-  ctx.setLineDash([10,14]);
-
-  ctx.beginPath();
-
-  prediction.forEach((p,i)=>{
-
-    if(i===0){
-      ctx.moveTo(p.x,p.y);
-    }else{
-      ctx.lineTo(p.x,p.y);
+    function togglePause(sync = true) {
+      paused = !paused;
+      pauseBtn.textContent = paused ? '▶' : 'II';
+      updateOverlay();
+      if (gameMode === 'multi' && mpRole === 'X' && sync) {
+        gameMP.send('pause_change', { paused });
+      }
     }
-  });
 
-  ctx.stroke();
+    function resetBall(direction = 1) {
+      ball.x = 400;
+      ball.y = 250;
+      ball.currentSpeed = getBaseSpeed();
 
-  ctx.setLineDash([]);
-}
+      // Ensure some horizontal velocity, random vertical
+      ball.vx = ball.currentSpeed * direction;
+      ball.vy = (Math.random() * 4 - 2);
 
-function drawPaddle(p,color){
+      ball.trail = [];
+      updatePrediction();
+    }
 
-  ctx.shadowBlur =
-    24 + p.glow*40;
+    function updatePrediction() {
+      prediction = [];
+      let px = ball.x;
+      let py = ball.y;
+      let vx = ball.vx;
+      let vy = ball.vy;
 
-  ctx.shadowColor = color;
+      for (let i = 0; i < 40; i++) {
+        px += vx * 0.8;
+        py += vy * 0.8;
 
-  ctx.fillStyle = color;
+        if (py < ball.size || py > ch - ball.size) {
+          vy *= -1;
+        }
+        prediction.push({ x: px, y: py });
+      }
+    }
 
-  ctx.beginPath();
+    function startCountdown() {
+      gameState = 'countdown';
+      countdown = 3;
+      countdownTimer = performance.now();
+      playSound('countdown');
+      updateOverlay();
+    }
 
-  ctx.roundRect(
-    p.x,
-    p.y,
-    paddle.width,
-    paddle.height,
-    18
-  );
+    function startGame() {
+      gameState = 'playing';
+      updateOverlay();
+    }
 
-  ctx.fill();
+    function endGame(winner) {
+      gameState = 'gameover';
+      updateOverlay();
+      playSound(winner === 'left' ? 'win' : 'gameover');
+    }
 
-  ctx.shadowBlur = 0;
-}
+    function restartGame(sync = true) {
+      left.score = 0;
+      right.score = 0;
+      gameState = 'hold';
+      paused = false;
+      pauseBtn.textContent = 'II';
+      resetBall(Math.random() > 0.5 ? 1 : -1);
+      updateOverlay();
+      if (gameMode === 'multi' && mpRole === 'X' && sync) {
+        gameMP.send('restart_game', { game: 'pong' });
+      }
+    }
 
-function drawBall(){
+    function updateOverlay() {
+      if (paused) {
+        overlayTitle.textContent = 'Pause';
+        overlaySub.textContent = gameMode === 'multi' ? 'Der Host hat das Spiel pausiert.' : 'Drücke den Play-Knopf zum Weiterspielen.';
+        overlayBtn.style.display = 'none';
+        overlay.classList.add('visible');
+        return;
+      }
 
-  ball.trail.forEach((t,i)=>{
+      if (gameState === 'hold') {
+        overlayTitle.textContent = 'Hold To Play';
+        if (gameMode === 'multi') {
+          overlaySub.textContent = 'Drücke und halte den Bildschirm (oder W/S), um spielbereit zu sein. Beide müssen halten!';
+        } else if (mode === 'vs') {
+          overlaySub.textContent = 'Beide Spieler müssen drücken/halten (W/S & Pfeile oder auf dem Bildschirm), um zu starten.';
+        } else {
+          overlaySub.textContent = 'Drücke und halte den Bildschirm (oder W/S) zum Starten.';
+        }
+        overlayBtn.style.display = 'none';
+        overlay.classList.add('visible');
+        return;
+      }
 
-    ctx.fillStyle =
-      `rgba(255,255,255,${
-        i/ball.trail.length/2
-      })`;
+      if (gameState === 'countdown') {
+        overlayTitle.textContent = countdown > 0 ? countdown : 'GO!';
+        overlaySub.textContent = 'Bereitmachen...';
+        overlayBtn.style.display = 'none';
+        overlay.classList.add('visible');
+        return;
+      }
 
-    ctx.beginPath();
+      if (gameState === 'gameover') {
+        let text = "";
+        let isWin = false;
+        if (gameMode === 'multi') {
+          isWin = (mpRole === 'X' && left.score >= 10) || (mpRole === 'O' && right.score >= 10);
+          text = isWin ? '🎉 Du hast gewonnen!' : `😔 Gegner gewinnt! (${left.score} vs ${right.score})`;
+        } else if (mode === 'bot') {
+          isWin = left.score >= 10;
+          text = isWin ? '🎉 Gewonnen!' : '🤖 Bot hat gewonnen!';
+        } else {
+          text = left.score >= 10 ? '👤 Spieler Links gewinnt!' : '👤 Spieler Rechts gewinnt!';
+        }
+        overlayTitle.textContent = 'Spiel beendet';
+        overlaySub.textContent = text;
+        
+        // Only Host/Solo can click restart button
+        if (gameMode !== 'multi' || mpRole === 'X') {
+          overlayBtn.textContent = 'Nochmal spielen';
+          overlayBtn.style.display = 'block';
+        } else {
+          overlaySub.textContent += '\nWarte auf den Host für einen Neustart...';
+          overlayBtn.style.display = 'none';
+        }
+        
+        overlay.classList.add('visible');
+        return;
+      }
 
-    ctx.arc(
-      t.x,
-      t.y,
-      ball.size*(i/ball.trail.length),
-      0,
-      Math.PI*2
-    );
+      overlay.classList.remove('visible');
+    }
 
-    ctx.fill();
-  });
+    // ── Inputs ──
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key] = true;
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.key] = false;
+    });
 
-  ctx.fillStyle = 'white';
+    const activeTouches = {};
+    window.addEventListener('touchstart', e => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = cw / rect.width;
+      const scaleY = ch / rect.height;
 
-  ctx.shadowBlur = 30;
-  ctx.shadowColor = 'white';
+      for (const touch of e.touches) {
+        activeTouches[touch.identifier] = {
+          x: (touch.clientX - rect.left) * scaleX,
+          y: (touch.clientY - rect.top) * scaleY
+        };
+      }
+    }, { passive: true });
 
-  ctx.beginPath();
+    window.addEventListener('touchmove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = cw / rect.width;
+      const scaleY = ch / rect.height;
 
-  ctx.arc(
-    ball.x,
-    ball.y,
-    ball.size,
-    0,
-    Math.PI*2
-  );
+      for (const touch of e.touches) {
+        if (activeTouches[touch.identifier]) {
+          activeTouches[touch.identifier].x = (touch.clientX - rect.left) * scaleX;
+          activeTouches[touch.identifier].y = (touch.clientY - rect.top) * scaleY;
+        }
+      }
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
 
-  ctx.fill();
+    window.addEventListener('touchend', e => {
+      for (const touch of e.changedTouches) {
+        delete activeTouches[touch.identifier];
+      }
+    }, { passive: true });
 
-  ctx.shadowBlur = 0;
-}
+    window.addEventListener('touchcancel', e => {
+      for (const touch of e.changedTouches) {
+        delete activeTouches[touch.identifier];
+      }
+    }, { passive: true });
 
-function drawScores(){
+    function clampPaddles() {
+      left.y = Math.max(0, Math.min(ch - paddle.height, left.y));
+      right.y = Math.max(0, Math.min(ch - paddle.height, right.y));
+    }
 
-  ctx.font =
-    'bold 76px Fredoka';
+    // Check if the required inputs for "Hold to Play" are active
+    function checkInputsHold() {
+      // Keyboard input indicators
+      const leftHold = keys['w'] || keys['s'] || keys['W'] || keys['S'];
+      const rightHold = keys['ArrowUp'] || keys['ArrowDown'];
 
-  ctx.fillStyle =
-    'rgba(255,255,255,0.12)';
+      // Touch input indicators
+      let leftTouch = false;
+      let rightTouch = false;
 
-  ctx.fillText(
-    left.score,
-    canvas.width*0.25,
-    90
-  );
+      Object.values(activeTouches).forEach(t => {
+        if (t.x < cw / 2) leftTouch = true;
+        else rightTouch = true;
+      });
 
-  ctx.fillText(
-    right.score,
-    canvas.width*0.75,
-    90
-  );
-}
+      if (gameMode === 'multi') {
+        return mpRole === 'X' ? (leftHold || leftTouch) : (rightHold || rightTouch);
+      }
 
-function drawText(){
+      if (mode === 'vs') {
+        return (leftHold || leftTouch) && (rightHold || rightTouch);
+      }
 
-  ctx.textAlign='center';
+      // vs Bot: only need left hold
+      return leftHold || leftTouch;
+    }
 
-  if(paused){
+    // ── Update loop ──
+    let lastGuestSend = 0;
 
-    ctx.font =
-      'bold 48px Fredoka';
+    function update() {
+      if (paused) return;
 
-    ctx.fillStyle='white';
+      // Update paddle position from input locally
+      if (gameMode !== 'multi' || mpRole === 'X') {
+        // Left paddle keyboard controls
+        if (keys['w'] || keys['W']) left.y -= 7;
+        if (keys['s'] || keys['S']) left.y += 7;
 
-    ctx.fillText(
-      'Paused',
-      canvas.width/2,
-      canvas.height*0.3
-    );
+        // Left paddle touch controls
+        Object.values(activeTouches).forEach(t => {
+          if (t.x < cw / 2) {
+            left.y = t.y - paddle.height / 2;
+          }
+        });
+      }
 
-    return;
-  }
+      if (gameMode !== 'multi') {
+        // Right paddle controls in offline / bot mode
+        if (mode === 'vs') {
+          if (keys['ArrowUp']) right.y -= 7;
+          if (keys['ArrowDown']) right.y += 7;
 
-  if(gameState === 'hold'){
+          Object.values(activeTouches).forEach(t => {
+            if (t.x >= cw / 2) {
+              right.y = t.y - paddle.height / 2;
+            }
+          });
+        }
+      } else if (mpRole === 'O') {
+        // Guest controls RIGHT paddle locally
+        if (keys['w'] || keys['W'] || keys['ArrowUp']) right.y -= 7;
+        if (keys['s'] || keys['S'] || keys['ArrowDown']) right.y += 7;
 
-    ctx.font =
-      'bold 44px Fredoka';
+        Object.values(activeTouches).forEach(t => {
+          right.y = t.y - paddle.height / 2; // Guest control everywhere on their screen
+        });
+      }
 
-    ctx.fillStyle='white';
+      clampPaddles();
 
-    ctx.fillText(
-      'Hold To Play',
-      canvas.width/2,
-      canvas.height*0.28
-    );
-  }
+      // Guest sends paddle update to Host at 60 FPS
+      if (gameMode === 'multi' && mpRole === 'O') {
+        const now = performance.now();
+        if (now - lastGuestSend > 16) {
+          gameMP.send('paddle_update', { y: right.y, hold: checkInputsHold() });
+          lastGuestSend = now;
+        }
+      }
 
-  if(gameState === 'countdown'){
+      // Check lobby state and start countdown if ready
+      if (gameState === 'hold') {
+        const myHold = checkInputsHold();
+        
+        if (gameMode === 'multi') {
+          if (mpRole === 'X') {
+            // Host collects both local hold and guest hold
+            const guestHold = opponentReadyState;
+            if (myHold && guestHold) {
+              startCountdown();
+            }
+          }
+        } else {
+          if (myHold) {
+            startCountdown();
+          }
+        }
+        return;
+      }
 
-    ctx.font =
-      'bold 70px Fredoka';
+      if (gameState === 'countdown') {
+        const now = performance.now();
+        if (now - countdownTimer > 1000) {
+          countdown--;
+          countdownTimer = now;
+          if (countdown > 0) {
+            playSound('countdown');
+          } else if (countdown === 0) {
+            playSound('countdown-start');
+            if (gameMode !== 'multi' || mpRole === 'X') {
+              startGame();
+            }
+          }
+        }
+        return;
+      }
 
-    ctx.fillStyle='white';
+      if (gameState !== 'playing') return;
 
-    ctx.fillText(
-      countdown > 0
-      ? countdown
-      : 'GO!',
-      canvas.width/2,
-      canvas.height*0.28
-    );
-  }
-}
+      // ── Physics loop (Authority: Host / Solo only) ──
+      if (gameMode !== 'multi' || mpRole === 'X') {
+        // AI Bot movements
+        if (mode === 'bot') {
+          const target = ball.y - paddle.height / 2;
+          const diff = target - right.y;
+          // Apply speed limit for bot
+          right.y += Math.max(-5.5, Math.min(5.5, diff * 0.12));
+          clampPaddles();
+        }
 
-function draw(){
+        // Move ball
+        ball.x += ball.vx;
+        ball.y += ball.vy;
 
-  drawBackground();
+        // Ball trail
+        ball.trail.push({ x: ball.x, y: ball.y });
+        if (ball.trail.length > 8) ball.trail.shift();
 
-  drawPrediction();
+        // Top/Bottom wall bounce
+        if (ball.y - ball.size < 0 && ball.vy < 0) {
+          ball.y = ball.size;
+          ball.vy *= -1;
+          playSound('bounce');
+        }
+        if (ball.y + ball.size > ch && ball.vy > 0) {
+          ball.y = ch - ball.size;
+          ball.vy *= -1;
+          playSound('bounce');
+        }
 
-  drawScores();
+        // Paddle hits
+        // Left paddle collision
+        if (ball.vx < 0 && 
+            ball.x - ball.size <= left.x + paddle.width && 
+            ball.x - ball.size >= left.x &&
+            ball.y >= left.y && 
+            ball.y <= left.y + paddle.height) {
+          
+          handlePaddleHit(left, true);
+        }
 
-  drawPaddle(left,'#60a5fa');
+        // Right paddle collision
+        if (ball.vx > 0 && 
+            ball.x + ball.size >= right.x && 
+            ball.x + ball.size <= right.x + paddle.width &&
+            ball.y >= right.y && 
+            ball.y <= right.y + paddle.height) {
+          
+          handlePaddleHit(right, false);
+        }
 
-  drawPaddle(right,'#a78bfa');
+        // Scoring goals
+        if (ball.x < 0) {
+          // Right scores
+          right.score++;
+          playSound('score');
+          if (right.score >= 10) {
+            endGame('right');
+          } else {
+            startCountdown();
+            resetBall(1); // Give ball to loser (left)
+          }
+        } else if (ball.x > cw) {
+          // Left scores
+          left.score++;
+          playSound('score');
+          if (left.score >= 10) {
+            endGame('left');
+          } else {
+            startCountdown();
+            resetBall(-1); // Give ball to loser (right)
+          }
+        }
+      }
 
-  drawBall();
+      left.glow *= 0.9;
+      right.glow *= 0.9;
+    }
 
-  drawText();
-}
+    function handlePaddleHit(p, isLeft) {
+      // Normalized intersection point on the paddle (from -1 to 1)
+      const relativeIntersectY = (p.y + paddle.height / 2) - ball.y;
+      const normalizedIntersectY = relativeIntersectY / (paddle.height / 2);
+      
+      // Calculate max angle of reflection (55 degrees)
+      const maxBounceAngle = 55 * Math.PI / 180;
+      const bounceAngle = normalizedIntersectY * maxBounceAngle;
 
-function loop(){
+      // Increase speed slightly on hit (cap at 30)
+      ball.currentSpeed = Math.min(ball.currentSpeed * 1.06, 30);
 
-  update();
+      // Set new velocities
+      ball.vx = (isLeft ? 1 : -1) * ball.currentSpeed * Math.cos(bounceAngle);
+      ball.vy = -ball.currentSpeed * Math.sin(bounceAngle);
 
-  draw();
+      p.glow = 1;
+      playSound('hit');
+      updatePrediction();
+    }
 
-  requestAnimationFrame(loop);
-}
+    // ── Drawing loop ──
+    function draw() {
+      // Clear canvas
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, cw, ch);
 
-loop();
+      // Draw middle dashed line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.setLineDash([15, 15]);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cw / 2, 0);
+      ctx.lineTo(cw / 2, ch);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-</script>
+      // Draw Prediction Line (countdown only)
+      if (gameState === 'countdown' && (gameMode !== 'multi' || mpRole === 'X')) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.setLineDash([8, 12]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        prediction.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw Scores
+      ctx.font = '800 84px Fredoka';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillText(left.score, cw * 0.25, 110);
+      ctx.fillText(right.score, cw * 0.75, 110);
+
+      // Draw Paddles
+      drawPaddleElement(left, '#3b82f6');
+      drawPaddleElement(right, '#a78bfa');
+
+      // Draw Ball
+      drawBallElement();
+    }
+
+    function drawPaddleElement(p, color) {
+      ctx.shadowBlur = 16 + p.glow * 35;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+
+      ctx.beginPath();
+      // Round rect paddle design
+      ctx.roundRect(p.x, p.y, paddle.width, paddle.height, 8);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawBallElement() {
+      if (gameState === 'hold') return;
+
+      // Draw trail
+      ball.trail.forEach((t, i) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.05 + (i / ball.trail.length) * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, ball.size * (0.4 + (i / ball.trail.length) * 0.6), 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw main ball
+      ctx.fillStyle = 'white';
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = 'white';
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Main Loop ──
+    let lastHostSend = 0;
+
+    function loop() {
+      update();
+      draw();
+
+      // Host sends game state to Guest at ~60 FPS
+      if (gameMode === 'multi' && mpRole === 'X') {
+        const now = performance.now();
+        if (now - lastHostSend > 16) {
+          gameMP.send('move', {
+            game: 'pong',
+            data: {
+              ball: { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, trail: ball.trail },
+              paddles: { left: left.y, right: right.y },
+              glows: { left: left.glow, right: right.glow },
+              scores: { left: left.score, right: right.score },
+              gameState: gameState,
+              countdown: countdown,
+              paused: paused,
+              speedMode: speedMode
+            }
+          });
+          lastHostSend = now;
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // ── Multiplayer Event Receivers ──
+    let opponentReadyState = false;
+    let onMoveHandler, onPaddleUpdateHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onSpeedHandler, onPauseHandler;
+
+    function setupMultiplayerEvents() {
+      // Guest receives state from Host
+      if (mpRole === 'O') {
+        onMoveHandler = ({ game, data }) => {
+          if (game !== 'pong') return;
+          
+          ball.x = data.ball.x;
+          ball.y = data.ball.y;
+          ball.vx = data.ball.vx;
+          ball.vy = data.ball.vy;
+          ball.trail = data.ball.trail || [];
+          
+          left.y = data.paddles.left;
+          left.glow = data.glows.left;
+          right.glow = data.glows.right;
+          
+          // Reconcile guest paddle position if they aren't actively touching/pressing
+          const myHold = checkInputsHold();
+          if (!myHold) {
+            right.y = data.paddles.right;
+          }
+
+          const prevLeftScore = left.score;
+          const prevRightScore = right.score;
+          left.score = data.scores.left;
+          right.score = data.scores.right;
+
+          // Sound triggers on Guest
+          if (left.score !== prevLeftScore || right.score !== prevRightScore) {
+            playSound('score');
+          }
+
+          const prevGameState = gameState;
+          gameState = data.gameState;
+          
+          const prevCountdown = countdown;
+          countdown = data.countdown;
+
+          if (gameState === 'countdown' && countdown !== prevCountdown) {
+            playSound(countdown > 0 ? 'countdown' : 'countdown-start');
+          }
+
+          if (gameState === 'gameover' && prevGameState !== 'gameover') {
+            const isWin = right.score >= 10;
+            playSound(isWin ? 'win' : 'gameover');
+          }
+
+          const prevPaused = paused;
+          paused = data.paused;
+          if (paused !== prevPaused) {
+            pauseBtn.textContent = paused ? '▶' : 'II';
+          }
+
+          const prevSpeed = speedMode;
+          speedMode = data.speedMode;
+          if (speedMode !== prevSpeed) {
+            updateMenuButtons();
+          }
+
+          updateOverlay();
+        };
+        gameMP.on('move', onMoveHandler);
+      }
+
+      // Host receives guest inputs
+      if (mpRole === 'X') {
+        onPaddleUpdateHandler = (data) => {
+          right.y = data.y;
+          opponentReadyState = data.hold;
+        };
+        gameMP.on('paddle_update', onPaddleUpdateHandler);
+      }
+
+      // Speed synchronizer for Guest
+      onSpeedHandler = (data) => {
+        if (mpRole === 'O') {
+          speedMode = data.speedMode;
+          updateMenuButtons();
+        }
+      };
+      gameMP.on('speed_change', onSpeedHandler);
+
+      // Pause synchronizer for Guest
+      onPauseHandler = (data) => {
+        if (mpRole === 'O') {
+          paused = data.paused;
+          pauseBtn.textContent = paused ? '▶' : 'II';
+          updateOverlay();
+        }
+      };
+      gameMP.on('pause_change', onPauseHandler);
+
+      // Chat handlers
+      onChatHandler = ({ text, name }) => {
+        addChatMsg(text, name, false);
+        if (!chatDrawer.classList.contains('open')) {
+          unreadChat++;
+          chatBadgeHdr.textContent = unreadChat;
+          chatBadgeHdr.style.display = 'flex';
+        }
+      };
+      gameMP.on('chat', onChatHandler);
+
+      // Connection states
+      onDisconnectedHandler = () => {
+        showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+        paused = true;
+        updateOverlay();
+        oppRole.textContent = 'Getrennt';
+      };
+      gameMP.on('disconnected', onDisconnectedHandler);
+
+      onMenuHandler = () => {
+        showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
+      };
+      gameMP.on('menu', onMenuHandler);
+
+      onRestartHandler = (data) => {
+        if (data && data.game === 'pong') {
+          restartGame(false);
+          showToast(`${gameMP.opponent || 'Gegner'} hat das Spiel neu gestartet.`);
+        }
+      };
+      gameMP.on('restart_game', onRestartHandler);
+    }
+
+    // Clean up WebRTC listeners when leaving
+    window.addEventListener('unload', () => {
+      if (gameMode === 'multi' && gameMP) {
+        if (onMoveHandler) gameMP.off('move', onMoveHandler);
+        if (onPaddleUpdateHandler) gameMP.off('paddle_update', onPaddleUpdateHandler);
+        if (onChatHandler) gameMP.off('chat', onChatHandler);
+        if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
+        if (onMenuHandler) gameMP.off('menu', onMenuHandler);
+        if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
+        if (onSpeedHandler) gameMP.off('speed_change', onSpeedHandler);
+        if (onPauseHandler) gameMP.off('pause_change', onPauseHandler);
+      }
+    });
+
+    backBtn.addEventListener('click', (e) => {
+      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
+        e.preventDefault();
+        window.parent.closeGameFrame();
+      } else {
+        if (gameMode === 'multi' && gameMP.isConnected()) {
+          gameMP.send('menu');
+        }
+      }
+    });
+
+    // ── Local Chat Drawer ──
+    chatBtn.addEventListener('click', openChat);
+    chatClose.addEventListener('click', closeChat);
+    chatOverlay.addEventListener('click', closeChat);
+
+    function openChat() {
+      chatOverlay.classList.add('open');
+      chatDrawer.classList.add('open');
+      unreadChat = 0;
+      chatBadgeHdr.style.display = 'none';
+      setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
+    }
+    function closeChat() {
+      chatOverlay.classList.remove('open');
+      chatDrawer.classList.remove('open');
+    }
+
+    chatSend.addEventListener('click', sendChat);
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+    function sendChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      if (gameMode === 'multi' && gameMP.isConnected()) {
+        gameMP.send('chat', { text, name: myName });
+        if (window.parent && window.parent.addChatMessageFromGame) {
+          window.parent.addChatMessageFromGame(text, myName, true);
+        }
+      }
+      addChatMsg(text, myName, true);
+      chatInput.value = '';
+    }
+
+    function addChatMsg(text, name, mine) {
+      const msg = { text, name, mine };
+      chatHistory.push(msg);
+      if (chatHistory.length > 100) chatHistory.shift();
+      const key = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      try { localStorage.setItem(`chatPong_${key}`, JSON.stringify(chatHistory)); } catch {}
+      if (chatDrawer.classList.contains('open')) {
+        appendBubble(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+
+    function renderChatHistory() {
+      chatMessages.innerHTML = '';
+      chatHistory.forEach(m => appendBubble(m));
+    }
+
+    function appendBubble({ text, name, mine }) {
+      const div = document.createElement('div');
+      div.className = `chat-msg-local ${mine ? 'mine' : 'theirs'}`;
+      if (!mine) {
+        const n = document.createElement('div');
+        n.className = 'chat-name-local';
+        n.textContent = name;
+        div.appendChild(n);
+      }
+      const t = document.createElement('div');
+      t.textContent = text;
+      div.appendChild(t);
+      chatMessages.appendChild(div);
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Autofocus
+    window.addEventListener('load', () => { window.focus(); });
+    document.addEventListener('click', () => { window.focus(); });
+    document.addEventListener('touchstart', () => { window.focus(); });
+
+    // Initialize Game
+    initMode();
+    resetBall(Math.random() > 0.5 ? 1 : -1);
+    updateOverlay();
+    loop();
+
+  </script>
 </body>
 </html>
