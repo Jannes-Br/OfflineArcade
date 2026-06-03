@@ -23,11 +23,14 @@
     <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
     <header>
       <div class="header-main">
-        <div class="header-left">
-          <h1>OfflineArcade</h1>
-          <span class="player-name-display" id="playerNameDisplay">...</span>
-        </div>
+        <h1>OfflineArcade</h1>
         <div class="header-actions">
+          <!-- Profil-Pill -->
+          <div class="profile-pill" id="profilePill" title="Profil öffnen">
+            <div class="profile-avatar" id="profileAvatar">😎</div>
+            <span class="profile-name" id="playerNameDisplay">...</span>
+          </div>
+
           <button id="chat-header-btn" style="display:none;" title="Chat öffnen">
             💬
             <span class="chat-badge-header" id="chatBadgeHeader" style="display:none;">0</span>
@@ -37,8 +40,6 @@
         </div>
       </div>
     </header>
-
-
     <!-- ═══════════════════════════ MAIN CONTENT ══════════════════════ -->
     <main>
       <div class="games-wrapper">
@@ -108,71 +109,79 @@
 
         </div>
       </div>
-    </main>
 
-    <!-- ═══════════════════════════ MODE TABS (under games) ══════════ -->
-    <div class="mode-tabs" id="modeTabs">
-      <button class="mode-tab active" data-mode="solo"  id="tabSolo">🎮 Solo</button>
-      <button class="mode-tab"        data-mode="bot"   id="tabBot">🤖 vs. Bot</button>
-      <button class="mode-tab"        data-mode="multi" id="tabMulti">📡 Multiplayer</button>
-    </div>
-
-    <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
-    <div class="lobby-panel" id="lobbyPanel" style="display:none;">
-      <div class="lobby-actions" id="lobbyActions">
-        <button class="lobby-btn primary" id="createLobbyBtn">
-          <span>📡</span> Verbindung erstellen
-        </button>
-        <button class="lobby-btn" id="joinLobbyBtn">
-          <span>📋</span> Beitreten (Code einfügen)
-        </button>
+      <!-- ═══════════════════════════ MODE TABS (under games) ══════════ -->
+      <div class="mode-tabs" id="modeTabs">
+        <button class="mode-tab active" data-mode="solo"  id="tabSolo">🎮 Solo</button>
+        <button class="mode-tab"        data-mode="bot"   id="tabBot">🤖 vs. Bot</button>
+        <button class="mode-tab"        data-mode="multi" id="tabMulti">📡 Multiplayer</button>
       </div>
-      <div class="lobby-actions" id="lobbyConnectedActions" style="display:none;">
-        <button class="lobby-btn danger" id="lobbyDisconnectBtn" style="background:#ef4444; color:white; border-color:transparent; box-shadow:0 4px 14px rgba(239,68,68,0.4);">
-          <span>✕</span> Verbindung trennen
-        </button>
-      </div>
-      <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und tausche den Code per Kopieren/Teilen aus.</p>
-    </div>
 
-    <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
-    <div class="instructions-wrap" id="instructionsWrap">
-      <button class="instructions-toggle" id="instructionsToggle">
-        ℹ️ So funktioniert OfflineArcade <span class="instr-arrow">▾</span>
-      </button>
-      <div class="instructions-body" id="instructionsBody">
-        <div class="instr-grid">
-          <div class="instr-item">
-            <div class="instr-icon">🎮</div>
-            <div><strong>Solo</strong> – Alleine oder zu zweit auf einem Gerät spielen.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">🤖</div>
-            <div><strong>vs. Bot</strong> – Tritt gegen eine KI auf deinem Gerät an.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">📡</div>
-            <div><strong>Multiplayer</strong> – Verbinde dich per Code-Austausch mit einem Freund im gleichen WLAN.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">📶</div>
-            <div>Spiele sind <strong>offline spielbar</strong>, sobald die Seite einmal mit Internet geöffnet wurde.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">1️⃣</div>
-            <div>Drücke <strong>„Verbindung erstellen"</strong> – kopiere oder teile deinen Host-Code.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">2️⃣</div>
-            <div>Dein Freund klickt <strong>„Beitreten"</strong>, fügt deinen Code ein und teilt seinen Code.</div>
-          </div>
-          <div class="instr-item">
-            <div class="instr-icon">3️⃣</div>
-            <div>Du fügst seinen Antwort-Code ein → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
+      <!-- ═══════════════════════════ LOBBY PANEL ═══════════════════════ -->
+      <div class="lobby-panel" id="lobbyPanel" style="display:none;">
+        <div class="lobby-actions" id="lobbyActions">
+          <button class="lobby-btn primary" id="createLobbyBtn">
+            <span>📡</span> Verbindung erstellen
+          </button>
+          <button class="lobby-btn" id="joinLobbyBtn">
+            <span>📋</span> Beitreten (Code einfügen)
+          </button>
+        </div>
+        <div class="lobby-actions" id="lobbyConnectedActions" style="display:none;">
+          <button class="lobby-btn danger" id="lobbyDisconnectBtn" style="background:#ef4444; color:white; border-color:transparent; box-shadow:0 4px 14px rgba(239,68,68,0.4);">
+            <span>✕</span> Verbindung trennen
+          </button>
+        </div>
+        <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und tausche den Code per Kopieren/Teilen aus.</p>
+      </div>
+
+      <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
+      <div class="instructions-wrap" id="instructionsWrap">
+        <button class="instructions-toggle" id="instructionsToggle">
+          ℹ️ So funktioniert OfflineArcade <span class="instr-arrow">▾</span>
+        </button>
+        <div class="instructions-body" id="instructionsBody">
+          <div class="instr-grid">
+            <div class="instr-item">
+              <div class="instr-icon">🎮</div>
+              <div><strong>Solo</strong> – Alleine oder zu zweit auf einem Gerät spielen.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">🤖</div>
+              <div><strong>vs. Bot</strong> – Tritt gegen eine KI auf deinem Gerät an.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">📡</div>
+              <div><strong>Multiplayer</strong> – Verbinde dich per Code-Austausch mit einem Freund im gleichen WLAN.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">📶</div>
+              <div>Spiele sind <strong>offline spielbar</strong>, sobald die Seite einmal mit Internet geöffnet wurde.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">1️⃣</div>
+              <div>Drücke <strong>„Verbindung erstellen"</strong> – kopiere oder teile deinen Host-Code.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">2️⃣</div>
+              <div>Dein Freund klickt <strong>„Beitreten"</strong>, fügt deinen Code ein und teilt seinen Code.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">3️⃣</div>
+              <div>Du fügst seinen Antwort-Code ein → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">📵</div>
+              <div><strong>Bildschirm an lassen!</strong> Sperrt sich ein Gerät, bricht die Verbindung ab.</div>
+            </div>
+            <div class="instr-item">
+              <div class="instr-icon">📶</div>
+              <div>Bleibt im <strong>selben WLAN</strong> oder Hotspot – Verbindungswechsel trennt die Verbindung.</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <!-- ═══════════════════════════ FOOTER ════════════════════════════ -->
     <div class="footer">
@@ -213,6 +222,27 @@
         <input type="text" id="nameInput" class="setting-input" maxlength="20" placeholder="Dein Name...">
         <button class="setting-save-btn" id="nameSaveBtn">✓</button>
       </div>
+
+      <label class="setting-label" style="margin-top:18px;">Profilbild</label>
+      <div class="avatar-grid" id="avatarGrid">
+        <button class="avatar-option" data-emoji="😎">😎</button>
+        <button class="avatar-option" data-emoji="🦊">🦊</button>
+        <button class="avatar-option" data-emoji="🐼">🐼</button>
+        <button class="avatar-option" data-emoji="🐯">🐯</button>
+        <button class="avatar-option" data-emoji="🦁">🦁</button>
+        <button class="avatar-option" data-emoji="🐸">🐸</button>
+        <button class="avatar-option" data-emoji="🦄">🦄</button>
+        <button class="avatar-option" data-emoji="🐲">🐲</button>
+        <button class="avatar-option" data-emoji="🤖">🤖</button>
+        <button class="avatar-option" data-emoji="👾">👾</button>
+        <button class="avatar-option" data-emoji="💀">💀</button>
+        <button class="avatar-option" data-emoji="🎃">🎃</button>
+        <button class="avatar-option" data-emoji="🌙">🌙</button>
+        <button class="avatar-option" data-emoji="⚡">⚡</button>
+        <button class="avatar-option" data-emoji="🔥">🔥</button>
+        <button class="avatar-option" data-emoji="💎">💎</button>
+      </div>
+
       <label class="setting-label" style="margin-top:18px;">Design</label>
       <div class="setting-row">
         <button class="setting-theme-btn" id="themeToggleDrawer">☀️ Light Mode</button>
