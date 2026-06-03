@@ -1,32 +1,32 @@
 /* ============================================================
-   OfflineArcade – style.css  (v83 – Layout & Frame Support)
+   OfflineArcade – style.css  (v71 – Mode tabs moved to bottom)
    ============================================================ */
 
 /* ───────────────────────── CSS VARIABLES ────────────────────── */
 :root {
-  --bg-color: #f8fafc;
+  --bg-color: #f0f7ff;
   --text-color: #0f172a;
-  --text-gradient: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+  --text-gradient: linear-gradient(135deg, #0f172a 0%, #0f172a 100%);
 
-  --bg-radial-1: rgba(59, 130, 246, 0.08);
-  --bg-radial-2: rgba(147, 51, 234, 0.08);
-  --bg-linear: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --bg-radial-1: rgba(59, 130, 246, 0.18);
+  --bg-radial-2: rgba(147, 196, 255, 0.22);
+  --bg-linear: linear-gradient(180deg, #e8f4ff 0%, #f0f7ff 100%);
 
-  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-bg: rgba(255, 255, 255, 0.82);
   --card-border: rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --card-hover-border: rgba(59, 130, 246, 0.5);
-  --card-hover-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --card-hover-border: var(--accent);
+  --card-hover-shadow: 0 0 25px var(--accent-glow);
 
   --box-bg: rgba(255, 255, 255, 0.75);
   --box-border: rgba(0, 0, 0, 0.08);
   --box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 
-  --btn-bg: rgba(0, 0, 0, 0.04);
-  --btn-border: rgba(0, 0, 0, 0.08);
-  --btn-color: #0f172a;
-  --btn-hover-bg: rgba(0, 0, 0, 0.08);
-  --btn-hover-border: rgba(59, 130, 246, 0.4);
+  --btn-bg: rgba(59, 130, 246, 0.10);
+  --btn-border: rgba(59, 130, 246, 0.22);
+  --btn-color: #1e40af;
+  --btn-hover-bg: rgba(59, 130, 246, 0.18);
+  --btn-hover-border: rgba(59, 130, 246, 0.5);
 
   --tab-active-bg: #3b82f6;
   --tab-active-color: #fff;
@@ -38,6 +38,8 @@
   --modal-bg: #ffffff;
   --input-bg: rgba(0,0,0,0.04);
   --input-border: rgba(0,0,0,0.12);
+  --pill-bg: rgba(255,255,255,0.75);
+  --pill-border: rgba(59,130,246,0.25);
 }
 
 body.dark-mode {
@@ -52,8 +54,8 @@ body.dark-mode {
   --card-bg: rgba(255, 255, 255, 0.06);
   --card-border: rgba(255, 255, 255, 0.08);
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --card-hover-border: rgba(76, 201, 240, 0.55);
-  --card-hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  --card-hover-border: var(--accent);
+  --card-hover-shadow: 0 0 25px var(--accent-glow);
 
   --box-bg: rgba(0, 0, 0, 0.5);
   --box-border: rgba(255, 255, 255, 0.08);
@@ -75,6 +77,8 @@ body.dark-mode {
   --modal-bg: #1e293b;
   --input-bg: rgba(255,255,255,0.06);
   --input-border: rgba(255,255,255,0.12);
+  --pill-bg: rgba(255,255,255,0.07);
+  --pill-border: rgba(255,255,255,0.12);
 }
 
 /* ───────────────────────── RESET ────────────────────────────── */
@@ -115,29 +119,57 @@ body { position: fixed; inset: 0; }
 /* ───────────────────────── HEADER ───────────────────────────── */
 header {
   padding: max(20px, env(safe-area-inset-top)) 20px 0;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 .header-main {
   display: flex; align-items: center;
   justify-content: space-between; gap: 12px;
-}
-.header-left {
-  display: flex; flex-direction: column; gap: 2px;
+  margin-bottom: 10px;
 }
 h1 {
   margin: 0;
-  font-size: 42px; font-weight: 800;
+  font-size: 110px; font-weight: 900;
   background: var(--text-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  line-height: 1.1;
+  line-height: 1;
+  letter-spacing: -3px;
 }
-.player-name-display {
-  font-size: 12px; font-weight: 600;
-  opacity: 0.55;
-  letter-spacing: 0.3px;
+
+/* ── Profile Pill ── */
+.profile-pill {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--pill-bg, rgba(255,255,255,0.75));
+  border: 1px solid var(--pill-border, rgba(59,130,246,0.25));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 50px;
+  padding: 5px 16px 5px 5px;
+  cursor: pointer;
+  width: fit-content;
+  max-width: 240px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
+.profile-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 18px var(--accent-glow);
+}
+.profile-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.profile-name {
+  font-size: 14px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-color);
+}
+
 .header-actions { display: flex; gap: 8px; }
 #chat-header-btn, #random-btn, #settings-btn {
   border: 1px solid var(--btn-border);
@@ -150,7 +182,7 @@ h1 {
   font-size: 20px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  position: relative; /* Für die Badge-Positionierung */
+  position: relative;
   transition: transform 0.2s, background 0.2s, border-color 0.2s;
 }
 #chat-header-btn:hover, #random-btn:hover, #settings-btn:hover {
@@ -247,7 +279,7 @@ h1 {
 
 /* ───────────────────────── GAME GRID ────────────────────────── */
 main {
-  flex: 1; display: flex; align-items: flex-start; overflow: hidden; min-height: 0;
+  flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0;
 }
 .games-wrapper {
   width: 100%;
@@ -256,6 +288,7 @@ main {
   -webkit-overflow-scrolling: touch;
   padding: 16px 20px 20px;
   scrollbar-width: none;
+  flex-shrink: 0;
 }
 .games-wrapper::-webkit-scrollbar { display: none; }
 .game-grid { display: flex; gap: 18px; }
@@ -278,6 +311,7 @@ main {
   transform: translateY(-8px);
   border-color: var(--card-hover-border);
   box-shadow: var(--card-hover-shadow);
+  background: var(--card-bg);
 }
 .game-card.mp-disabled {
   opacity: 0.35;
@@ -331,7 +365,7 @@ main {
 /* ───────────────────────── MODE TABS (below games) ──────────── */
 .mode-tabs {
   display: flex; gap: 6px;
-  margin: 0 20px 0;
+  margin: 10px 20px 0;
   padding: 4px;
   background: var(--box-bg);
   border: 1px solid var(--box-border);
@@ -386,6 +420,28 @@ main {
   font-size: 11px; opacity: 0.8; line-height: 1.4;
 }
 .instr-icon { font-size: 16px; flex-shrink: 0; }
+
+/* ───────────────────────── CHAT FAB ─────────────────────────── */
+.chat-fab {
+  position: fixed; bottom: 90px; right: 18px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: none; color: #fff; font-size: 22px;
+  cursor: pointer; z-index: 200;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px var(--accent-glow); }
+.chat-fab:active { transform: scale(0.95); }
+.chat-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #ef4444; color: #fff;
+  font-size: 10px; font-weight: 800;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-color);
+}
 
 /* ───────────────────────── OVERLAY / DRAWER ─────────────────── */
 .overlay {
@@ -463,6 +519,35 @@ main {
 }
 .setting-danger-btn:hover { background: rgba(239,68,68,0.2); }
 
+/* ───────────────────────── AVATAR GRID ──────────────────────── */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.avatar-option {
+  aspect-ratio: 1;
+  border: 2px solid var(--btn-border);
+  background: var(--btn-bg);
+  border-radius: 14px;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.avatar-option:hover {
+  transform: scale(1.12);
+  border-color: var(--accent);
+  background: var(--btn-hover-bg);
+}
+.avatar-option.selected {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.15);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  transform: scale(1.08);
+}
+
 /* ───────────────────────── MODALS ───────────────────────────── */
 .modal-overlay {
   position: fixed; inset: 0;
@@ -532,6 +617,29 @@ main {
   animation: pulse 1.5s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+.camera-wrap {
+  position: relative; width: 100%; border-radius: 16px; overflow: hidden;
+  background: #000; aspect-ratio: 1;
+}
+.camera-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scan-reticle {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.scan-reticle::before {
+  content: '';
+  width: 65%; aspect-ratio: 1;
+  border: 3px solid rgba(56,189,248,0.9);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+  animation: scanPulse 2s infinite;
+}
+@keyframes scanPulse {
+  0%,100% { border-color: rgba(56,189,248,0.9); }
+  50%      { border-color: rgba(56,189,248,0.4); }
+}
 
 /* ───────────────────────── SUGGEST TOAST ────────────────────── */
 .suggest-toast {
@@ -647,7 +755,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 #app-info {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; min-width: 160px;
-  margin-left: auto;
+  margin-left: auto; /* Push version info to the right */
 }
 .info-left { display: flex; flex-direction: column; }
 .status-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
@@ -674,7 +782,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 
 /* ───────────────────────── RESPONSIVE ───────────────────────── */
 @media (max-width: 700px) {
-  h1 { font-size: 30px; }
+  h1 { font-size: 70px; letter-spacing: -2px; }
   .game-card { width: 185px; }
   .game-thumb { height: 108px; }
   .instr-grid { grid-template-columns: 1fr; }
@@ -687,8 +795,9 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   #install-info, #app-info { width: 100%; max-width: 320px; }
 }
 @media (max-height: 550px) {
-  header { padding: max(8px,env(safe-area-inset-top)) 20px 0; }
-  h1 { font-size: 24px; }
+  header { padding: max(8px,env(safe-area-inset-top)) 20px 0; margin-bottom: 6px; }
+  h1 { font-size: 50px; letter-spacing: -1px; }
+  .profile-pill { display: none; }
   .mode-tabs { margin: 0 20px; }
   .mode-tab { padding: 6px 4px; font-size: 11px; }
   .games-wrapper { padding: 10px 20px 14px; }
@@ -704,6 +813,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   #online-status, .version-row { display: none; }
   #reload-btn { width: 30px; height: 30px; font-size: 14px; }
   .instructions-wrap { display: none; }
+  .chat-fab { bottom: 60px; width: 44px; height: 44px; font-size: 18px; }
   .connection-bar { margin: 4px 20px 0; padding: 8px 12px; }
   .lobby-panel { margin: 4px 20px 0; padding: 10px; }
 }
