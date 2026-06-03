@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v86';
+const CACHE_VERSION = 'v88';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048'];
 
 /* ── Random name generator ── */
@@ -27,6 +27,7 @@ function showToast(msg, ms = 2800) {
 /* ── State ── */
 let currentMode    = localStorage.getItem('gameMode') || 'solo';
 let playerName     = localStorage.getItem('playerName') || '';
+let playerAvatar   = localStorage.getItem('playerAvatar') || '😎';
 let unreadChat     = 0;
 let chatHistory    = {};
 let scanStream     = null;
@@ -127,8 +128,36 @@ document.addEventListener('DOMContentLoaded', () => {
     playerName = randomName();
     localStorage.setItem('playerName', playerName);
   }
+
+  /* Avatar */
+  const profileAvatarEl = document.getElementById('profileAvatar');
+  if (profileAvatarEl) profileAvatarEl.textContent = playerAvatar;
+
   if (nameDisplay) nameDisplay.textContent = playerName;
   if (nameInput) nameInput.value = playerName;
+
+  /* Avatar grid: mark selected */
+  function refreshAvatarGrid() {
+    document.querySelectorAll('.avatar-option').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.emoji === playerAvatar);
+    });
+  }
+  refreshAvatarGrid();
+
+  /* Avatar grid click */
+  document.querySelectorAll('.avatar-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playerAvatar = btn.dataset.emoji;
+      localStorage.setItem('playerAvatar', playerAvatar);
+      if (profileAvatarEl) profileAvatarEl.textContent = playerAvatar;
+      refreshAvatarGrid();
+      showToast('Profilbild gespeichert! ' + playerAvatar);
+    });
+  });
+
+  /* Profile pill opens settings */
+  const profilePill = document.getElementById('profilePill');
+  if (profilePill) profilePill.addEventListener('click', openSettings);
 
   applyTheme();
   setMode(currentMode, false);
@@ -214,7 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const old  = card.querySelector('.solo-badge');
       if (old) old.remove();
 
-      if (mode === 'multi' && connected && !isMP) {
+      // Disable non-MP cards when in bot or multi mode
+      const shouldDisable = (mode === 'bot' || mode === 'multi') && !isMP;
+      if (shouldDisable) {
         card.classList.add('mp-disabled');
         const badge = document.createElement('div');
         badge.className   = 'solo-badge';
@@ -467,7 +498,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
-    if (gameFrame) gameFrame.src = `games/${game}/index.html`;
+    if (gameFrame) {
+      gameFrame.src = `games/${game}/index.html`;
+      gameFrame.onload = () => {
+        try {
+          gameFrame.contentWindow.focus();
+        } catch (e) {
+          console.warn("Could not focus gameFrame window:", e);
+        }
+      };
+    }
     if (gameFrameOverlay) gameFrameOverlay.style.display = "flex";
   }
   window.openGameFrame = openGameFrame;
@@ -567,8 +607,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (randomBtn) randomBtn.addEventListener('click', startLuckySpin);
 
   function startLuckySpin() {
-    const cards = [...document.querySelectorAll('.game-card:not(.mp-disabled)')];
-    if (!cards.length) return;
+    // In bot/multi mode: only spin among MP-capable games
+    let cards;
+    if (currentMode === 'bot' || currentMode === 'multi') {
+      cards = [...document.querySelectorAll('.game-card[data-multiplayer="true"]')];
+    } else {
+      cards = [...document.querySelectorAll('.game-card')];
+    }
+    if (!cards.length) { if (randomBtn) { randomBtn.disabled = false; randomBtn.style.opacity = '1'; } return; }
     if (randomBtn) {
       randomBtn.disabled     = true;
       randomBtn.style.opacity = '0.5';
