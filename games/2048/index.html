@@ -347,7 +347,7 @@
       border-radius: 24px;
       aspect-ratio: 1;
       width: 100%;
-      max-width: 100%;
+      max-width: min(100%, calc(100vh - 380px));
       max-height: 100%;
       touch-action: none;
       user-select: none;
@@ -1059,11 +1059,11 @@
         chatWith.textContent = opponent;
         oppAvatar.textContent = opponent[0].toUpperCase();
         oppName.textContent = opponent;
-        oppRole.textContent = `Spielt ${mySymbol === 'X' ? 'O' : 'X'}`;
+        oppRole.textContent = 'Verbunden';
         opponentBar.classList.add('show');
 
-        p1Label.textContent = mySymbol === 'X' ? '👤 Du (X)' : `👤 ${opponent} (X)`;
-        p2Label.textContent = mySymbol === 'O' ? '👤 Du (O)' : `👤 ${opponent} (O)`;
+        p1Label.textContent = mySymbol === 'X' ? '👤 Du' : `👤 ${opponent}`;
+        p2Label.textContent = mySymbol === 'O' ? '👤 Du' : `👤 ${opponent}`;
 
         try { chatHistory = JSON.parse(localStorage.getItem(`chat2048_${opponent}`) || '[]'); } catch {}
         renderChatHistory();
@@ -1242,7 +1242,7 @@
       });
 
       if (isMyTurnNow) {
-        messageElement.textContent = `✅ Du bist dran (${mySymbol})`;
+        messageElement.textContent = `✅ Du bist dran`;
       } else {
         messageElement.textContent = `⏳ ${gameMP.opponent || 'Gegner'} ist dran…`;
       }
@@ -1843,31 +1843,43 @@
 
     let startX = 0;
     let startY = 0;
+    let touchActive = false;
 
     board.addEventListener('touchstart', e => {
+      if (e.touches.length > 1) return; // ignore multi-touch
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
+      touchActive = true;
     }, { passive: true });
 
-    board.addEventListener('touchend', e => {
-      if (deleteMode || mergeMode || !gameActive || isMoving) return;
-
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 40) move('right');
-        else if (dx < -40) move('left');
-      } else {
-        if (dy > 40) move('down');
-        else if (dy < -40) move('up');
-      }
-    }, { passive: true });
-
-    // Prevent iPad bouncing scroll while playing swipes on the board
     board.addEventListener('touchmove', e => {
-      e.preventDefault();
+      if (!touchActive || deleteMode || mergeMode || !gameActive || isMoving) return;
+
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      const threshold = 30; // 30px swipe threshold
+
+      if (Math.max(Math.abs(dx), Math.abs(dy)) > threshold) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 0) move('right');
+          else move('left');
+        } else {
+          if (dy > 0) move('down');
+          else move('up');
+        }
+        touchActive = false; // Disable further moves for this swipe until next touchstart
+      }
+
+      if (e.cancelable) e.preventDefault();
     }, { passive: false });
+
+    board.addEventListener('touchend', () => {
+      touchActive = false;
+    });
+
+    board.addEventListener('touchcancel', () => {
+      touchActive = false;
+    });
 
     /* ═══════════════════════════════════════════════════════
        CONTROLS BINDINGS
