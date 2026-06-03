@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with multiplayer)
    ============================================================ */
 
-const CACHE_VERSION = 'v85';
+const CACHE_VERSION = 'v86';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048'];
 
 /* ── Random name generator ── */
@@ -17,6 +17,7 @@ function randomName() {
 let toastTimer = null;
 function showToast(msg, ms = 2800) {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
@@ -106,24 +107,28 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.serviceWorker.register('sw.js').then(reg => {
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
-        w.addEventListener('statechange', () => {
-          if (w.state === 'installed' && navigator.serviceWorker.controller) {
-            reloadBtn.classList.add('pulse');
-            reloadBtn.title = 'Update verfügbar!';
-          }
-        });
+        if (w) {
+          w.addEventListener('statechange', () => {
+            if (w.state === 'installed' && navigator.serviceWorker.controller) {
+              if (reloadBtn) {
+                reloadBtn.classList.add('pulse');
+                reloadBtn.title = 'Update verfügbar!';
+              }
+            }
+          });
+        }
       });
     });
   }
 
-  versionEl.textContent = CACHE_VERSION;
+  if (versionEl) versionEl.textContent = CACHE_VERSION;
 
   if (!playerName) {
     playerName = randomName();
     localStorage.setItem('playerName', playerName);
   }
-  nameDisplay.textContent = playerName;
-  nameInput.value = playerName;
+  if (nameDisplay) nameDisplay.textContent = playerName;
+  if (nameInput) nameInput.value = playerName;
 
   applyTheme();
   setMode(currentMode, false);
@@ -137,27 +142,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyTheme() {
     const t = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('dark-mode', t === 'dark');
-    themeToggleDrawer.textContent = t === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    if (themeToggleDrawer) {
+      themeToggleDrawer.textContent = t === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
   }
   function toggleTheme() {
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('theme', isDark ? 'light' : 'dark');
     applyTheme();
   }
-  themeToggleDrawer.addEventListener('click', toggleTheme);
+  if (themeToggleDrawer) themeToggleDrawer.addEventListener('click', toggleTheme);
 
   /* ══════════════════ ONLINE STATUS ══════════════════ */
   function updateOnlineStatus() {
     if (navigator.onLine) {
-      statusDot.style.background = '#22c55e';
-      statusDot.style.boxShadow  = '0 0 8px #22c55e';
-      onlineStatusEl.textContent = 'Online';
-      reloadBtn.style.display    = 'flex';
+      if (statusDot) {
+        statusDot.style.background = '#22c55e';
+        statusDot.style.boxShadow  = '0 0 8px #22c55e';
+      }
+      if (onlineStatusEl) onlineStatusEl.textContent = 'Online';
+      if (reloadBtn) reloadBtn.style.display    = 'flex';
     } else {
-      statusDot.style.background = '#ef4444';
-      statusDot.style.boxShadow  = '0 0 8px #ef4444';
-      onlineStatusEl.textContent = 'Offline';
-      reloadBtn.style.display    = 'none';
+      if (statusDot) {
+        statusDot.style.background = '#ef4444';
+        statusDot.style.boxShadow  = '0 0 8px #ef4444';
+      }
+      if (onlineStatusEl) onlineStatusEl.textContent = 'Offline';
+      if (reloadBtn) reloadBtn.style.display    = 'none';
     }
   }
 
@@ -171,20 +182,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMulti   = mode === 'multi';
     const connected = MP.isConnected();
 
-    lobbyPanel.style.display             = isMulti ? 'block' : 'none';
-    chatFab.style.display                = (isMulti &&  connected) ? 'flex'  : 'none';
-    settingsDisconnectWrap.style.display = (isMulti &&  connected) ? 'block' : 'none';
+    if (lobbyPanel) lobbyPanel.style.display             = isMulti ? 'block' : 'none';
+    if (chatFab) chatFab.style.display                = (isMulti &&  connected) ? 'flex'  : 'none';
+    if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = (isMulti &&  connected) ? 'block' : 'none';
 
     if (isMulti) {
       if (connected) {
-        lobbyActions.style.display = 'none';
-        lobbyConnectedActions.style.display = 'flex';
-        lobbyDisconnectBtn.innerHTML = `<span>✕</span> Verbindung trennen (mit <strong>${MP.opponent || 'Gegner'}</strong> verbunden)`;
-        lobbyHint.textContent = `Wähle ein spiel aus, um zu starten.`;
+        if (lobbyActions) lobbyActions.style.display = 'none';
+        if (lobbyConnectedActions) lobbyConnectedActions.style.display = 'flex';
+        if (lobbyDisconnectBtn) lobbyDisconnectBtn.innerHTML = `<span>✕</span> Verbindung trennen (mit <strong>${MP.opponent || 'Gegner'}</strong> verbunden)`;
+        if (lobbyHint) lobbyHint.textContent = `Wähle ein spiel aus, um zu starten.`;
       } else {
-        lobbyActions.style.display = 'flex';
-        lobbyConnectedActions.style.display = 'none';
-        lobbyHint.textContent = 'Erstelle eine Verbindung und tausche den Code aus.';
+        if (lobbyActions) lobbyActions.style.display = 'flex';
+        if (lobbyConnectedActions) lobbyConnectedActions.style.display = 'none';
+        if (lobbyHint) lobbyHint.textContent = 'Erstelle eine Verbindung und tausche den Code aus.';
       }
     }
 
@@ -196,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tab.addEventListener('click', () => setMode(tab.dataset.mode));
   });
 
-  /* ══════════════════ CARD STATES ══════════════════ */
+  /* ── CARD STATES ── */
   function updateCardStates(mode, connected) {
     gameCards.forEach(card => {
       const isMP = card.dataset.multiplayer === 'true';
@@ -215,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ══════════════════ GAME CARD CLICK ══════════════════ */
+  /* ── GAME CARD CLICK ── */
   gameCards.forEach(card => {
     card.addEventListener('click', (e) => {
       if (card.classList.contains('mp-disabled')) { e.preventDefault(); return; }
@@ -233,41 +244,41 @@ document.addEventListener('DOMContentLoaded', () => {
           openGameFrame(game);
         }
       } else {
-        // Solo or Bot mode
         openGameFrame(game);
       }
     });
   });
 
-  /* ══════════════════ SETTINGS DRAWER ══════════════════ */
-  settingsBtn.addEventListener('click', openSettings);
-  settingsClose.addEventListener('click', closeSettings);
-  settingsOverlay.addEventListener('click', closeSettings);
+  /* ── SETTINGS DRAWER ── */
+  if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+  if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+  if (settingsOverlay) settingsOverlay.addEventListener('click', closeSettings);
 
   function openSettings() {
-    nameInput.value = playerName;
-    settingsOverlay.classList.add('open');
-    settingsDrawer.classList.add('open');
+    if (nameInput) nameInput.value = playerName;
+    if (settingsOverlay) settingsOverlay.classList.add('open');
+    if (settingsDrawer) settingsDrawer.classList.add('open');
   }
   function closeSettings() {
-    settingsOverlay.classList.remove('open');
-    settingsDrawer.classList.remove('open');
+    if (settingsOverlay) settingsOverlay.classList.remove('open');
+    if (settingsDrawer) settingsDrawer.classList.remove('open');
   }
 
-  nameSaveBtn.addEventListener('click', saveName);
-  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+  if (nameSaveBtn) nameSaveBtn.addEventListener('click', saveName);
+  if (nameInput) nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
   function saveName() {
+    if (!nameInput) return;
     const n = nameInput.value.trim();
     if (!n) return;
     playerName = n;
     localStorage.setItem('playerName', playerName);
-    nameDisplay.textContent = playerName;
+    if (nameDisplay) nameDisplay.textContent = playerName;
     showToast('Name gespeichert! 👋');
     closeSettings();
   }
 
-  lobbyDisconnectBtn.addEventListener('click', doDisconnect);
-  settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
+  if (lobbyDisconnectBtn) lobbyDisconnectBtn.addEventListener('click', doDisconnect);
+  if (settingsDisconnectBtn) settingsDisconnectBtn.addEventListener('click', () => { closeSettings(); doDisconnect(); });
 
   function doDisconnect() {
     MP.disconnect();
@@ -277,23 +288,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
   MP.on('connected', ({ opponent }) => {
-    chatPartnerName.textContent = opponent || 'Gegner';
+    if (chatPartnerName) chatPartnerName.textContent = opponent || 'Gegner';
     closeAllModals();
     setMode(currentMode, false);
     showToast(`✅ Verbunden mit ${opponent}!`);
   });
 
   MP.on('disconnected', ({ opponent }) => {
-    MP.disconnect(); // Sauberen Reset durchführen
+    MP.disconnect();
     onDisconnected();
     if (opponent) showToast(`${opponent} hat die Verbindung getrennt.`);
   });
 
   MP.on('suggest', ({ game }) => {
     gameCards.forEach(c => c.classList.toggle('suggested', c.dataset.game === game));
-    suggestText.textContent    = `${MP.opponent} schlägt ${game} vor!`;
-    suggestToast.style.display = 'block';
-    setTimeout(() => { suggestToast.style.display = 'none'; }, 4000);
+    if (suggestText) suggestText.textContent = `${MP.opponent} schlägt ${game} vor!`;
+    if (suggestToast) suggestToast.style.display = 'block';
+    setTimeout(() => { if (suggestToast) suggestToast.style.display = 'none'; }, 4000);
   });
 
   MP.on('start', ({ game }) => {
@@ -303,10 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   MP.on('chat', ({ text, name }) => {
     addChatMessage(text, name, false);
-    if (!chatDrawer.classList.contains('open')) {
+    if (chatDrawer && !chatDrawer.classList.contains('open')) {
       unreadChat++;
-      chatBadge.textContent    = unreadChat;
-      chatBadge.style.display  = 'flex';
+      if (chatBadge) {
+        chatBadge.textContent   = unreadChat;
+        chatBadge.style.display = 'flex';
+      }
     }
   });
 
@@ -316,132 +329,152 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function onDisconnected() {
-    chatFab.style.display                = 'none';
-    settingsDisconnectWrap.style.display = 'none';
+    if (chatFab) chatFab.style.display = 'none';
+    if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
     gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
     document.querySelectorAll('.solo-badge').forEach(b => b.remove());
     setMode(currentMode, false);
   }
 
   /* ══════════════════ HOST FLOW ══════════════════ */
-  createLobbyBtn.addEventListener('click', async () => {
-    hostCodeBox.innerHTML          = '';
-    hostCodeBox.style.display      = 'none';
-    hostShareActions.style.display = 'none';
-    hostPasteGuestBtn.style.display = 'none';
-    hostSpinner.style.display      = 'block';
-    hostQrSubtitle.textContent     = 'Code wird erstellt…';
-    openModal(hostQrOverlay);
-
-    try {
-      const encoded = await MP.createOffer(playerName);
-      hostSpinner.style.display  = 'none';
-      hostQrSubtitle.textContent = 'Teile diesen Code mit deinem Gast:';
-      hostCodeBox.textContent    = encoded;
-      hostCodeBox.style.display  = 'block';
-      hostShareActions.style.display = 'flex';
-      hostPasteGuestBtn.style.display = 'flex';
-
-      hostCopyBtn.onclick = () => {
-        navigator.clipboard.writeText(encoded)
-          .then(() => showToast('📋 Code kopiert!'))
-          .catch(() => showToast('❌ Fehler beim Kopieren.'));
-      };
-
-      hostShareBtn.onclick = () => {
-        if (navigator.share) {
-          navigator.share({
-            title: 'OfflineArcade Verbindung',
-            text: encoded
-          }).then(() => showToast('Erfolgreich geteilt!'))
-            .catch(() => {});
-        } else {
-          showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
-        }
-      };
-    } catch(e) {
-      hostQrSubtitle.textContent = '❌ Fehler beim Erstellen. Nochmal versuchen.';
-      hostSpinner.style.display  = 'none';
-    }
-  });
-
-  hostPasteGuestBtn.addEventListener('click', async () => {
-    let text = "";
-    try { text = await navigator.clipboard.readText(); } catch(e) {}
-    if (!text) text = prompt("Füge den Verbindungscode des Gastes hier ein:");
-    text = text ? text.trim() : "";
-    if (!text) return;
-    closeModal(hostQrOverlay);
-    try {
-      await MP.receiveAnswer(text);
-    } catch(e) {
-      showToast('❌ Ungültiger Code.');
+  if (createLobbyBtn) {
+    createLobbyBtn.addEventListener('click', async () => {
+      if (hostCodeBox) {
+        hostCodeBox.innerHTML = '';
+        hostCodeBox.style.display = 'none';
+      }
+      if (hostShareActions) hostShareActions.style.display = 'none';
+      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
+      if (hostSpinner) hostSpinner.style.display = 'block';
+      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Code wird erstellt…';
       openModal(hostQrOverlay);
-    }
-  });
 
-  hostQrClose.addEventListener('click',  () => { closeModal(hostQrOverlay);  MP.disconnect(); });
+      try {
+        const encoded = await MP.createOffer(playerName);
+        if (hostSpinner) hostSpinner.style.display  = 'none';
+        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Teile diesen Code mit deinem Gast:';
+        if (hostCodeBox) {
+          hostCodeBox.textContent    = encoded;
+          hostCodeBox.style.display  = 'block';
+        }
+        if (hostShareActions) hostShareActions.style.display = 'flex';
+        if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'flex';
+
+        if (hostCopyBtn) {
+          hostCopyBtn.onclick = () => {
+            navigator.clipboard.writeText(encoded)
+              .then(() => showToast('📋 Code kopiert!'))
+              .catch(() => showToast('❌ Fehler beim Kopieren.'));
+          };
+        }
+
+        if (hostShareBtn) {
+          hostShareBtn.onclick = () => {
+            if (navigator.share) {
+              navigator.share({
+                title: 'OfflineArcade Verbindung',
+                text: encoded
+              }).then(() => showToast('Erfolgreich geteilt!'))
+                .catch(() => {});
+            } else {
+              showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
+            }
+          };
+        }
+      } catch(e) {
+        if (hostQrSubtitle) hostQrSubtitle.textContent = '❌ Fehler beim Erstellen. Nochmal versuchen.';
+        if (hostSpinner) hostSpinner.style.display  = 'none';
+      }
+    });
+  }
+
+  if (hostPasteGuestBtn) {
+    hostPasteGuestBtn.addEventListener('click', async () => {
+      let text = "";
+      try { text = await navigator.clipboard.readText(); } catch(e) {}
+      if (!text) text = prompt("Füge den Verbindungscode des Gastes hier ein:");
+      text = text ? text.trim() : "";
+      if (!text) return;
+      closeModal(hostQrOverlay);
+      try {
+        await MP.receiveAnswer(text);
+      } catch(e) {
+        showToast('❌ Ungültiger Code.');
+        openModal(hostQrOverlay);
+      }
+    });
+  }
+
+  if (hostQrClose) hostQrClose.addEventListener('click',  () => { closeModal(hostQrOverlay);  MP.disconnect(); });
 
   /* ══════════════════ GUEST FLOW ══════════════════ */
-  joinLobbyBtn.addEventListener('click', () => {
-    guestScanStep.style.display   = 'block';
-    guestAnswerStep.style.display = 'none';
-    openModal(guestJoinOverlay);
-  });
+  if (joinLobbyBtn) {
+    joinLobbyBtn.addEventListener('click', () => {
+      if (guestScanStep) guestScanStep.style.display   = 'block';
+      if (guestAnswerStep) guestAnswerStep.style.display = 'none';
+      openModal(guestJoinOverlay);
+    });
+  }
 
   async function guestProcessOffer(offerText) {
-    guestScanStep.style.display   = 'none';
-    guestAnswerStep.style.display = 'block';
-    guestAnswerCodeBox.innerHTML  = '';
-    guestSpinner.style.display    = 'block';
+    if (guestScanStep) guestScanStep.style.display   = 'none';
+    if (guestAnswerStep) guestAnswerStep.style.display = 'block';
+    if (guestAnswerCodeBox) guestAnswerCodeBox.innerHTML  = '';
+    if (guestSpinner) guestSpinner.style.display    = 'block';
     try {
       const answer = await MP.receiveOffer(offerText, playerName);
-      guestSpinner.style.display = 'none';
-      guestAnswerCodeBox.textContent = answer;
+      if (guestSpinner) guestSpinner.style.display = 'none';
+      if (guestAnswerCodeBox) guestAnswerCodeBox.textContent = answer;
 
-      guestCopyBtn.onclick = () => {
-        navigator.clipboard.writeText(answer)
-          .then(() => showToast('📋 Code kopiert!'))
-          .catch(() => showToast('❌ Fehler beim Kopieren.'));
-      };
+      if (guestCopyBtn) {
+        guestCopyBtn.onclick = () => {
+          navigator.clipboard.writeText(answer)
+            .then(() => showToast('📋 Code kopiert!'))
+            .catch(() => showToast('❌ Fehler beim Kopieren.'));
+        };
+      }
 
-      guestShareBtn.onclick = () => {
-        if (navigator.share) {
-          navigator.share({
-            title: 'OfflineArcade Verbindung',
-            text: answer
-          }).then(() => showToast('Erfolgreich geteilt!'))
-            .catch(() => {});
-        } else {
-          showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
-        }
-      };
+      if (guestShareBtn) {
+        guestShareBtn.onclick = () => {
+          if (navigator.share) {
+            navigator.share({
+              title: 'OfflineArcade Verbindung',
+              text: answer
+            }).then(() => showToast('Erfolgreich geteilt!'))
+              .catch(() => {});
+          } else {
+            showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
+          }
+        };
+      }
     } catch(e) {
-      guestSpinner.textContent = '❌ Fehler. Bitte erneut versuchen.';
+      if (guestSpinner) guestSpinner.textContent = '❌ Fehler. Bitte erneut versuchen.';
     }
   }
 
-  guestPasteHostBtn.addEventListener('click', async () => {
-    let text = "";
-    try { text = await navigator.clipboard.readText(); } catch(e) {}
-    if (!text) text = prompt("Füge den Verbindungscode des Hosts hier ein:");
-    text = text ? text.trim() : "";
-    if (!text) return;
-    guestProcessOffer(text);
-  });
+  if (guestPasteHostBtn) {
+    guestPasteHostBtn.addEventListener('click', async () => {
+      let text = "";
+      try { text = await navigator.clipboard.readText(); } catch(e) {}
+      if (!text) text = prompt("Füge den Verbindungscode des Hosts hier ein:");
+      text = text ? text.trim() : "";
+      if (!text) return;
+      guestProcessOffer(text);
+    });
+  }
 
-  guestJoinClose.addEventListener('click', () => { closeModal(guestJoinOverlay); MP.disconnect(); });
+  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
-    gameFrame.src = `games/${game}/index.html`;
-    gameFrameOverlay.style.display = "flex";
+    if (gameFrame) gameFrame.src = `games/${game}/index.html`;
+    if (gameFrameOverlay) gameFrameOverlay.style.display = "flex";
   }
   window.openGameFrame = openGameFrame;
 
   function closeGameFrame() {
-    gameFrame.src = "";
-    gameFrameOverlay.style.display = "none";
+    if (gameFrame) gameFrame.src = "";
+    if (gameFrameOverlay) gameFrameOverlay.style.display = "none";
     if (MP.isConnected()) {
       MP.send('menu');
     }
@@ -449,42 +482,43 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeGameFrame = closeGameFrame;
 
   MP.on('menu', () => {
-    if (gameFrameOverlay.style.display !== "none") {
-      gameFrame.src = "";
+    if (gameFrameOverlay && gameFrameOverlay.style.display !== "none") {
+      if (gameFrame) gameFrame.src = "";
       gameFrameOverlay.style.display = "none";
       showToast(`${MP.opponent || 'Gegner'} ist zurück im Menü.`);
     }
   });
 
   /* ══════════════════ MODAL HELPERS ══════════════════ */
-  function openModal(el)  { el.classList.add('open'); }
-  function closeModal(el) { el.classList.remove('open'); }
+  function openModal(el)  { if (el) el.classList.add('open'); }
+  function closeModal(el) { if (el) el.classList.remove('open'); }
   function closeAllModals() {
     [hostQrOverlay, guestJoinOverlay].forEach(closeModal);
   }
 
   /* ══════════════════ CHAT ══════════════════ */
-  chatFab.addEventListener('click', openChat);
-  chatClose.addEventListener('click', closeChat);
-  chatOverlay.addEventListener('click', closeChat);
+  if (chatFab) chatFab.addEventListener('click', openChat);
+  if (chatClose) chatClose.addEventListener('click', closeChat);
+  if (chatOverlay) chatOverlay.addEventListener('click', closeChat);
 
   function openChat() {
-    chatOverlay.classList.add('open');
-    chatDrawer.classList.add('open');
+    if (chatOverlay) chatOverlay.classList.add('open');
+    if (chatDrawer) chatDrawer.classList.add('open');
     unreadChat = 0;
-    chatBadge.style.display = 'none';
+    if (chatBadge) chatBadge.style.display = 'none';
     renderChatHistory();
-    setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
+    setTimeout(() => { if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
   }
   function closeChat() {
-    chatOverlay.classList.remove('open');
-    chatDrawer.classList.remove('open');
+    if (chatOverlay) chatOverlay.classList.remove('open');
+    if (chatDrawer) chatDrawer.classList.remove('open');
   }
 
-  chatSend.addEventListener('click', sendChat);
-  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+  if (chatSend) chatSend.addEventListener('click', sendChat);
+  if (chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
   function sendChat() {
+    if (!chatInput) return;
     const text = chatInput.value.trim();
     if (!text || !MP.isConnected()) return;
     MP.send('chat', { text, name: playerName });
@@ -499,20 +533,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chatHistory[key].length > 100) chatHistory[key].shift(); // keep max 100
     try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch {}
 
-    if (chatDrawer.classList.contains('open')) {
+    if (chatDrawer && chatDrawer.classList.contains('open')) {
       appendChatBubble({ text, name, mine });
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   }
   window.addChatMessageFromGame = addChatMessage;
 
   function renderChatHistory() {
+    if (!chatMessages) return;
     chatMessages.innerHTML = '';
     const key = MP.opponent || '';
     (chatHistory[key] || []).forEach(msg => appendChatBubble(msg));
   }
 
   function appendChatBubble({ text, name, mine }) {
+    if (!chatMessages) return;
     const div = document.createElement('div');
     div.className = `chat-msg ${mine ? 'mine' : 'theirs'}`;
     if (!mine) {
@@ -527,14 +563,16 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.appendChild(div);
   }
 
-  /* ══════════════════ LUCKY SPIN ══════════════════ */
-  randomBtn.addEventListener('click', startLuckySpin);
+  /* ── LUCKY SPIN ── */
+  if (randomBtn) randomBtn.addEventListener('click', startLuckySpin);
 
   function startLuckySpin() {
     const cards = [...document.querySelectorAll('.game-card:not(.mp-disabled)')];
     if (!cards.length) return;
-    randomBtn.disabled     = true;
-    randomBtn.style.opacity = '0.5';
+    if (randomBtn) {
+      randomBtn.disabled     = true;
+      randomBtn.style.opacity = '0.5';
+    }
     cards.forEach(c => c.classList.remove('highlighted'));
 
     let idx = 0, steps = 14 + Math.floor(Math.random() * 8), delay = 60;
@@ -559,8 +597,10 @@ document.addEventListener('DOMContentLoaded', () => {
           else {
             winner.classList.add('highlighted');
             setTimeout(() => {
-              randomBtn.disabled      = false;
-              randomBtn.style.opacity = '1';
+              if (randomBtn) {
+                randomBtn.disabled      = false;
+                randomBtn.style.opacity = '1';
+              }
               winner.classList.remove('highlighted');
               winner.click();
             }, 900);
@@ -572,36 +612,49 @@ document.addEventListener('DOMContentLoaded', () => {
     spin();
   }
 
-  /* ══════════════════ INSTRUCTIONS ══════════════════ */
-  instructToggle.addEventListener('click', () => {
-    const open = instructBody.classList.toggle('open');
-    instructToggle.classList.toggle('open', open);
-  });
+  /* ── INSTRUCTIONS ── */
+  if (instructToggle) {
+    instructToggle.addEventListener('click', () => {
+      if (instructBody) {
+        const open = instructBody.classList.toggle('open');
+        instructToggle.classList.toggle('open', open);
+      }
+    });
+  }
 
-  /* ══════════════════ RELOAD / INSTALL ══════════════════ */
-  reloadBtn.addEventListener('click', () => window.location.reload());
+  /* ── RELOAD / INSTALL ── */
+  if (reloadBtn) reloadBtn.addEventListener('click', () => window.location.reload());
 
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault(); deferredPrompt = e;
     const info = document.getElementById('install-info');
     const text = document.getElementById('install-text');
+    if (!info) return;
     info.style.display = 'block';
-    text.innerHTML = `OfflineArcade als App installieren:<br>
-      <button id="install-app-btn" style="margin-top:8px;background:#22c55e;color:white;border:none;padding:7px 12px;font-weight:700;border-radius:10px;cursor:pointer;font-size:11px;width:100%;">Jetzt installieren</button>`;
-    document.getElementById('install-app-btn').addEventListener('click', () => {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(r => {
-        if (r.outcome === 'accepted') info.style.display = 'none';
-        deferredPrompt = null;
-      });
-    });
+    if (text) {
+      text.innerHTML = `OfflineArcade als App installieren:<br>
+        <button id="install-app-btn" style="margin-top:8px;background:#22c55e;color:white;border:none;padding:7px 12px;font-weight:700;border-radius:10px;cursor:pointer;font-size:11px;width:100%;">Jetzt installieren</button>`;
+      const appBtn = document.getElementById('install-app-btn');
+      if (appBtn) {
+        appBtn.addEventListener('click', () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(r => {
+              if (r.outcome === 'accepted') info.style.display = 'none';
+              deferredPrompt = null;
+            });
+          }
+        });
+      }
+    }
   });
 
   const installCloseBtn = document.getElementById('installCloseBtn');
   if (installCloseBtn) {
     installCloseBtn.addEventListener('click', () => {
-      document.getElementById('install-info').style.display = 'none';
+      const info = document.getElementById('install-info');
+      if (info) info.style.display = 'none';
       localStorage.setItem('installBannerDismissed', 'true');
     });
   }
@@ -612,30 +665,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dismissed  = localStorage.getItem('installBannerDismissed') === 'true';
     const info       = document.getElementById('install-info');
     const text       = document.getElementById('install-text');
+    if (!info) return;
     if (isInstalled || dismissed) { info.style.display = 'none'; return; }
     info.style.display = 'block';
-    if (isIOS) text.innerHTML = `Tippe auf ⎙ in Safari und wähle <strong>„Zum Home-Bildschirm"</strong>.`;
+    if (isIOS && text) text.innerHTML = `Tippe auf ⎙ in Safari und wähle <strong>„Zum Home-Bildschirm"</strong>.`;
   })();
 
 });
-
-{
-  "name": "OfflineArcade",
-  "short_name": "OfflineArcade",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#181921",
-  "theme_color": "#4cc9f0",
-  "icons": [
-    {
-      "src": "assets/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
