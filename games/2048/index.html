@@ -194,27 +194,33 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 72px 16px 20px;
+      padding: max(72px, env(safe-area-inset-top) + 56px) 16px max(20px, env(safe-area-inset-bottom) + 10px);
+      overflow: hidden;
     }
 
     .game-box {
       width: 100%;
       max-width: 420px;
+      max-height: 100%;
       background: var(--box-bg);
       border: 1px solid var(--box-border);
       border-radius: 28px;
-      padding: 24px;
+      padding: 20px;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       box-shadow: var(--box-shadow);
       transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .title-section {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
     }
 
     .title {
@@ -230,11 +236,12 @@
       display: none;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       padding: 10px 14px;
       background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(56, 189, 248, 0.08));
       border: 1px solid rgba(34, 197, 94, 0.25);
       border-radius: 16px;
+      flex-shrink: 0;
     }
 
     .opponent-bar.show {
@@ -295,7 +302,8 @@
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
     }
 
     .multi-score-box {
@@ -321,6 +329,16 @@
       font-weight: 800;
     }
 
+    .board-wrapper {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin: 4px 0;
+    }
+
     .board {
       position: relative;
       background: rgba(0, 0, 0, 0.05);
@@ -329,6 +347,8 @@
       border-radius: 24px;
       aspect-ratio: 1;
       width: 100%;
+      max-width: 100%;
+      max-height: 100%;
       touch-action: none;
       user-select: none;
     }
@@ -429,10 +449,11 @@
     }
 
     .controls {
-      margin-top: 18px;
+      margin-top: 8px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     .controls.three-buttons {
@@ -482,12 +503,13 @@
     }
 
     .message {
-      margin-top: 14px;
+      margin-top: 6px;
       text-align: center;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
-      min-height: 20px;
+      min-height: 18px;
       opacity: 0.9;
+      flex-shrink: 0;
     }
 
     /* Delete / Merge interactive states */
@@ -598,7 +620,7 @@
         padding: 14px;
         align-items: center;
       }
-
+      
       .title-section {
         flex-direction: column;
         align-items: flex-start;
@@ -886,7 +908,7 @@
 
     /* ═══════════════════════════════════════════════════════
        SOUND SYNTHESIS (Web Audio API)
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     let audioCtx = null;
     function initAudio() {
       if (!audioCtx) {
@@ -977,7 +999,7 @@
 
     /* ═══════════════════════════════════════════════════════
        GAME SYSTEM
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     function createEmptyGrid() {
       return [
         [null, null, null, null],
@@ -1132,6 +1154,8 @@
 
     function syncTileDOM() {
       const containerWidth = tilesContainer.clientWidth;
+      if (containerWidth <= 0) return; // Wait for layout visibility
+
       const gap = 12;
       const tileSize = (containerWidth - gap * 3) / 4;
       const currentIds = new Set();
@@ -1226,6 +1250,8 @@
 
     function animateMovements(oldGrid, newGrid) {
       const containerWidth = tilesContainer.clientWidth;
+      if (containerWidth <= 0) return;
+
       const gap = 12;
       const tileSize = (containerWidth - gap * 3) / 4;
 
@@ -1362,7 +1388,7 @@
 
     /* ═══════════════════════════════════════════════════════
        SLIDE MOVEMENT LOGIC
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     function slideRowLeft(row) {
       const newRow = [null, null, null, null];
       let targetCol = 0;
@@ -1766,7 +1792,7 @@
 
     /* ═══════════════════════════════════════════════════════
        INTERACTIVE SCREEN OVERLAY
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     overlayBtn.addEventListener('click', () => {
       overlay.classList.remove('visible');
       if (!gameActive) {
@@ -1788,7 +1814,7 @@
 
     /* ═══════════════════════════════════════════════════════
        INPUTS (KEYBOARD & TOUCH SWIPES)
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     window.addEventListener('keydown', e => {
       if (!gameActive || isMoving) return;
       switch (e.key) {
@@ -1838,9 +1864,14 @@
       }
     }, { passive: true });
 
+    // Prevent iPad bouncing scroll while playing swipes on the board
+    board.addEventListener('touchmove', e => {
+      e.preventDefault();
+    }, { passive: false });
+
     /* ═══════════════════════════════════════════════════════
        CONTROLS BINDINGS
-    ══════════════════════════════════════════════════════ */
+       ══════════════════════════════════════════════════════ */
     trashBtn.addEventListener('click', () => {
       if (trashUses <= 0 || gameMode !== 'solo') return;
       playSound('click');
@@ -1880,9 +1911,32 @@
       restartGame(true);
     });
 
-    window.addEventListener('resize', () => {
-      syncTileDOM();
+    // Auto-focus window on clicks/touches to ensure keydown events work immediately
+    window.addEventListener('load', () => {
+      window.focus();
     });
+    document.addEventListener('click', () => {
+      window.focus();
+    });
+    document.addEventListener('touchstart', () => {
+      window.focus();
+    });
+
+    // Monitor tilesContainer size changes to cleanly adjust tile widths/heights
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+          if (entry.contentRect.width > 0) {
+            syncTileDOM();
+          }
+        }
+      });
+      resizeObserver.observe(tilesContainer);
+    } else {
+      window.addEventListener('resize', () => {
+        syncTileDOM();
+      });
+    }
 
     /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
     let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler;
