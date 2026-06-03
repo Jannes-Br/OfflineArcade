@@ -17,13 +17,18 @@ const MP = (() => {
   let myName       = null;
   const listeners  = {};
 
-  /* STUN server for robust NAT traversal (fallback to LAN host candidates if offline) */
-  const ICE_CONFIG = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-  };
+  /* Dynamic ICE config (disabled when offline to generate codes instantly) */
+  function getIceConfig() {
+    if (navigator.onLine === false) {
+      return { iceServers: [] };
+    }
+    return {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
+  }
 
   /* ---- event bus ---- */
   function on(event, cb) {
@@ -55,8 +60,8 @@ const MP = (() => {
       if (peerConn.iceGatheringState === 'complete') { resolve(); return; }
       const done = () => { if (peerConn.iceGatheringState === 'complete') resolve(); };
       peerConn.addEventListener('icegatheringstatechange', done);
-      /* Fallback: after 6 s take whatever we have */
-      setTimeout(resolve, 6000);
+      /* Fallback: after 1.2s take whatever we have (avoids long wait for STUN when offline) */
+      setTimeout(resolve, 1200);
     });
   }
 
@@ -68,13 +73,14 @@ const MP = (() => {
     return sdp.split('\n').filter(line => {
       // Keep all non-candidate lines
       if (!line.startsWith('a=candidate:')) return true;
-      // Drop IPv6 candidates
-      if (line.includes(' :: ') || line.match(/[0-9a-f]{4}:[0-9a-f]/i)) return false;
       // Drop TCP candidates
       if (line.includes(' tcp ')) return false;
-      // Drop relay/srflx candidates (only keep host)
+      // Drop relay/srflx candidates (only keep host candidates)
       if (line.includes(' relay ') || line.includes(' srflx ')) return false;
-      return true;
+      // Keep host candidates (both IPv4 and IPv6)
+      if (line.includes(' typ host ')) return true;
+      // Drop anything else that isn't a host candidate
+      return false;
     }).join('\n');
   }
 
@@ -135,7 +141,7 @@ const MP = (() => {
     myName = name;
     role   = 'host';
 
-    pc = new RTCPeerConnection(ICE_CONFIG);
+    pc = new RTCPeerConnection(getIceConfig());
     setupPC(pc);
 
     const chan = pc.createDataChannel('game', { ordered: true });
@@ -162,7 +168,7 @@ const MP = (() => {
     const data = decode(encodedOffer);
     opponentName = data.name;
 
-    pc = new RTCPeerConnection(ICE_CONFIG);
+    pc = new RTCPeerConnection(getIceConfig());
     setupPC(pc);
 
     pc.ondatachannel = (e) => setupDC(e.channel);
