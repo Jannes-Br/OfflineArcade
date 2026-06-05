@@ -83,11 +83,11 @@ const MP = (() => {
       if (!line.startsWith('a=candidate:')) return true;
       // Drop TCP candidates
       if (line.includes(' tcp ')) return false;
-      // Drop relay/srflx candidates (only keep host candidates)
-      if (line.includes(' relay ') || line.includes(' srflx ')) return false;
-      // Keep host candidates (both IPv4 and IPv6)
-      if (line.includes(' typ host ')) return true;
-      // Drop anything else that isn't a host candidate
+      // Drop relay candidates (relay candidates require TURN servers, which we don't have)
+      if (line.includes(' relay ')) return false;
+      // Keep host and srflx candidates
+      if (line.includes(' typ host ') || line.includes(' typ srflx ')) return true;
+      // Drop anything else
       return false;
     }).join('\n');
   }
