@@ -1,6 +1,6 @@
-const CACHE = 'offlinearcade-v91';
+const CACHE = 'offlinearcade-v93';
 
-// Essenzielle App-Shell Dateien (SW schlägt fehl, wenn diese nicht geladen werden können)
+// Essential App Shell files (SW fails if these cannot be loaded)
 const ESSENTIAL_ASSETS = [
   './',
   'index.html',
@@ -10,7 +10,7 @@ const ESSENTIAL_ASSETS = [
   'multiplayer.js'
 ];
 
-// Optionale Spiele-Assets (SW installiert sich trotzdem, falls eine Datei fehlt)
+// Optional game assets (SW still installs if a file is missing)
 const GAME_ASSETS = [
   'games/escape-road/index.html',
   'games/escape-road/manifest.json',
@@ -36,19 +36,19 @@ const GAME_ASSETS = [
   'assets/thumbnails/pong.png'
 ];
 
-// Installation: Essentials cachen (muss gelingen) und Games optional cachen
+// Installation: Cache essentials (must succeed) and cache games optionally
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then(cache => {
-      // 1. Essenzielle Shell-Dateien laden
+      // 1. Load essential shell files
       return cache.addAll(ESSENTIAL_ASSETS)
         .then(() => {
-          // 2. Optionale Spiele-Assets einzeln cachen, damit Fehler (404) nicht die Installation blockieren
+          // 2. Cache optional game assets individually so errors (404) do not block installation
           return Promise.allSettled(
             GAME_ASSETS.map(url => {
               return cache.add(url).catch(err => {
-                console.warn(`Optionales Pre-Caching übersprungen für: ${url}`, err);
+                console.warn(`Optional pre-caching skipped for: ${url}`, err);
               });
             })
           );
@@ -57,7 +57,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Aktivierung: Alten Cache bereinigen
+// Activation: Clean up old cache
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -73,19 +73,19 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch-Handler: Hybride Caching-Strategie
+// Fetch Handler: Hybrid caching strategy
 self.addEventListener('fetch', e => {
-  // Nur HTTP/HTTPS GET-Requests verarbeiten
+  // Only handle HTTP/HTTPS GET requests
   if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) {
     return;
   }
 
   const url = new URL(e.request.url);
-  // Erkennt statische Spiele-Ressourcen und Thumbnails
+  // Detect static game assets and thumbnails
   const isStaticAsset = url.pathname.includes('/games/') || url.pathname.includes('/assets/');
 
   if (isStaticAsset) {
-    // A. CACHE-FIRST für Spiele-Ressourcen (lädt offline & online sofort aus dem Cache)
+    // A. CACHE-FIRST for game assets (loads offline & online instantly from cache)
     e.respondWith(
       caches.match(e.request).then(cachedResponse => {
         if (cachedResponse) {
@@ -103,7 +103,7 @@ self.addEventListener('fetch', e => {
       })
     );
   } else {
-    // B. NETWORK-FIRST für die App Shell (stellt sicher, dass Updates geladen werden)
+    // B. NETWORK-FIRST for the App Shell (ensures updates are fetched)
     e.respondWith(
       fetch(e.request)
         .then(networkResponse => {
