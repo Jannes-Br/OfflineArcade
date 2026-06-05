@@ -306,10 +306,21 @@
       <!-- QR code display container -->
       <div id="hostQrContainer" class="qr-wrap"></div>
 
-      <!-- Single-line Copy box -->
-      <div class="code-copy-container" id="hostCodeCopyContainer" style="display: none;">
-        <input type="text" id="hostCodeInput" readonly class="code-copy-input">
-        <button id="hostCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
+      <!-- Section labels and input boxes -->
+      <div id="hostLinkSection" style="display: none; width: 100%;">
+        <div style="font-size: 11px; font-weight: 700; opacity: 0.6; text-align: left; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Option A: Connection Link (for browser)</div>
+        <div class="code-copy-container" id="hostCodeCopyContainer">
+          <input type="text" id="hostCodeInput" readonly class="code-copy-input">
+          <button id="hostCopyBtn" class="code-copy-btn" title="Copy Link">📋</button>
+        </div>
+      </div>
+
+      <div id="hostRawSection" style="display: none; width: 100%;">
+        <div style="font-size: 11px; font-weight: 700; opacity: 0.6; text-align: left; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Option B: Connection Code (raw)</div>
+        <div class="code-copy-container" id="hostRawCodeCopyContainer">
+          <input type="text" id="hostRawCodeInput" readonly class="code-copy-input">
+          <button id="hostRawCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
+        </div>
       </div>
 
       <!-- Share action -->
@@ -365,9 +376,20 @@
         <!-- QR Code display for Guest Answer -->
         <div id="guestQrContainer" class="qr-wrap"></div>
 
-        <div class="code-copy-container" id="guestCodeCopyContainer" style="display: none;">
-          <input type="text" id="guestCodeInput" readonly class="code-copy-input">
-          <button id="guestCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
+        <div id="guestLinkSection" style="display: none; width: 100%;">
+          <div style="font-size: 11px; font-weight: 700; opacity: 0.6; text-align: left; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Option A: Guest Link (for browser)</div>
+          <div class="code-copy-container" id="guestCodeCopyContainer">
+            <input type="text" id="guestCodeInput" readonly class="code-copy-input">
+            <button id="guestCopyBtn" class="code-copy-btn" title="Copy Link">📋</button>
+          </div>
+        </div>
+
+        <div id="guestRawSection" style="display: none; width: 100%;">
+          <div style="font-size: 11px; font-weight: 700; opacity: 0.6; text-align: left; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Option B: Guest Code (raw)</div>
+          <div class="code-copy-container" id="guestRawCodeCopyContainer">
+            <input type="text" id="guestRawCodeInput" readonly class="code-copy-input">
+            <button id="guestRawCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
+          </div>
         </div>
 
         <button class="modal-btn secondary" id="guestShareBtn" style="display: none; width: 100%; gap: 8px; margin-top: 8px;">
