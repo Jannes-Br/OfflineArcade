@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v91';
+const CACHE_VERSION = 'v93';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -31,93 +31,41 @@ let playerAvatar   = localStorage.getItem('playerAvatar') || '😎';
 let unreadChat     = 0;
 let chatHistory    = {};
 
-/* ── QR Scanner state ── */
-let activeStream = null;
-let activeScanInterval = null;
+/* ── QR Scanner dummy & Hash helper ── */
+function stopCameraScanner() {}
 
-function stopCameraScanner() {
-  if (activeScanInterval) {
-    clearInterval(activeScanInterval);
-    activeScanInterval = null;
-  }
-  if (activeStream) {
-    activeStream.getTracks().forEach(track => track.stop());
-    activeStream = null;
-  }
-  
-  const hostScannerView = document.getElementById('hostScannerView');
-  const guestScannerView = document.getElementById('guestScannerView');
-  if (hostScannerView) hostScannerView.style.display = 'none';
-  
-  const hostVideo = document.getElementById('hostVideo');
-  const guestVideo = document.getElementById('guestVideo');
-  if (hostVideo) hostVideo.srcObject = null;
-  if (guestVideo) guestVideo.srcObject = null;
-}
-
-async function startCameraScanner(videoEl, callback) {
-  stopCameraScanner();
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: "environment" } 
-    });
-    activeStream = stream;
-    videoEl.srcObject = stream;
-    videoEl.setAttribute("playsinline", true);
-    videoEl.muted = true;
-    
-    // Explicitly play video to support all platforms (especially Safari/iOS)
-    videoEl.play().catch(err => console.warn("Video play started automatically or failed:", err));
-    
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    activeScanInterval = setInterval(() => {
-      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
-        // Downscale scanner image to a maximum of 480px width/height for high performance on mobile devices
-        let width = videoEl.videoWidth;
-        let height = videoEl.videoHeight;
-        const maxDim = 480;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(videoEl, 0, 0, width, height);
-        const imgData = ctx.getImageData(0, 0, width, height);
-        try {
-          const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
-            inversionAttempts: "attemptBoth"
-          });
-          if (decoded && decoded.data) {
-            const scannedText = decoded.data.trim();
-            if (scannedText) {
-              stopCameraScanner();
-              callback(scannedText);
-            }
-          }
-        } catch (e) {
-          console.warn("jsQR decoding error:", e);
-        }
+// Handle join hash on page load
+const hash = window.location.hash;
+if (hash.startsWith('#join=')) {
+  const joinCode = hash.substring(6);
+  document.addEventListener('DOMContentLoaded', () => {
+    const qrHelperOverlay = document.getElementById('qrHelperOverlay');
+    const qrHelperCopyBtn = document.getElementById('qrHelperCopyBtn');
+    if (qrHelperOverlay) {
+      qrHelperOverlay.style.display = 'flex';
+      if (qrHelperCopyBtn) {
+        qrHelperCopyBtn.onclick = () => {
+          navigator.clipboard.writeText(joinCode)
+            .then(() => {
+              showToast('📋 Code copied! Open OfflineArcade.');
+              qrHelperCopyBtn.innerHTML = '<span>✓</span> Code Copied!';
+              qrHelperCopyBtn.style.background = '#22c55e';
+            })
+            .catch(() => {
+              const temp = document.createElement('input');
+              temp.value = joinCode;
+              document.body.appendChild(temp);
+              temp.select();
+              document.execCommand('copy');
+              document.body.removeChild(temp);
+              showToast('📋 Code copied! Open OfflineArcade.');
+              qrHelperCopyBtn.innerHTML = '<span>✓</span> Code Copied!';
+              qrHelperCopyBtn.style.background = '#22c55e';
+            });
+        };
       }
-    }, 250);
-  } catch (err) {
-    console.error("Camera access failed:", err);
-    showToast("Camera access failed. Please use Text Code fallback.");
-    stopCameraScanner();
-    
-    const hostToggleTextBtn = document.getElementById('hostToggleTextBtn');
-    const guestToggleTextBtn = document.getElementById('guestToggleTextBtn');
-    if (videoEl.id === 'hostVideo' && hostToggleTextBtn) hostToggleTextBtn.click();
-    if (videoEl.id === 'guestVideo' && guestToggleTextBtn) guestToggleTextBtn.click();
-  }
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -163,33 +111,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const hostQrClose       = document.getElementById('hostQrClose');
   const hostQrSubtitle    = document.getElementById('hostQrSubtitle');
   const hostQrContainer   = document.getElementById('hostQrContainer');
-  const hostScannerView   = document.getElementById('hostScannerView');
-  const hostVideo         = document.getElementById('hostVideo');
-  const hostScanGuestBtn  = document.getElementById('hostScanGuestBtn');
-  const hostToggleTextBtn = document.getElementById('hostToggleTextBtn');
-  const hostScanActionArea = document.getElementById('hostScanActionArea');
-  const hostCodeBox       = document.getElementById('hostCodeBox');
-  const hostShareActions  = document.getElementById('hostShareActions');
+  const hostCodeCopyContainer = document.getElementById('hostCodeCopyContainer');
+  const hostCodeInput     = document.getElementById('hostCodeInput');
   const hostCopyBtn       = document.getElementById('hostCopyBtn');
   const hostShareBtn      = document.getElementById('hostShareBtn');
   const hostPasteGuestBtn = document.getElementById('hostPasteGuestBtn');
+  const hostInstructions  = document.getElementById('hostInstructions');
   const hostSpinner       = document.getElementById('hostSpinner');
 
   /* Guest Join Modal */
   const guestJoinOverlay  = document.getElementById('guestJoinOverlay');
   const guestJoinClose    = document.getElementById('guestJoinClose');
-  const guestScanStep     = document.getElementById('guestScanStep');
-  const guestVideo        = document.getElementById('guestVideo');
+  const guestInputStep    = document.getElementById('guestInputStep');
   const guestPasteHostBtn = document.getElementById('guestPasteHostBtn');
-  const guestToggleTextBtn = document.getElementById('guestToggleTextBtn');
-  const guestTextPasteArea = document.getElementById('guestTextPasteArea');
   const guestAnswerStep   = document.getElementById('guestAnswerStep');
   const guestQrContainer  = document.getElementById('guestQrContainer');
-  const guestAnswerCodeBox= document.getElementById('guestAnswerCodeBox');
-  const guestShareActions = document.getElementById('guestShareActions');
+  const guestCodeCopyContainer = document.getElementById('guestCodeCopyContainer');
+  const guestCodeInput    = document.getElementById('guestCodeInput');
   const guestCopyBtn      = document.getElementById('guestCopyBtn');
   const guestShareBtn     = document.getElementById('guestShareBtn');
-  const guestToggleAnswerTextBtn = document.getElementById('guestToggleAnswerTextBtn');
   const guestSpinner      = document.getElementById('guestSpinner');
 
   /* Chat */
@@ -230,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
       'manifest.json',
       'multiplayer.js',
       'assets/qrcode.min.js',
-      'assets/jsqr.min.js',
       'games/escape-road/index.html',
       'games/escape-road/manifest.json',
       'games/escape-road/script.js',
@@ -579,20 +518,29 @@ document.addEventListener('DOMContentLoaded', () => {
     setMode(currentMode, false);
   }
 
-  /* ══════════════════ HOST CONNECTIONS (QR Display & Scan) ══════════════════ */
+  /* ══════════════════ SMART CODE EXTRACTOR ══════════════════ */
+  function extractCode(text) {
+    if (!text) return "";
+    text = text.trim();
+    if (text.includes('#join=')) {
+      return text.split('#join=')[1].trim();
+    }
+    return text;
+  }
+
+  /* ══════════════════ HOST CONNECTIONS (QR Display & Clipboard) ══════════════════ */
   if (createLobbyBtn) {
     createLobbyBtn.addEventListener('click', async () => {
-      stopCameraScanner();
-      
       if (hostQrContainer) hostQrContainer.innerHTML = '';
-      if (hostCodeBox) {
-        hostCodeBox.innerHTML = '';
-        hostCodeBox.style.display = 'none';
+      if (hostCodeInput) hostCodeInput.value = '';
+      if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'none';
+      if (hostShareBtn) hostShareBtn.style.display = 'none';
+      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
+      if (hostInstructions) hostInstructions.style.display = 'none';
+      if (hostSpinner) {
+        hostSpinner.textContent = '⏳ Gathering network candidates…';
+        hostSpinner.style.display = 'block';
       }
-      if (hostShareActions) hostShareActions.style.display = 'none';
-      if (hostScanActionArea) hostScanActionArea.style.display = 'none';
-      if (hostScannerView) hostScannerView.style.display = 'none';
-      if (hostSpinner) hostSpinner.style.display = 'block';
       if (hostQrSubtitle) hostQrSubtitle.textContent = 'Generating connection QR code…';
       
       openModal(hostQrOverlay);
@@ -600,13 +548,15 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const encoded = await MP.createOffer(playerName);
         if (hostSpinner) hostSpinner.style.display = 'none';
-        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Let your guest scan this QR code:';
+        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Share this connection with your guest:';
         
+        const joinUrl = window.location.origin + window.location.pathname + '#join=' + encoded;
+
         // Render QR Code using low correction level for easy scanning
         if (hostQrContainer) {
           hostQrContainer.innerHTML = '';
           new QRCode(hostQrContainer, {
-            text: encoded,
+            text: joinUrl,
             width: 180,
             height: 180,
             correctLevel: QRCode.CorrectLevel.L
@@ -614,22 +564,25 @@ document.addEventListener('DOMContentLoaded', () => {
           hostQrContainer.style.display = 'flex';
         }
         
-        if (hostCodeBox) hostCodeBox.textContent = encoded;
-        if (hostScanActionArea) hostScanActionArea.style.display = 'flex';
+        if (hostCodeInput) hostCodeInput.value = joinUrl;
+        if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'flex';
+        if (hostShareBtn) hostShareBtn.style.display = 'flex';
+        if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'block';
+        if (hostInstructions) hostInstructions.style.display = 'block';
 
         // Setup copy buttons
         if (hostCopyBtn) {
           hostCopyBtn.onclick = () => {
-            navigator.clipboard.writeText(encoded)
-              .then(() => showToast('📋 Code copied!'))
-              .catch(() => showToast('❌ Failed copying code.'));
+            navigator.clipboard.writeText(joinUrl)
+              .then(() => showToast('📋 Connection link copied!'))
+              .catch(() => showToast('❌ Failed copying link.'));
           };
         }
 
         if (hostShareBtn) {
           hostShareBtn.onclick = () => {
             if (navigator.share) {
-              navigator.share({ title: 'OfflineArcade Code', text: encoded });
+              navigator.share({ title: 'OfflineArcade Connection', text: joinUrl });
             } else {
               showToast('Sharing not supported. Copy code manually.');
             }
@@ -642,40 +595,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Toggle fallback text displays in Host modal
-  if (hostToggleTextBtn) {
-    hostToggleTextBtn.addEventListener('click', () => {
-      stopCameraScanner();
-      const visible = hostCodeBox.style.display === 'block';
-      hostCodeBox.style.display = visible ? 'none' : 'block';
-      hostShareActions.style.display = visible ? 'none' : 'flex';
-      hostPasteGuestBtn.style.display = visible ? 'none' : 'flex';
-      
-      if (hostQrContainer) hostQrContainer.style.display = visible ? 'flex' : 'none';
-      hostToggleTextBtn.textContent = visible ? '📋 Show Text Code fallback' : '📸 Show QR Code';
-      if (hostQrSubtitle) {
-        hostQrSubtitle.textContent = visible ? 'Let your guest scan this QR code:' : 'Share this text code with your guest:';
-      }
-    });
-  }
-
-  // Host scans guest response
-  if (hostScanGuestBtn) {
-    hostScanGuestBtn.addEventListener('click', () => {
-      if (hostQrContainer) hostQrContainer.style.display = 'none';
-      if (hostScannerView) hostScannerView.style.display = 'block';
-      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Point camera at Guest\'s QR code:';
-      
-      startCameraScanner(hostVideo, async (scannedCode) => {
-        stopCameraScanner();
-        processGuestAnswer(scannedCode);
-      });
-    });
-  }
-
   async function processGuestAnswer(textCode) {
     if (hostQrSubtitle) hostQrSubtitle.textContent = 'Establishing connection...';
-    if (hostScanActionArea) hostScanActionArea.style.display = 'none';
+    if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'none';
+    if (hostShareBtn) hostShareBtn.style.display = 'none';
+    if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
+    if (hostInstructions) hostInstructions.style.display = 'none';
+    if (hostQrContainer) hostQrContainer.style.display = 'none';
     if (hostSpinner) {
       hostSpinner.textContent = 'Connecting to guest...';
       hostSpinner.style.display = 'block';
@@ -689,9 +615,12 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(connectionTimeout);
       showToast('❌ Invalid code.');
       
-      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Let your guest scan this QR code:';
+      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Share this connection with your guest:';
       if (hostQrContainer) hostQrContainer.style.display = 'flex';
-      if (hostScanActionArea) hostScanActionArea.style.display = 'flex';
+      if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'flex';
+      if (hostShareBtn) hostShareBtn.style.display = 'flex';
+      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'block';
+      if (hostInstructions) hostInstructions.style.display = 'block';
       if (hostSpinner) hostSpinner.style.display = 'none';
     }
   }
@@ -700,76 +629,51 @@ document.addEventListener('DOMContentLoaded', () => {
     hostPasteGuestBtn.addEventListener('click', async () => {
       let text = "";
       try { text = await navigator.clipboard.readText(); } catch(e) {}
-      if (!text) text = prompt("Paste the Guest's connection code:");
+      if (!text) text = prompt("Paste the Guest's connection code or link:");
       text = text ? text.trim() : "";
       if (!text) return;
-      processGuestAnswer(text);
+      processGuestAnswer(extractCode(text));
     });
   }
 
-  if (hostQrClose) hostQrClose.addEventListener('click',  () => { stopCameraScanner(); clearTimeout(connectionTimeout); closeModal(hostQrOverlay);  MP.disconnect(); });
+  if (hostQrClose) hostQrClose.addEventListener('click',  () => { clearTimeout(connectionTimeout); closeModal(hostQrOverlay);  MP.disconnect(); });
 
-  /* ══════════════════ GUEST CONNECTIONS (Scan Host & QR Display) ══════════════════ */
+  /* ══════════════════ GUEST CONNECTIONS (QR Display & Clipboard) ══════════════════ */
   if (joinLobbyBtn) {
     joinLobbyBtn.addEventListener('click', () => {
-      stopCameraScanner();
-      if (guestScanStep) guestScanStep.style.display = 'block';
+      if (guestInputStep) guestInputStep.style.display = 'block';
       if (guestAnswerStep) guestAnswerStep.style.display = 'none';
-      
       openModal(guestJoinOverlay);
-      
-      // Start scanning immediately
-      startCameraScanner(guestVideo, (scannedHostCode) => {
-        stopCameraScanner();
-        guestProcessOffer(scannedHostCode);
-      });
-    });
-  }
-
-  // Toggle Guest Scan input fallbacks
-  if (guestToggleTextBtn) {
-    guestToggleTextBtn.addEventListener('click', () => {
-      const visible = guestTextPasteArea.style.display === 'block';
-      guestTextPasteArea.style.display = visible ? 'none' : 'block';
-      if (guestScannerView) guestScannerView.style.display = visible ? 'block' : 'none';
-      guestToggleTextBtn.textContent = visible ? '📋 Use Text Code Instead' : '📸 Scan QR Code';
-      
-      if (visible) {
-        startCameraScanner(guestVideo, (scannedHostCode) => {
-          stopCameraScanner();
-          guestProcessOffer(scannedHostCode);
-        });
-      } else {
-        stopCameraScanner();
-      }
     });
   }
 
   async function guestProcessOffer(offerText) {
-    stopCameraScanner();
-    if (guestScanStep) guestScanStep.style.display = 'none';
+    if (guestInputStep) guestInputStep.style.display = 'none';
     if (guestAnswerStep) guestAnswerStep.style.display = 'block';
     
     if (guestQrContainer) guestQrContainer.innerHTML = '';
-    if (guestAnswerCodeBox) {
-      guestAnswerCodeBox.innerHTML = '';
-      guestAnswerCodeBox.style.display = 'none';
+    if (guestCodeInput) guestCodeInput.value = '';
+    if (guestCodeCopyContainer) guestCodeCopyContainer.style.display = 'none';
+    if (guestShareBtn) guestShareBtn.style.display = 'none';
+    if (guestSpinner) {
+      guestSpinner.textContent = '⏳ Creating response...';
+      guestSpinner.style.display = 'block';
     }
-    if (guestShareActions) guestShareActions.style.display = 'none';
-    if (guestSpinner) guestSpinner.style.display = 'block';
 
     try {
       const answer = await MP.receiveOffer(offerText, playerName);
       if (guestSpinner) {
-        guestSpinner.textContent = 'Waiting for direct connection...';
+        guestSpinner.textContent = 'Waiting for Host to scan/paste...';
         guestSpinner.style.display = 'block';
       }
+
+      const answerUrl = window.location.origin + window.location.pathname + '#join=' + answer;
 
       // Render Guest Answer QR code
       if (guestQrContainer) {
         guestQrContainer.innerHTML = '';
         new QRCode(guestQrContainer, {
-          text: answer,
+          text: answerUrl,
           width: 180,
           height: 180,
           correctLevel: QRCode.CorrectLevel.L
@@ -777,22 +681,24 @@ document.addEventListener('DOMContentLoaded', () => {
         guestQrContainer.style.display = 'flex';
       }
 
-      if (guestAnswerCodeBox) guestAnswerCodeBox.textContent = answer;
+      if (guestCodeInput) guestCodeInput.value = answerUrl;
+      if (guestCodeCopyContainer) guestCodeCopyContainer.style.display = 'flex';
+      if (guestShareBtn) guestShareBtn.style.display = 'flex';
 
       startConnectionTimeout();
 
       if (guestCopyBtn) {
         guestCopyBtn.onclick = () => {
-          navigator.clipboard.writeText(answer)
-            .then(() => showToast('📋 Code copied!'))
-            .catch(() => showToast('❌ Failed copying code.'));
+          navigator.clipboard.writeText(answerUrl)
+            .then(() => showToast('📋 Connection link copied!'))
+            .catch(() => showToast('❌ Failed copying link.'));
         };
       }
 
       if (guestShareBtn) {
         guestShareBtn.onclick = () => {
           if (navigator.share) {
-            navigator.share({ title: 'OfflineArcade Code', text: answer });
+            navigator.share({ title: 'OfflineArcade Connection', text: answerUrl });
           } else {
             showToast('Sharing not supported. Copy code manually.');
           }
@@ -803,30 +709,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Toggle Guest Answer Code text display
-  if (guestToggleAnswerTextBtn) {
-    guestToggleAnswerTextBtn.addEventListener('click', () => {
-      const visible = guestAnswerCodeBox.style.display === 'block';
-      guestAnswerCodeBox.style.display = visible ? 'none' : 'block';
-      guestShareActions.style.display = visible ? 'none' : 'flex';
-      
-      if (guestQrContainer) guestQrContainer.style.display = visible ? 'flex' : 'none';
-      guestToggleAnswerTextBtn.textContent = visible ? '📋 Show Text Code fallback' : '📸 Show QR Code';
-    });
-  }
-
   if (guestPasteHostBtn) {
     guestPasteHostBtn.addEventListener('click', async () => {
       let text = "";
       try { text = await navigator.clipboard.readText(); } catch(e) {}
-      if (!text) text = prompt("Paste the Host's connection code:");
+      if (!text) text = prompt("Paste the Host's connection code or link:");
       text = text ? text.trim() : "";
       if (!text) return;
-      guestProcessOffer(text);
+      guestProcessOffer(extractCode(text));
     });
   }
 
-  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { stopCameraScanner(); clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
+  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
@@ -973,23 +867,53 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── LUCKY SPIN ── */
   if (randomBtn) randomBtn.addEventListener('click', startLuckySpin);
 
+  let spinTimeoutId = null;
+  let isSpinning = false;
+  let activeSpinCards = [];
+
+  function cancelLuckySpin() {
+    if (spinTimeoutId) {
+      clearTimeout(spinTimeoutId);
+      spinTimeoutId = null;
+    }
+    if (activeSpinCards) {
+      activeSpinCards.forEach(c => c.classList.remove('highlighted'));
+    }
+    if (randomBtn) {
+      randomBtn.style.opacity = '1';
+    }
+    isSpinning = false;
+  }
+
   function startLuckySpin() {
+    if (currentMode === 'multi' && !MP.isConnected()) {
+      return;
+    }
+
+    if (isSpinning) {
+      cancelLuckySpin();
+      return;
+    }
+
     let cards;
     if (currentMode === 'bot' || currentMode === 'multi') {
       cards = [...document.querySelectorAll('.game-card[data-multiplayer="true"]')];
     } else {
       cards = [...document.querySelectorAll('.game-card')];
     }
-    if (!cards.length) { if (randomBtn) { randomBtn.disabled = false; randomBtn.style.opacity = '1'; } return; }
+    if (!cards.length) return;
+
+    isSpinning = true;
+    activeSpinCards = cards;
     if (randomBtn) {
-      randomBtn.disabled     = true;
-      randomBtn.style.opacity = '0.5';
+      randomBtn.style.opacity = '0.6';
     }
     cards.forEach(c => c.classList.remove('highlighted'));
 
     let idx = 0, steps = 14 + Math.floor(Math.random() * 8), delay = 60;
 
     function spin() {
+      if (!isSpinning) return;
       cards.forEach(c => c.classList.remove('highlighted'));
       cards[idx].classList.add('highlighted');
       cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -998,22 +922,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (steps > 0) {
         if (steps < 7) delay += 40;
         if (steps < 3) delay += 90;
-        setTimeout(spin, delay);
+        spinTimeoutId = setTimeout(spin, delay);
       } else {
         const winner = cards[(idx - 1 + cards.length) % cards.length];
         let blinks = 4;
         function blink() {
+          if (!isSpinning) return;
           winner.classList.toggle('highlighted', blinks % 2 !== 0);
           blinks--;
-          if (blinks > 0) { setTimeout(blink, 150); }
-          else {
+          if (blinks > 0) {
+            spinTimeoutId = setTimeout(blink, 150);
+          } else {
             winner.classList.add('highlighted');
-            setTimeout(() => {
+            spinTimeoutId = setTimeout(() => {
               if (randomBtn) {
-                randomBtn.disabled      = false;
                 randomBtn.style.opacity = '1';
               }
               winner.classList.remove('highlighted');
+              isSpinning = false;
               winner.click();
             }, 900);
           }
