@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v95';
+const CACHE_VERSION = 'v96';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -355,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateCardStates(mode, connected);
+    updateActiveHostGameCard();
     localStorage.setItem('gameMode', mode);
   }
 
@@ -390,6 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (currentMode === 'multi') {
         if (MP.isConnected()) {
+          if (card.classList.contains('active-host-game')) {
+            openGameFrame(game);
+            return;
+          }
           if (MP.role === 'guest') {
             MP.send('suggest', { game });
             showToast('Suggestion sent! Waiting for host.');
@@ -397,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (MP.role === 'host') {
             MP.send('start', { game, role: 'O' });
             localStorage.setItem('mpRole', 'X');
+            MP.activeGame = game;
             openGameFrame(game);
           }
         } else {
@@ -507,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  MP.on('connected', ({ opponent }) => {
+  MP.onParent('connected', ({ opponent }) => {
     stopConnectionTimeout();
     stopCameraScanner();
     if (chatPartnerName) chatPartnerName.textContent = opponent || 'Opponent';
@@ -516,27 +522,33 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Connected with ${opponent}! ✅`);
   });
 
-  MP.on('disconnected', ({ opponent }) => {
+  MP.onParent('disconnected', ({ opponent }) => {
     stopConnectionTimeout();
     stopCameraScanner();
-    MP.disconnect();
+    closeGameFrame();
     onDisconnected();
-    if (opponent) showToast(`${opponent} disconnected.`);
+    if (opponent) {
+      showToast(`❌ Connection lost with ${opponent}.`);
+    } else {
+      showToast('❌ Connection lost.');
+    }
   });
 
-  MP.on('suggest', ({ game }) => {
+  MP.onParent('suggest', ({ game }) => {
     gameCards.forEach(c => c.classList.toggle('suggested', c.dataset.game === game));
     if (suggestText) suggestText.textContent = `${MP.opponent} suggests playing ${game}!`;
     if (suggestToast) suggestToast.style.display = 'block';
     setTimeout(() => { if (suggestToast) suggestToast.style.display = 'none'; }, 4000);
   });
 
-  MP.on('start', ({ game }) => {
+  MP.onParent('start', ({ game }) => {
     localStorage.setItem('mpRole', 'O');
+    MP.activeGame = game;
     openGameFrame(game);
+    updateActiveHostGameCard();
   });
 
-  MP.on('chat', ({ text, name }) => {
+  MP.onParent('chat', ({ text, name }) => {
     addChatMessage(text, name, false);
     if (chatDrawer && !chatDrawer.classList.contains('open')) {
       unreadChat++;
@@ -547,11 +559,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  MP.on('disconnect', () => {
+  MP.onParent('disconnect', () => {
     stopConnectionTimeout();
     stopCameraScanner();
+    closeGameFrame();
     onDisconnected();
     showToast('Opponent disconnected.');
+  });
+
+  MP.onParent('guest_menu', ({ game }) => {
+    showToast(`${MP.opponent || 'Opponent'} went back to menu.`);
+    updateActiveHostGameCard();
   });
 
   function onDisconnected() {
@@ -559,9 +577,22 @@ document.addEventListener('DOMContentLoaded', () => {
     stopCameraScanner();
     if (chatFab) chatFab.style.display = 'none';
     if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
-    gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
+    gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested', 'active-host-game'));
     document.querySelectorAll('.solo-badge').forEach(b => b.remove());
+    MP.activeGame = null;
     setMode(currentMode, false);
+  }
+
+  function updateActiveHostGameCard() {
+    gameCards.forEach(card => {
+      card.classList.remove('active-host-game');
+    });
+    if (MP.isConnected() && MP.role === 'guest' && MP.activeGame) {
+      const activeCard = document.querySelector(`.game-card[data-game="${MP.activeGame}"]`);
+      if (activeCard) {
+        activeCard.classList.add('active-host-game');
+      }
+    }
   }
 
   /* ══════════════════ SMART CODE EXTRACTOR ══════════════════ */
@@ -834,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openGameFrame = openGameFrame;
 
   function closeGameFrame() {
+    const game = MP.activeGame;
     if (gameFrame) gameFrame.src = "";
     if (gameFrameOverlay) gameFrameOverlay.style.display = "none";
     
@@ -841,12 +873,21 @@ document.addEventListener('DOMContentLoaded', () => {
     gameCards.forEach(c => c.classList.remove('suggested'));
     
     if (MP.isConnected()) {
-      MP.send('menu');
+      if (MP.role === 'host') {
+        MP.activeGame = null;
+        MP.send('menu');
+      } else {
+        MP.send('guest_menu', { game });
+      }
+    } else {
+      MP.activeGame = null;
     }
+    updateActiveHostGameCard();
   }
   window.closeGameFrame = closeGameFrame;
 
-  MP.on('menu', () => {
+  MP.onParent('menu', () => {
+    MP.activeGame = null;
     if (gameFrameOverlay && gameFrameOverlay.style.display !== "none") {
       if (gameFrame) gameFrame.src = "";
       gameFrameOverlay.style.display = "none";
@@ -855,6 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gameCards.forEach(c => c.classList.remove('suggested'));
       showToast(`${MP.opponent || 'Opponent'} went back to menu.`);
     }
+    updateActiveHostGameCard();
   });
 
   /* ══════════════════ MODAL HELPERS ══════════════════ */
@@ -975,6 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeSpinCards.forEach(c => c.classList.remove('highlighted'));
     }
     if (randomBtn) {
+      randomBtn.classList.remove('spinning');
       randomBtn.style.opacity = '1';
     }
     isSpinning = false;
@@ -1001,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isSpinning = true;
     activeSpinCards = cards;
     if (randomBtn) {
+      randomBtn.classList.add('spinning');
       randomBtn.style.opacity = '0.6';
     }
     cards.forEach(c => c.classList.remove('highlighted'));
@@ -1031,6 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
             winner.classList.add('highlighted');
             spinTimeoutId = setTimeout(() => {
               if (randomBtn) {
+                randomBtn.classList.remove('spinning');
                 randomBtn.style.opacity = '1';
               }
               winner.classList.remove('highlighted');
@@ -1093,15 +1138,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   (function checkInstall() {
-    const isIOS      = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isInstalled= window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
-    const dismissed  = localStorage.getItem('installBannerDismissed') === 'true';
     const info       = document.getElementById('install-info');
-    const text       = document.getElementById('install-text');
-    if (!info) return;
-    if (isInstalled || dismissed) { info.style.display = 'none'; return; }
-    info.style.display = 'block';
-    if (isIOS && text) text.innerHTML = `Tap ⎙ in Safari and select <strong>"Add to Home Screen"</strong>.`;
+    if (info) info.style.display = 'none';
   })();
 
 });
