@@ -17,6 +17,10 @@ const MP = (() => {
   let opponentDeviceId = null;
   let myName       = null;
   const listeners  = {};
+  const parentListeners = {};
+  let activeGame = null;
+  let heartbeatTimer = null;
+  let lastPeerMessageTime = 0;
 
   // Persistent device ID
   let myDeviceId = localStorage.getItem('mpDeviceId');
@@ -47,7 +51,16 @@ const MP = (() => {
     if (!listeners[event]) return;
     listeners[event] = listeners[event].filter(f => f !== cb);
   }
+  function onParent(event, cb) {
+    if (!parentListeners[event]) parentListeners[event] = [];
+    parentListeners[event].push(cb);
+  }
+  function offParent(event, cb) {
+    if (!parentListeners[event]) return;
+    parentListeners[event] = parentListeners[event].filter(f => f !== cb);
+  }
   function emit(event, data) {
+    (parentListeners[event] || []).forEach(cb => { try { cb(data); } catch(e) {} });
     (listeners[event] || []).forEach(cb => { try { cb(data); } catch(e) {} });
   }
 
@@ -60,6 +73,31 @@ const MP = (() => {
 
   function isConnected() {
     return !!(dc && dc.readyState === 'open');
+  }
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    lastPeerMessageTime = Date.now();
+    heartbeatTimer = setInterval(() => {
+      if (!isConnected()) {
+        stopHeartbeat();
+        return;
+      }
+      send('_ping');
+      const elapsed = Date.now() - lastPeerMessageTime;
+      if (elapsed > 8000) { // 8 seconds timeout
+        console.warn("Heartbeat lost. Disconnecting...");
+        stopHeartbeat();
+        handleDisconnect();
+      }
+    }, 3000);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
   }
 
   /* ---- ICE gathering: wait until complete or timeout ---- */
@@ -117,13 +155,19 @@ const MP = (() => {
     dc.onopen = () => {
       send('_hello', { name: myName, deviceId: myDeviceId });
       emit('ready', { opponent: opponentName, role, deviceId: opponentDeviceId });
+      startHeartbeat();
     };
-    dc.onclose  = () => handleDisconnect();
-    dc.onerror  = () => handleDisconnect();
+    dc.onclose  = () => { stopHeartbeat(); handleDisconnect(); };
+    dc.onerror  = () => { stopHeartbeat(); handleDisconnect(); };
     dc.onmessage = (e) => {
+      lastPeerMessageTime = Date.now();
       let msg;
       try { msg = JSON.parse(e.data); } catch { return; }
-      if (msg.type === '_hello') {
+      if (msg.type === '_ping') {
+        send('_pong');
+      } else if (msg.type === '_pong') {
+        // Heartbeat updated lastPeerMessageTime
+      } else if (msg.type === '_hello') {
         opponentName = msg.name;
         opponentDeviceId = msg.deviceId;
         emit('connected', { opponent: opponentName, role, deviceId: opponentDeviceId });
@@ -136,8 +180,18 @@ const MP = (() => {
   }
 
   function handleDisconnect() {
+    const wasConnected = isConnected() || role !== null;
+    stopHeartbeat();
     opponentDeviceId = null;
-    emit('disconnected', { opponent: opponentName });
+    role = null;
+    activeGame = null;
+    try { if (dc) dc.close(); } catch {}
+    try { if (pc) pc.close(); } catch {}
+    dc   = null;
+    pc   = null;
+    if (wasConnected) {
+      emit('disconnected', { opponent: opponentName });
+    }
   }
 
   /* ============================================================
@@ -209,32 +263,24 @@ const MP = (() => {
    */
   function disconnect() {
     send('disconnect');
-    try { if (dc) dc.close(); } catch {}
-    try { if (pc) pc.close(); } catch {}
-    dc   = null;
-    pc   = null;
-    role = null;
-    opponentName = null;
-    emit('disconnected', {});
+    handleDisconnect();
   }
 
   function clearGameListeners() {
-    const gameEvents = [
-      'move', 'chat', 'disconnected', 'menu', 'restart_game', 
-      'paddle_update', 'speed_change', 'pause_change', 'ready', 'guest_move'
-    ];
-    gameEvents.forEach(evt => {
+    for (const evt in listeners) {
       listeners[evt] = [];
-    });
+    }
   }
 
   const instance = {
-    on, off, send, isConnected,
+    on, off, onParent, offParent, send, isConnected,
     createOffer, receiveOffer, receiveAnswer, disconnect, clearGameListeners,
     get role()             { return role; },
     get opponent()         { return opponentName; },
     get opponentDeviceId() { return opponentDeviceId || opponentName || 'unknown_peer'; },
-    get myName()           { return myName; }
+    get myName()           { return myName; },
+    get activeGame()       { return activeGame; },
+    set activeGame(val)    { activeGame = val; }
   };
   window.MP = instance;
   return instance;
