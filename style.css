@@ -650,7 +650,7 @@ main {
   display: flex; align-items: center; justify-content: center;
   margin: 12px 0; padding: 16px;
   background: #fff; border-radius: 16px;
-  min-height: 200px;
+  min-height: 292px;
 }
 .qr-wrap canvas, .qr-wrap img { border-radius: 8px; }
 .qr-spinner {
