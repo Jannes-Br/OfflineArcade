@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -450,9 +450,12 @@
   <script src="../../multiplayer.js"></script>
   <script>
     const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+    if (gameMP && typeof gameMP.clearGameListeners === 'function') {
+      gameMP.clearGameListeners();
+    }
 
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
-    const myName    = localStorage.getItem('playerName') || 'Du';
+    const myName    = localStorage.getItem('playerName') || 'You';
     const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest
 
     const canvas = document.getElementById('game');
