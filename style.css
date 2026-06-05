@@ -190,7 +190,9 @@ h1 {
   border-color: var(--btn-hover-border);
   transform: translateY(-2px);
 }
-#random-btn:hover { transform: translateY(-2px) rotate(15deg); }
+@media (hover: hover) {
+  #random-btn:hover { transform: translateY(-2px) rotate(15deg); }
+}
 #chat-header-btn:active, #random-btn:active, #settings-btn:active { transform: scale(0.94); }
 
 .chat-badge-header {
@@ -400,6 +402,7 @@ main {
   flex-shrink: 0;
   margin: 20px 20px 0;
   border-top: 1px solid var(--box-border);
+  padding-bottom: 90px;
 }
 .instructions-toggle {
   width: 100%; background: none; border: none;
@@ -938,4 +941,30 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   max-height: 3em;
   overflow: hidden;
   margin-top: 4px;
+}
+
+/* ───────────────────────── ACTIVE HOST GAME HIGHLIGHT ───────────────── */
+.game-card.active-host-game {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4), var(--card-shadow) !important;
+  animation: activeHostPulse 1.5s infinite ease-in-out;
+}
+@keyframes activeHostPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35), 0 0 15px rgba(239, 68, 68, 0.2);
+    border-color: #f87171 !important;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.45);
+    border-color: #ef4444 !important;
+  }
+}
+
+/* ───────────────────────── DICE ROTATION SPINNING ───────────────────── */
+@keyframes spinAnimation {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+#random-btn.spinning {
+  animation: spinAnimation 0.8s infinite linear !important;
 }
