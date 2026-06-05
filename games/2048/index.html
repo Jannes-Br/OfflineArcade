@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -345,11 +345,9 @@
       border: 1px solid var(--box-border);
       padding: 12px;
       border-radius: 24px;
-      width: 320px;
-      height: 320px;
+      width: 100%;
       aspect-ratio: 1;
-      max-width: 100%;
-      max-height: 100%;
+      max-width: min(320px, calc(100vh - 340px));
       box-sizing: border-box;
       touch-action: none;
       user-select: none;
@@ -822,9 +820,12 @@
   <script src="../../multiplayer.js"></script>
   <script>
     const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+    if (gameMP && typeof gameMP.clearGameListeners === 'function') {
+      gameMP.clearGameListeners();
+    }
 
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
-    const myName    = localStorage.getItem('playerName') || 'Du';
+    const myName    = localStorage.getItem('playerName') || 'You';
     const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest
 
     const board = document.getElementById('board');
@@ -1047,7 +1048,7 @@
         trashBtn.style.display = 'none';
         mergeBtn.style.display = 'none';
 
-        p1Label.textContent = '👤 Du';
+        p1Label.textContent = '👤 You';
         p2Label.textContent = '🤖 Bot';
         
         mySymbol = 'X';
@@ -1335,8 +1336,11 @@
           syncTileDOM();
           
           if (!canMove() && grid.flat().filter(x => x).length === 16) {
-            messageElement.textContent = 'Game Over';
-            showOverlay('over');
+            if (trashUses === 0 && mergeUses === 0) {
+              endGame();
+            } else {
+              messageElement.textContent = 'Use your power-ups to continue!';
+            }
           }
         }
         return;
@@ -1395,7 +1399,7 @@
           syncTileDOM();
 
           if (hasWon()) {
-            messageElement.textContent = 'Du hast 2048 erreicht!';
+            messageElement.textContent = 'You reached 2048!';
             if (!hasReachedWin) {
               showOverlay('win');
             }
@@ -1607,14 +1611,59 @@
       return { newGrid, slideScore, moved };
     }
 
+    function executeAuthoritativeMove(direction) {
+      if (!gameActive || isMoving) return;
+      const { newGrid, slideScore, moved } = getNextState(direction);
+      if (!moved) return;
+
+      isMoving = true;
+      const oldGrid = copyGrid(grid);
+      grid = newGrid;
+      scores[currentPlayer] += slideScore;
+      addRandomTile();
+
+      gameMP.send('move', { game: '2048', data: { grid, scores } });
+
+      animateMovements(oldGrid, grid);
+      
+      setTimeout(() => {
+        playSound(slideScore > 0 ? 'merge' : 'slide');
+        syncTileDOM();
+
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            if (grid[r][c]) {
+              grid[r][c].mergedFrom = null;
+              grid[r][c].isMerged = false;
+            }
+          }
+        }
+
+        if (hasWon() || !canMove()) {
+          endGame();
+          return;
+        }
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateBoardInteractivity();
+        isMoving = false;
+      }, 140);
+    }
+
     function move(direction) {
       if (deleteMode || mergeMode || !gameActive || isMoving) return;
 
-      // Online: verify turn
-      if (gameMode === 'multi' && currentPlayer !== mySymbol) return;
+      if (gameMode === 'multi') {
+        if (currentPlayer !== mySymbol) return;
+        if (mySymbol === 'X') {
+          executeAuthoritativeMove(direction);
+        } else {
+          gameMP.send('guest_move', { direction });
+        }
+        return;
+      }
 
       const { newGrid, slideScore, moved } = getNextState(direction);
-
       if (!moved) return;
 
       isMoving = true;
@@ -1635,27 +1684,14 @@
         scores[currentPlayer] += slideScore;
       }
 
-      // Add random tile BEFORE sending!
       addRandomTile();
 
-      // Sync move to multiplayer
-      if (gameMode === 'multi') {
-        gameMP.send('move', { game: '2048', data: { direction, grid, scores } });
-      }
-      
-      // Animate from old grid to the new grid (which has the random tile)
       animateMovements(oldGrid, grid);
       
       setTimeout(() => {
-        if (slideScore > 0) {
-          playSound('merge');
-        } else {
-          playSound('slide');
-        }
-
+        playSound(slideScore > 0 ? 'merge' : 'slide');
         syncTileDOM();
 
-        // Clear animation flags
         for (let r = 0; r < 4; r++) {
           for (let c = 0; c < 4; c++) {
             if (grid[r][c]) {
@@ -1669,64 +1705,58 @@
           endGame();
           return;
         } else if (!canMove()) {
-          endGame();
-          return;
+          if (gameMode === 'solo' && (trashUses > 0 || mergeUses > 0)) {
+            messageElement.textContent = 'Use your power-ups to continue!';
+          } else {
+            endGame();
+            return;
+          }
         }
 
-        // Toggle turn
-        if (gameMode === 'multi' || gameMode === 'bot') {
-          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-          
-          if (gameMode === 'bot' && currentPlayer === 'O') {
-            board.style.pointerEvents = 'none';
-            messageElement.textContent = '🤖 Bot thinking…';
-            setTimeout(() => {
-              const botDir = getBotMove();
-              
-              const botResult = getNextState(botDir);
-              if (botResult.moved) {
-                const botOldGrid = copyGrid(grid);
-                grid = botResult.newGrid;
-                scores.O += botResult.slideScore;
-                
-                // Add random tile for bot move
-                addRandomTile();
+        if (gameMode === 'bot') {
+          currentPlayer = 'O';
+          board.style.pointerEvents = 'none';
+          messageElement.textContent = '🤖 Bot thinking…';
+          setTimeout(() => {
+            const botDir = getBotMove();
+            const botResult = getNextState(botDir);
+            if (botResult.moved) {
+              const botOldGrid = copyGrid(grid);
+              grid = botResult.newGrid;
+              scores.O += botResult.slideScore;
+              addRandomTile();
 
-                animateMovements(botOldGrid, grid);
+              animateMovements(botOldGrid, grid);
+              
+              setTimeout(() => {
+                playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
+                syncTileDOM();
                 
-                setTimeout(() => {
-                  playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
-                  syncTileDOM();
-                  
-                  // Clear animations
-                  for (let r = 0; r < 4; r++) {
-                    for (let c = 0; c < 4; c++) {
-                      if (grid[r][c]) {
-                        grid[r][c].mergedFrom = null;
-                        grid[r][c].isMerged = false;
-                      }
+                for (let r = 0; r < 4; r++) {
+                  for (let c = 0; c < 4; c++) {
+                    if (grid[r][c]) {
+                      grid[r][c].mergedFrom = null;
+                      grid[r][c].isMerged = false;
                     }
                   }
-                  
-                  board.style.pointerEvents = 'auto';
-
-                  if (hasWon() || !canMove()) {
-                    endGame();
-                    return;
-                  }
-                  
-                  currentPlayer = 'X';
-                  updateBoardInteractivity();
-                }, 140);
-              } else {
+                }
+                
                 board.style.pointerEvents = 'auto';
+
+                if (hasWon() || !canMove()) {
+                  endGame();
+                  return;
+                }
+                
                 currentPlayer = 'X';
                 updateBoardInteractivity();
-              }
-            }, 500);
-          } else {
-            updateBoardInteractivity();
-          }
+              }, 140);
+            } else {
+              board.style.pointerEvents = 'auto';
+              currentPlayer = 'X';
+              updateBoardInteractivity();
+            }
+          }, 500);
         }
 
         isMoving = false;
@@ -1983,7 +2013,7 @@
     }
 
     /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
-    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler;
+    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onGuestMoveHandler;
 
     function setupMultiplayerEvents() {
       onMoveHandler = ({ game, data }) => {
@@ -2022,6 +2052,12 @@
         }, 140);
       };
 
+      onGuestMoveHandler = ({ direction }) => {
+        if (mySymbol === 'X' && currentPlayer === 'O') {
+          executeAuthoritativeMove(direction);
+        }
+      };
+
       onChatHandler = ({ text, name }) => {
         addChatMsg(text, name, false);
         if (!chatDrawer.classList.contains('open')) {
@@ -2049,6 +2085,7 @@
       };
 
       gameMP.on('move', onMoveHandler);
+      gameMP.on('guest_move', onGuestMoveHandler);
       gameMP.on('chat', onChatHandler);
       gameMP.on('disconnected', onDisconnectedHandler);
       gameMP.on('menu', onMenuHandler);
@@ -2059,6 +2096,7 @@
     window.addEventListener('unload', () => {
       if (gameMode === 'multi' && gameMP) {
         if (onMoveHandler) gameMP.off('move', onMoveHandler);
+        if (onGuestMoveHandler) gameMP.off('guest_move', onGuestMoveHandler);
         if (onChatHandler) gameMP.off('chat', onChatHandler);
         if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
         if (onMenuHandler) gameMP.off('menu', onMenuHandler);
