@@ -1,8 +1,8 @@
 /* ============================================================
-   OfflineArcade – main.js  (complete rewrite with multiplayer)
+   OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v90';
+const CACHE_VERSION = 'v91';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -30,8 +30,95 @@ let playerName     = localStorage.getItem('playerName') || '';
 let playerAvatar   = localStorage.getItem('playerAvatar') || '😎';
 let unreadChat     = 0;
 let chatHistory    = {};
-let scanStream     = null;
-let scanInterval   = null;
+
+/* ── QR Scanner state ── */
+let activeStream = null;
+let activeScanInterval = null;
+
+function stopCameraScanner() {
+  if (activeScanInterval) {
+    clearInterval(activeScanInterval);
+    activeScanInterval = null;
+  }
+  if (activeStream) {
+    activeStream.getTracks().forEach(track => track.stop());
+    activeStream = null;
+  }
+  
+  const hostScannerView = document.getElementById('hostScannerView');
+  const guestScannerView = document.getElementById('guestScannerView');
+  if (hostScannerView) hostScannerView.style.display = 'none';
+  
+  const hostVideo = document.getElementById('hostVideo');
+  const guestVideo = document.getElementById('guestVideo');
+  if (hostVideo) hostVideo.srcObject = null;
+  if (guestVideo) guestVideo.srcObject = null;
+}
+
+async function startCameraScanner(videoEl, callback) {
+  stopCameraScanner();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: "environment" } 
+    });
+    activeStream = stream;
+    videoEl.srcObject = stream;
+    videoEl.setAttribute("playsinline", true);
+    videoEl.muted = true;
+    
+    // Explicitly play video to support all platforms (especially Safari/iOS)
+    videoEl.play().catch(err => console.warn("Video play started automatically or failed:", err));
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    activeScanInterval = setInterval(() => {
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+        // Downscale scanner image to a maximum of 480px width/height for high performance on mobile devices
+        let width = videoEl.videoWidth;
+        let height = videoEl.videoHeight;
+        const maxDim = 480;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(videoEl, 0, 0, width, height);
+        const imgData = ctx.getImageData(0, 0, width, height);
+        try {
+          const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
+            inversionAttempts: "attemptBoth"
+          });
+          if (decoded && decoded.data) {
+            const scannedText = decoded.data.trim();
+            if (scannedText) {
+              stopCameraScanner();
+              callback(scannedText);
+            }
+          }
+        } catch (e) {
+          console.warn("jsQR decoding error:", e);
+        }
+      }
+    }, 250);
+  } catch (err) {
+    console.error("Camera access failed:", err);
+    showToast("Camera access failed. Please use Text Code fallback.");
+    stopCameraScanner();
+    
+    const hostToggleTextBtn = document.getElementById('hostToggleTextBtn');
+    const guestToggleTextBtn = document.getElementById('guestToggleTextBtn');
+    if (videoEl.id === 'hostVideo' && hostToggleTextBtn) hostToggleTextBtn.click();
+    if (videoEl.id === 'guestVideo' && guestToggleTextBtn) guestToggleTextBtn.click();
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -75,6 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const hostQrOverlay     = document.getElementById('hostQrOverlay');
   const hostQrClose       = document.getElementById('hostQrClose');
   const hostQrSubtitle    = document.getElementById('hostQrSubtitle');
+  const hostQrContainer   = document.getElementById('hostQrContainer');
+  const hostScannerView   = document.getElementById('hostScannerView');
+  const hostVideo         = document.getElementById('hostVideo');
+  const hostScanGuestBtn  = document.getElementById('hostScanGuestBtn');
+  const hostToggleTextBtn = document.getElementById('hostToggleTextBtn');
+  const hostScanActionArea = document.getElementById('hostScanActionArea');
   const hostCodeBox       = document.getElementById('hostCodeBox');
   const hostShareActions  = document.getElementById('hostShareActions');
   const hostCopyBtn       = document.getElementById('hostCopyBtn');
@@ -86,11 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const guestJoinOverlay  = document.getElementById('guestJoinOverlay');
   const guestJoinClose    = document.getElementById('guestJoinClose');
   const guestScanStep     = document.getElementById('guestScanStep');
+  const guestVideo        = document.getElementById('guestVideo');
   const guestPasteHostBtn = document.getElementById('guestPasteHostBtn');
+  const guestToggleTextBtn = document.getElementById('guestToggleTextBtn');
+  const guestTextPasteArea = document.getElementById('guestTextPasteArea');
   const guestAnswerStep   = document.getElementById('guestAnswerStep');
+  const guestQrContainer  = document.getElementById('guestQrContainer');
   const guestAnswerCodeBox= document.getElementById('guestAnswerCodeBox');
+  const guestShareActions = document.getElementById('guestShareActions');
   const guestCopyBtn      = document.getElementById('guestCopyBtn');
   const guestShareBtn     = document.getElementById('guestShareBtn');
+  const guestToggleAnswerTextBtn = document.getElementById('guestToggleAnswerTextBtn');
   const guestSpinner      = document.getElementById('guestSpinner');
 
   /* Chat */
@@ -101,8 +200,96 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatPartnerName = document.getElementById('chatPartnerName');
   const chatInput       = document.getElementById('chatInput');
   const chatSend        = document.getElementById('chatSend');
+  const chatDeleteBtn   = document.getElementById('chatDeleteBtn');
+  const chatConfirmDelete = document.getElementById('chatConfirmDelete');
+  const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+  const confirmDeleteNo = document.getElementById('confirmDeleteNo');
 
-  /* ══════════════════ INIT ══════════════════ */
+  /* ══════════════════ PRE-CACHING LOADING SCREEN ══════════════════ */
+  
+  const isLoadedThisSession = sessionStorage.getItem('appLoadedThisSession') === 'true';
+  const loadingOverlay = document.getElementById('loadingOverlay');
+
+  if (!isLoadedThisSession && loadingOverlay) {
+    loadingOverlay.style.display = 'flex';
+    preCacheAppFiles();
+  } else {
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+  }
+
+  async function preCacheAppFiles() {
+    const statusText = document.getElementById('loadingStatus');
+    const fileText = document.getElementById('loadingFile');
+    const bar = document.getElementById('loadingBar');
+
+    const assets = [
+      './',
+      'index.html',
+      'style.css',
+      'main.js',
+      'manifest.json',
+      'multiplayer.js',
+      'assets/qrcode.min.js',
+      'assets/jsqr.min.js',
+      'games/escape-road/index.html',
+      'games/escape-road/manifest.json',
+      'games/escape-road/script.js',
+      'games/escape-road/style.css',
+      'games/escape-road/icon-512.png',
+      'games/escape-road/icon.png',
+      'assets/thumbnails/escape-road.png',
+      'games/drive-mad/index.html',
+      'assets/thumbnails/drive-mad.png',
+      'games/block-smasher/index.html',
+      'assets/thumbnails/block-smasher.png',
+      'games/tic-tac-toe/index.html',
+      'assets/thumbnails/tic-tac-toe.png',
+      'games/2048/index.html',
+      'assets/thumbnails/2048.png',
+      'games/pong/index.html',
+      'assets/thumbnails/pong.png'
+    ];
+
+    try {
+      const cache = await caches.open('offlinearcade-' + CACHE_VERSION);
+      let loaded = 0;
+      
+      for (const url of assets) {
+        if (statusText) statusText.textContent = `Downloading offline assets... (${loaded + 1}/${assets.length})`;
+        if (fileText) fileText.textContent = url;
+        
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            await cache.put(url, response);
+          }
+        } catch (e) {
+          console.warn(`Optional pre-cache skipped for: ${url}`, e);
+        }
+        
+        loaded++;
+        if (bar) bar.style.width = `${(loaded / assets.length) * 100}%`;
+      }
+      
+      if (statusText) statusText.textContent = 'Pre-caching complete! Loading...';
+      sessionStorage.setItem('appLoadedThisSession', 'true');
+      
+      setTimeout(() => {
+        if (loadingOverlay) {
+          loadingOverlay.style.opacity = '0';
+          setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+          }, 300);
+        }
+      }, 500);
+    } catch (e) {
+      console.error('Pre-caching failed:', e);
+      sessionStorage.setItem('appLoadedThisSession', 'true');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }
+  }
+
+  /* ══════════════════ SERVICE WORKER INIT ══════════════════ */
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
@@ -113,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (w.state === 'installed' && navigator.serviceWorker.controller) {
               if (reloadBtn) {
                 reloadBtn.classList.add('pulse');
-                reloadBtn.title = 'Update verfügbar!';
+                reloadBtn.title = 'Update available!';
               }
             }
           });
@@ -136,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (nameDisplay) nameDisplay.textContent = playerName;
   if (nameInput) nameInput.value = playerName;
 
-  /* Avatar grid: mark selected */
+  /* Avatar grid selection styling */
   function refreshAvatarGrid() {
     document.querySelectorAll('.avatar-option').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.emoji === playerAvatar);
@@ -151,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('playerAvatar', playerAvatar);
       if (profileAvatarEl) profileAvatarEl.textContent = playerAvatar;
       refreshAvatarGrid();
-      showToast('Profilbild gespeichert! ' + playerAvatar);
+      showToast('Avatar saved! ' + playerAvatar);
     });
   });
 
@@ -167,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   try { chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}'); } catch {}
 
-  /* ══════════════════ THEME ══════════════════ */
+  /* ── Themes ── */
   function applyTheme() {
     const t = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('dark-mode', t === 'dark');
@@ -182,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (themeToggleDrawer) themeToggleDrawer.addEventListener('click', toggleTheme);
 
-  /* ══════════════════ ONLINE STATUS ══════════════════ */
+  /* ── Online check ── */
   function updateOnlineStatus() {
     if (navigator.onLine) {
       if (statusDot) {
@@ -201,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* ══════════════════ MODE TABS ══════════════════ */
+  /* ── Tab switches ── */
   function setMode(mode, save = true) {
     currentMode = mode;
     if (save) localStorage.setItem('gameMode', mode);
@@ -212,19 +399,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const connected = MP.isConnected();
 
     if (lobbyPanel) lobbyPanel.style.display             = isMulti ? 'block' : 'none';
-    if (chatFab) chatFab.style.display                = (isMulti &&  connected) ? 'flex'  : 'none';
-    if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = (isMulti &&  connected) ? 'block' : 'none';
+    if (chatFab) chatFab.style.display                = (isMulti && connected) ? 'flex'  : 'none';
+    if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = (isMulti && connected) ? 'block' : 'none';
 
     if (isMulti) {
       if (connected) {
         if (lobbyActions) lobbyActions.style.display = 'none';
         if (lobbyConnectedActions) lobbyConnectedActions.style.display = 'flex';
-        if (lobbyDisconnectBtn) lobbyDisconnectBtn.innerHTML = `<span>✕</span> Verbindung trennen (mit <strong>${MP.opponent || 'Gegner'}</strong> verbunden)`;
-        if (lobbyHint) lobbyHint.textContent = `Wähle ein spiel aus, um zu starten.`;
+        if (lobbyDisconnectBtn) lobbyDisconnectBtn.innerHTML = `<span>✕</span> Disconnect (connected with <strong>${MP.opponent || 'Opponent'}</strong>)`;
+        if (lobbyHint) lobbyHint.textContent = `Select a game to play.`;
       } else {
         if (lobbyActions) lobbyActions.style.display = 'flex';
         if (lobbyConnectedActions) lobbyConnectedActions.style.display = 'none';
-        if (lobbyHint) lobbyHint.textContent = 'Erstelle eine Verbindung und tausche den Code aus.';
+        if (lobbyHint) lobbyHint.textContent = 'Establish a connection and exchange codes via Scanning or Text.';
       }
     }
 
@@ -236,14 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
     tab.addEventListener('click', () => setMode(tab.dataset.mode));
   });
 
-  /* ── CARD STATES ── */
   function updateCardStates(mode, connected) {
     gameCards.forEach(card => {
       const isMP = card.dataset.multiplayer === 'true';
       const old  = card.querySelector('.solo-badge');
       if (old) old.remove();
 
-      // Disable non-MP cards when in bot or multi mode
       const shouldDisable = (mode === 'bot' || mode === 'multi') && !isMP;
       if (shouldDisable) {
         card.classList.add('mp-disabled');
@@ -257,22 +442,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ── GAME CARD CLICK ── */
+  /* ── Card Click block if not connected ── */
   gameCards.forEach(card => {
     card.addEventListener('click', (e) => {
       if (card.classList.contains('mp-disabled')) { e.preventDefault(); return; }
       const game = card.dataset.game;
       e.preventDefault();
 
-      if (currentMode === 'multi' && MP.isConnected()) {
-        if (MP.role === 'guest') {
-          MP.send('suggest', { game });
-          showToast('Vorschlag gesendet! Warte auf den Host.');
-        }
-        if (MP.role === 'host') {
-          MP.send('start', { game, role: 'O' });
-          localStorage.setItem('mpRole', 'X'); // Host is X
-          openGameFrame(game);
+      if (currentMode === 'multi') {
+        if (MP.isConnected()) {
+          if (MP.role === 'guest') {
+            MP.send('suggest', { game });
+            showToast('Suggestion sent! Waiting for host.');
+          }
+          if (MP.role === 'host') {
+            MP.send('start', { game, role: 'O' });
+            localStorage.setItem('mpRole', 'X');
+            openGameFrame(game);
+          }
+        } else {
+          showToast('Please establish a connection first to play multiplayer.');
         }
       } else {
         openGameFrame(game);
@@ -280,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ── SETTINGS DRAWER ── */
+  /* ── Settings controls ── */
   if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
   if (settingsClose) settingsClose.addEventListener('click', closeSettings);
   if (settingsOverlay) settingsOverlay.addEventListener('click', closeSettings);
@@ -304,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerName = n;
     localStorage.setItem('playerName', playerName);
     if (nameDisplay) nameDisplay.textContent = playerName;
-    showToast('Name gespeichert! 👋');
+    showToast('Name saved! 👋');
     closeSettings();
   }
 
@@ -315,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(connectionTimeout);
     MP.disconnect();
     onDisconnected();
-    showToast('Verbindung getrennt.');
+    showToast('Connection disconnected.');
   }
 
   /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
@@ -325,31 +514,34 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(connectionTimeout);
     connectionTimeout = setTimeout(() => {
       if (!MP.isConnected()) {
+        stopCameraScanner();
         MP.disconnect();
-        showToast('❌ Verbindungsaufbau fehlgeschlagen (Timeout).');
+        showToast('❌ Connection attempt failed (Timeout).');
         closeAllModals();
       }
-    }, 15000); // 15 seconds timeout
+    }, 15000);
   }
 
   MP.on('connected', ({ opponent }) => {
     clearTimeout(connectionTimeout);
-    if (chatPartnerName) chatPartnerName.textContent = opponent || 'Gegner';
+    stopCameraScanner();
+    if (chatPartnerName) chatPartnerName.textContent = opponent || 'Opponent';
     closeAllModals();
     setMode(currentMode, false);
-    showToast(`✅ Verbunden mit ${opponent}!`);
+    showToast(`Connected with ${opponent}! ✅`);
   });
 
   MP.on('disconnected', ({ opponent }) => {
     clearTimeout(connectionTimeout);
+    stopCameraScanner();
     MP.disconnect();
     onDisconnected();
-    if (opponent) showToast(`${opponent} hat die Verbindung getrennt.`);
+    if (opponent) showToast(`${opponent} disconnected.`);
   });
 
   MP.on('suggest', ({ game }) => {
     gameCards.forEach(c => c.classList.toggle('suggested', c.dataset.game === game));
-    if (suggestText) suggestText.textContent = `${MP.opponent} schlägt ${game} vor!`;
+    if (suggestText) suggestText.textContent = `${MP.opponent} suggests playing ${game}!`;
     if (suggestToast) suggestToast.style.display = 'block';
     setTimeout(() => { if (suggestToast) suggestToast.style.display = 'none'; }, 4000);
   });
@@ -372,12 +564,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   MP.on('disconnect', () => {
     clearTimeout(connectionTimeout);
+    stopCameraScanner();
     onDisconnected();
-    showToast('Gegner hat die Verbindung getrennt.');
+    showToast('Opponent disconnected.');
   });
 
   function onDisconnected() {
     clearTimeout(connectionTimeout);
+    stopCameraScanner();
     if (chatFab) chatFab.style.display = 'none';
     if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
     gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested'));
@@ -385,115 +579,204 @@ document.addEventListener('DOMContentLoaded', () => {
     setMode(currentMode, false);
   }
 
-  /* ══════════════════ HOST FLOW ══════════════════ */
+  /* ══════════════════ HOST CONNECTIONS (QR Display & Scan) ══════════════════ */
   if (createLobbyBtn) {
     createLobbyBtn.addEventListener('click', async () => {
+      stopCameraScanner();
+      
+      if (hostQrContainer) hostQrContainer.innerHTML = '';
       if (hostCodeBox) {
         hostCodeBox.innerHTML = '';
         hostCodeBox.style.display = 'none';
       }
       if (hostShareActions) hostShareActions.style.display = 'none';
-      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
+      if (hostScanActionArea) hostScanActionArea.style.display = 'none';
+      if (hostScannerView) hostScannerView.style.display = 'none';
       if (hostSpinner) hostSpinner.style.display = 'block';
-      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Code wird erstellt…';
+      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Generating connection QR code…';
+      
       openModal(hostQrOverlay);
 
       try {
         const encoded = await MP.createOffer(playerName);
-        if (hostSpinner) hostSpinner.style.display  = 'none';
-        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Teile diesen Code mit deinem Gast:';
-        if (hostCodeBox) {
-          hostCodeBox.textContent    = encoded;
-          hostCodeBox.style.display  = 'block';
+        if (hostSpinner) hostSpinner.style.display = 'none';
+        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Let your guest scan this QR code:';
+        
+        // Render QR Code using low correction level for easy scanning
+        if (hostQrContainer) {
+          hostQrContainer.innerHTML = '';
+          new QRCode(hostQrContainer, {
+            text: encoded,
+            width: 180,
+            height: 180,
+            correctLevel: QRCode.CorrectLevel.L
+          });
+          hostQrContainer.style.display = 'flex';
         }
-        if (hostShareActions) hostShareActions.style.display = 'flex';
-        if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'flex';
+        
+        if (hostCodeBox) hostCodeBox.textContent = encoded;
+        if (hostScanActionArea) hostScanActionArea.style.display = 'flex';
 
+        // Setup copy buttons
         if (hostCopyBtn) {
           hostCopyBtn.onclick = () => {
             navigator.clipboard.writeText(encoded)
-              .then(() => showToast('📋 Code kopiert!'))
-              .catch(() => showToast('❌ Fehler beim Kopieren.'));
+              .then(() => showToast('📋 Code copied!'))
+              .catch(() => showToast('❌ Failed copying code.'));
           };
         }
 
         if (hostShareBtn) {
           hostShareBtn.onclick = () => {
             if (navigator.share) {
-              navigator.share({
-                title: 'OfflineArcade Verbindung',
-                text: encoded
-              }).then(() => showToast('Erfolgreich geteilt!'))
-                .catch(() => {});
+              navigator.share({ title: 'OfflineArcade Code', text: encoded });
             } else {
-              showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
+              showToast('Sharing not supported. Copy code manually.');
             }
           };
         }
       } catch(e) {
-        if (hostQrSubtitle) hostQrSubtitle.textContent = '❌ Fehler beim Erstellen. Nochmal versuchen.';
+        if (hostQrSubtitle) hostQrSubtitle.textContent = '❌ Failed generating connection. Retry.';
         if (hostSpinner) hostSpinner.style.display  = 'none';
       }
     });
+  }
+
+  // Toggle fallback text displays in Host modal
+  if (hostToggleTextBtn) {
+    hostToggleTextBtn.addEventListener('click', () => {
+      stopCameraScanner();
+      const visible = hostCodeBox.style.display === 'block';
+      hostCodeBox.style.display = visible ? 'none' : 'block';
+      hostShareActions.style.display = visible ? 'none' : 'flex';
+      hostPasteGuestBtn.style.display = visible ? 'none' : 'flex';
+      
+      if (hostQrContainer) hostQrContainer.style.display = visible ? 'flex' : 'none';
+      hostToggleTextBtn.textContent = visible ? '📋 Show Text Code fallback' : '📸 Show QR Code';
+      if (hostQrSubtitle) {
+        hostQrSubtitle.textContent = visible ? 'Let your guest scan this QR code:' : 'Share this text code with your guest:';
+      }
+    });
+  }
+
+  // Host scans guest response
+  if (hostScanGuestBtn) {
+    hostScanGuestBtn.addEventListener('click', () => {
+      if (hostQrContainer) hostQrContainer.style.display = 'none';
+      if (hostScannerView) hostScannerView.style.display = 'block';
+      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Point camera at Guest\'s QR code:';
+      
+      startCameraScanner(hostVideo, async (scannedCode) => {
+        stopCameraScanner();
+        processGuestAnswer(scannedCode);
+      });
+    });
+  }
+
+  async function processGuestAnswer(textCode) {
+    if (hostQrSubtitle) hostQrSubtitle.textContent = 'Establishing connection...';
+    if (hostScanActionArea) hostScanActionArea.style.display = 'none';
+    if (hostSpinner) {
+      hostSpinner.textContent = 'Connecting to guest...';
+      hostSpinner.style.display = 'block';
+    }
+
+    startConnectionTimeout();
+
+    try {
+      await MP.receiveAnswer(textCode);
+    } catch(e) {
+      clearTimeout(connectionTimeout);
+      showToast('❌ Invalid code.');
+      
+      if (hostQrSubtitle) hostQrSubtitle.textContent = 'Let your guest scan this QR code:';
+      if (hostQrContainer) hostQrContainer.style.display = 'flex';
+      if (hostScanActionArea) hostScanActionArea.style.display = 'flex';
+      if (hostSpinner) hostSpinner.style.display = 'none';
+    }
   }
 
   if (hostPasteGuestBtn) {
     hostPasteGuestBtn.addEventListener('click', async () => {
       let text = "";
       try { text = await navigator.clipboard.readText(); } catch(e) {}
-      if (!text) text = prompt("Füge den Verbindungscode des Gastes hier ein:");
+      if (!text) text = prompt("Paste the Guest's connection code:");
       text = text ? text.trim() : "";
       if (!text) return;
-      
-      // Keep Host modal open, show connection spinner
-      if (hostQrSubtitle) hostQrSubtitle.textContent = '⏳ Verbindung wird aufgebaut...';
-      if (hostCodeBox) hostCodeBox.style.display = 'none';
-      if (hostShareActions) hostShareActions.style.display = 'none';
-      if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
-      if (hostSpinner) {
-        hostSpinner.textContent = '⏳ Verbinde mit Gast...';
-        hostSpinner.style.display = 'block';
-      }
-
-      startConnectionTimeout();
-
-      try {
-        await MP.receiveAnswer(text);
-      } catch(e) {
-        clearTimeout(connectionTimeout);
-        showToast('❌ Ungültiger Code.');
-        // Restore Host modal state
-        if (hostQrSubtitle) hostQrSubtitle.textContent = 'Teile diesen Code mit deinem Gast:';
-        if (hostCodeBox) hostCodeBox.style.display = 'block';
-        if (hostShareActions) hostShareActions.style.display = 'flex';
-        if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'flex';
-        if (hostSpinner) hostSpinner.style.display = 'none';
-      }
+      processGuestAnswer(text);
     });
   }
 
-  if (hostQrClose) hostQrClose.addEventListener('click',  () => { clearTimeout(connectionTimeout); closeModal(hostQrOverlay);  MP.disconnect(); });
+  if (hostQrClose) hostQrClose.addEventListener('click',  () => { stopCameraScanner(); clearTimeout(connectionTimeout); closeModal(hostQrOverlay);  MP.disconnect(); });
 
-  /* ══════════════════ GUEST FLOW ══════════════════ */
+  /* ══════════════════ GUEST CONNECTIONS (Scan Host & QR Display) ══════════════════ */
   if (joinLobbyBtn) {
     joinLobbyBtn.addEventListener('click', () => {
-      if (guestScanStep) guestScanStep.style.display   = 'block';
+      stopCameraScanner();
+      if (guestScanStep) guestScanStep.style.display = 'block';
       if (guestAnswerStep) guestAnswerStep.style.display = 'none';
+      
       openModal(guestJoinOverlay);
+      
+      // Start scanning immediately
+      startCameraScanner(guestVideo, (scannedHostCode) => {
+        stopCameraScanner();
+        guestProcessOffer(scannedHostCode);
+      });
+    });
+  }
+
+  // Toggle Guest Scan input fallbacks
+  if (guestToggleTextBtn) {
+    guestToggleTextBtn.addEventListener('click', () => {
+      const visible = guestTextPasteArea.style.display === 'block';
+      guestTextPasteArea.style.display = visible ? 'none' : 'block';
+      if (guestScannerView) guestScannerView.style.display = visible ? 'block' : 'none';
+      guestToggleTextBtn.textContent = visible ? '📋 Use Text Code Instead' : '📸 Scan QR Code';
+      
+      if (visible) {
+        startCameraScanner(guestVideo, (scannedHostCode) => {
+          stopCameraScanner();
+          guestProcessOffer(scannedHostCode);
+        });
+      } else {
+        stopCameraScanner();
+      }
     });
   }
 
   async function guestProcessOffer(offerText) {
-    if (guestScanStep) guestScanStep.style.display   = 'none';
+    stopCameraScanner();
+    if (guestScanStep) guestScanStep.style.display = 'none';
     if (guestAnswerStep) guestAnswerStep.style.display = 'block';
-    if (guestAnswerCodeBox) guestAnswerCodeBox.innerHTML  = '';
-    if (guestSpinner) guestSpinner.style.display    = 'block';
+    
+    if (guestQrContainer) guestQrContainer.innerHTML = '';
+    if (guestAnswerCodeBox) {
+      guestAnswerCodeBox.innerHTML = '';
+      guestAnswerCodeBox.style.display = 'none';
+    }
+    if (guestShareActions) guestShareActions.style.display = 'none';
+    if (guestSpinner) guestSpinner.style.display = 'block';
+
     try {
       const answer = await MP.receiveOffer(offerText, playerName);
       if (guestSpinner) {
-        guestSpinner.textContent = '⏳ Warte auf Verbindung...';
+        guestSpinner.textContent = 'Waiting for direct connection...';
         guestSpinner.style.display = 'block';
       }
+
+      // Render Guest Answer QR code
+      if (guestQrContainer) {
+        guestQrContainer.innerHTML = '';
+        new QRCode(guestQrContainer, {
+          text: answer,
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.L
+        });
+        guestQrContainer.style.display = 'flex';
+      }
+
       if (guestAnswerCodeBox) guestAnswerCodeBox.textContent = answer;
 
       startConnectionTimeout();
@@ -501,41 +784,49 @@ document.addEventListener('DOMContentLoaded', () => {
       if (guestCopyBtn) {
         guestCopyBtn.onclick = () => {
           navigator.clipboard.writeText(answer)
-            .then(() => showToast('📋 Code kopiert!'))
-            .catch(() => showToast('❌ Fehler beim Kopieren.'));
+            .then(() => showToast('📋 Code copied!'))
+            .catch(() => showToast('❌ Failed copying code.'));
         };
       }
 
       if (guestShareBtn) {
         guestShareBtn.onclick = () => {
           if (navigator.share) {
-            navigator.share({
-              title: 'OfflineArcade Verbindung',
-              text: answer
-            }).then(() => showToast('Erfolgreich geteilt!'))
-              .catch(() => {});
+            navigator.share({ title: 'OfflineArcade Code', text: answer });
           } else {
-            showToast('Teilen nicht unterstützt. Bitte manuell kopieren.');
+            showToast('Sharing not supported. Copy code manually.');
           }
         };
       }
     } catch(e) {
-      if (guestSpinner) guestSpinner.textContent = '❌ Fehler. Bitte erneut versuchen.';
+      if (guestSpinner) guestSpinner.textContent = '❌ Failed generating connection code. Retry.';
     }
+  }
+
+  // Toggle Guest Answer Code text display
+  if (guestToggleAnswerTextBtn) {
+    guestToggleAnswerTextBtn.addEventListener('click', () => {
+      const visible = guestAnswerCodeBox.style.display === 'block';
+      guestAnswerCodeBox.style.display = visible ? 'none' : 'block';
+      guestShareActions.style.display = visible ? 'none' : 'flex';
+      
+      if (guestQrContainer) guestQrContainer.style.display = visible ? 'flex' : 'none';
+      guestToggleAnswerTextBtn.textContent = visible ? '📋 Show Text Code fallback' : '📸 Show QR Code';
+    });
   }
 
   if (guestPasteHostBtn) {
     guestPasteHostBtn.addEventListener('click', async () => {
       let text = "";
       try { text = await navigator.clipboard.readText(); } catch(e) {}
-      if (!text) text = prompt("Füge den Verbindungscode des Hosts hier ein:");
+      if (!text) text = prompt("Paste the Host's connection code:");
       text = text ? text.trim() : "";
       if (!text) return;
       guestProcessOffer(text);
     });
   }
 
-  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
+  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { stopCameraScanner(); clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
@@ -556,6 +847,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeGameFrame() {
     if (gameFrame) gameFrame.src = "";
     if (gameFrameOverlay) gameFrameOverlay.style.display = "none";
+    
+    // Clear card suggestions when going back
+    gameCards.forEach(c => c.classList.remove('suggested'));
+    
     if (MP.isConnected()) {
       MP.send('menu');
     }
@@ -566,7 +861,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gameFrameOverlay && gameFrameOverlay.style.display !== "none") {
       if (gameFrame) gameFrame.src = "";
       gameFrameOverlay.style.display = "none";
-      showToast(`${MP.opponent || 'Gegner'} ist zurück im Menü.`);
+      
+      // Clear suggestions on menu return
+      gameCards.forEach(c => c.classList.remove('suggested'));
+      showToast(`${MP.opponent || 'Opponent'} went back to menu.`);
     }
   });
 
@@ -593,6 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeChat() {
     if (chatOverlay) chatOverlay.classList.remove('open');
     if (chatDrawer) chatDrawer.classList.remove('open');
+    if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
   }
 
   if (chatSend) chatSend.addEventListener('click', sendChat);
@@ -608,10 +907,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addChatMessage(text, name, mine) {
-    const key = MP.opponent || 'Gegner';
+    const key = MP.opponentDeviceId || 'unknown_peer';
     if (!chatHistory[key]) chatHistory[key] = [];
     chatHistory[key].push({ text, name, mine, ts: Date.now() });
-    if (chatHistory[key].length > 100) chatHistory[key].shift(); // keep max 100
+    if (chatHistory[key].length > 100) chatHistory[key].shift();
     try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch {}
 
     if (chatDrawer && chatDrawer.classList.contains('open')) {
@@ -624,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderChatHistory() {
     if (!chatMessages) return;
     chatMessages.innerHTML = '';
-    const key = MP.opponent || '';
+    const key = MP.opponentDeviceId || 'unknown_peer';
     (chatHistory[key] || []).forEach(msg => appendChatBubble(msg));
   }
 
@@ -644,11 +943,37 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.appendChild(div);
   }
 
+  /* Chat delete confirmation triggers */
+  if (chatDeleteBtn) {
+    chatDeleteBtn.addEventListener('click', () => {
+      if (chatConfirmDelete) chatConfirmDelete.style.display = 'flex';
+    });
+  }
+
+  if (confirmDeleteNo) {
+    confirmDeleteNo.addEventListener('click', () => {
+      if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+    });
+  }
+
+  if (confirmDeleteYes) {
+    confirmDeleteYes.addEventListener('click', () => {
+      const key = MP.opponentDeviceId || 'unknown_peer';
+      delete chatHistory[key];
+      try {
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+      } catch (e) {}
+      
+      if (chatMessages) chatMessages.innerHTML = '';
+      if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+      showToast('Chat history cleared.');
+    });
+  }
+
   /* ── LUCKY SPIN ── */
   if (randomBtn) randomBtn.addEventListener('click', startLuckySpin);
 
   function startLuckySpin() {
-    // In bot/multi mode: only spin among MP-capable games
     let cards;
     if (currentMode === 'bot' || currentMode === 'multi') {
       cards = [...document.querySelectorAll('.game-card[data-multiplayer="true"]')];
@@ -720,8 +1045,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!info) return;
     info.style.display = 'block';
     if (text) {
-      text.innerHTML = `OfflineArcade als App installieren:<br>
-        <button id="install-app-btn" style="margin-top:8px;background:#22c55e;color:white;border:none;padding:7px 12px;font-weight:700;border-radius:10px;cursor:pointer;font-size:11px;width:100%;">Jetzt installieren</button>`;
+      text.innerHTML = `Install OfflineArcade as an App:<br>
+        <button id="install-app-btn" style="margin-top:8px;background:#22c55e;color:white;border:none;padding:7px 12px;font-weight:700;border-radius:10px;cursor:pointer;font-size:11px;width:100%;">Install Now</button>`;
       const appBtn = document.getElementById('install-app-btn');
       if (appBtn) {
         appBtn.addEventListener('click', () => {
@@ -755,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!info) return;
     if (isInstalled || dismissed) { info.style.display = 'none'; return; }
     info.style.display = 'block';
-    if (isIOS && text) text.innerHTML = `Tippe auf ⎙ in Safari und wähle <strong>„Zum Home-Bildschirm"</strong>.`;
+    if (isIOS && text) text.innerHTML = `Tap ⎙ in Safari and select <strong>"Add to Home Screen"</strong>.`;
   })();
 
 });
