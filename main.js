@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v94';
+const CACHE_VERSION = 'v95';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -448,21 +448,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
   let connectionTimeout = null;
+  let connectionTimerInterval = null;
+  let secondsRemaining = 0;
 
-  function startConnectionTimeout() {
+  function stopConnectionTimeout() {
     clearTimeout(connectionTimeout);
+    clearInterval(connectionTimerInterval);
+    connectionTimeout = null;
+    connectionTimerInterval = null;
+  }
+
+  function startConnectionTimeout(durationSeconds = 300) {
+    stopConnectionTimeout();
+    
+    secondsRemaining = durationSeconds;
+    updateSpinnerTimeouts();
+
+    connectionTimerInterval = setInterval(() => {
+      secondsRemaining--;
+      if (secondsRemaining <= 0) {
+        stopConnectionTimeout();
+      } else {
+        updateSpinnerTimeouts();
+      }
+    }, 1000);
+
     connectionTimeout = setTimeout(() => {
+      stopConnectionTimeout();
       if (!MP.isConnected()) {
         stopCameraScanner();
         MP.disconnect();
         showToast('❌ Connection attempt failed (Timeout).');
         closeAllModals();
       }
-    }, 90000);
+    }, durationSeconds * 1000);
+  }
+
+  function updateSpinnerTimeouts() {
+    const hostSpinner = document.getElementById('hostSpinner');
+    const guestSpinner = document.getElementById('guestSpinner');
+    
+    if (hostSpinner && hostSpinner.style.display !== 'none') {
+      if (hostSpinner.textContent.startsWith('Connecting to guest') || hostSpinner.textContent.startsWith('Establishing connection')) {
+        hostSpinner.textContent = `Connecting to guest... (${secondsRemaining}s left)`;
+      } else {
+        hostSpinner.textContent = `⏳ Waiting for Guest... (${secondsRemaining}s left)`;
+      }
+    }
+    
+    if (guestSpinner && guestSpinner.style.display !== 'none') {
+      if (guestSpinner.textContent.startsWith('Waiting for Host to scan')) {
+        guestSpinner.textContent = `Waiting for Host to scan/paste... (${secondsRemaining}s left)`;
+      } else if (guestSpinner.textContent.startsWith('⏳ Creating response') || guestSpinner.textContent.startsWith('Creating response')) {
+        guestSpinner.textContent = `Creating response... (${secondsRemaining}s left)`;
+      } else {
+        guestSpinner.textContent = `⏳ Waiting for direct connection... (${secondsRemaining}s left)`;
+      }
+    }
   }
 
   MP.on('connected', ({ opponent }) => {
-    clearTimeout(connectionTimeout);
+    stopConnectionTimeout();
     stopCameraScanner();
     if (chatPartnerName) chatPartnerName.textContent = opponent || 'Opponent';
     closeAllModals();
@@ -471,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('disconnected', ({ opponent }) => {
-    clearTimeout(connectionTimeout);
+    stopConnectionTimeout();
     stopCameraScanner();
     MP.disconnect();
     onDisconnected();
@@ -502,14 +548,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   MP.on('disconnect', () => {
-    clearTimeout(connectionTimeout);
+    stopConnectionTimeout();
     stopCameraScanner();
     onDisconnected();
     showToast('Opponent disconnected.');
   });
 
   function onDisconnected() {
-    clearTimeout(connectionTimeout);
+    stopConnectionTimeout();
     stopCameraScanner();
     if (chatFab) chatFab.style.display = 'none';
     if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
@@ -554,7 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const encoded = await MP.createOffer(playerName);
-        if (hostSpinner) hostSpinner.style.display = 'none';
+        if (hostSpinner) {
+          hostSpinner.textContent = '⏳ Waiting for Guest...';
+          hostSpinner.style.display = 'block';
+        }
+        startConnectionTimeout(300);
         if (hostQrSubtitle) hostQrSubtitle.textContent = 'Share this connection with your guest:';
         
         const joinUrl = window.location.origin + window.location.pathname + '#join=' + encoded;
@@ -629,12 +679,12 @@ document.addEventListener('DOMContentLoaded', () => {
       hostSpinner.style.display = 'block';
     }
 
-    startConnectionTimeout();
+    startConnectionTimeout(300);
 
     try {
       await MP.receiveAnswer(textCode);
     } catch(e) {
-      clearTimeout(connectionTimeout);
+      stopConnectionTimeout();
       showToast('❌ Invalid code.');
       
       if (hostQrSubtitle) hostQrSubtitle.textContent = 'Share this connection with your guest:';
@@ -644,7 +694,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (hostShareBtn) hostShareBtn.style.display = 'flex';
       if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'block';
       if (hostInstructions) hostInstructions.style.display = 'block';
-      if (hostSpinner) hostSpinner.style.display = 'none';
+      if (hostSpinner) {
+        hostSpinner.textContent = '⏳ Waiting for Guest...';
+        hostSpinner.style.display = 'block';
+      }
+      startConnectionTimeout(300);
     }
   }
 
@@ -718,7 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (guestRawSection) guestRawSection.style.display = 'block';
       if (guestShareBtn) guestShareBtn.style.display = 'flex';
 
-      startConnectionTimeout();
+      startConnectionTimeout(300);
 
       if (guestCopyBtn) {
         guestCopyBtn.onclick = () => {
@@ -761,7 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { clearTimeout(connectionTimeout); closeModal(guestJoinOverlay); MP.disconnect(); });
+  if (guestJoinClose) guestJoinClose.addEventListener('click', () => { stopConnectionTimeout(); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
   function openGameFrame(game) {
