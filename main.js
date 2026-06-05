@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v93';
+const CACHE_VERSION = 'v94';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('❌ Connection attempt failed (Timeout).');
         closeAllModals();
       }
-    }, 15000);
+    }, 90000);
   }
 
   MP.on('connected', ({ opponent }) => {
@@ -531,9 +531,16 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ══════════════════ HOST CONNECTIONS (QR Display & Clipboard) ══════════════════ */
   if (createLobbyBtn) {
     createLobbyBtn.addEventListener('click', async () => {
+      const hostLinkSection = document.getElementById('hostLinkSection');
+      const hostRawSection = document.getElementById('hostRawSection');
+      const hostRawCodeInput = document.getElementById('hostRawCodeInput');
+      const hostRawCopyBtn = document.getElementById('hostRawCopyBtn');
+
       if (hostQrContainer) hostQrContainer.innerHTML = '';
       if (hostCodeInput) hostCodeInput.value = '';
-      if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'none';
+      if (hostRawCodeInput) hostRawCodeInput.value = '';
+      if (hostLinkSection) hostLinkSection.style.display = 'none';
+      if (hostRawSection) hostRawSection.style.display = 'none';
       if (hostShareBtn) hostShareBtn.style.display = 'none';
       if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
       if (hostInstructions) hostInstructions.style.display = 'none';
@@ -552,20 +559,23 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const joinUrl = window.location.origin + window.location.pathname + '#join=' + encoded;
 
-        // Render QR Code using low correction level for easy scanning
+        // Render QR Code using low correction level for easy scanning (larger size)
         if (hostQrContainer) {
           hostQrContainer.innerHTML = '';
           new QRCode(hostQrContainer, {
             text: joinUrl,
-            width: 180,
-            height: 180,
+            width: 260,
+            height: 260,
             correctLevel: QRCode.CorrectLevel.L
           });
           hostQrContainer.style.display = 'flex';
         }
         
         if (hostCodeInput) hostCodeInput.value = joinUrl;
-        if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'flex';
+        if (hostRawCodeInput) hostRawCodeInput.value = encoded;
+        
+        if (hostLinkSection) hostLinkSection.style.display = 'block';
+        if (hostRawSection) hostRawSection.style.display = 'block';
         if (hostShareBtn) hostShareBtn.style.display = 'flex';
         if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'block';
         if (hostInstructions) hostInstructions.style.display = 'block';
@@ -576,6 +586,14 @@ document.addEventListener('DOMContentLoaded', () => {
             navigator.clipboard.writeText(joinUrl)
               .then(() => showToast('📋 Connection link copied!'))
               .catch(() => showToast('❌ Failed copying link.'));
+          };
+        }
+
+        if (hostRawCopyBtn) {
+          hostRawCopyBtn.onclick = () => {
+            navigator.clipboard.writeText(encoded)
+              .then(() => showToast('📋 Connection code copied!'))
+              .catch(() => showToast('❌ Failed copying code.'));
           };
         }
 
@@ -596,8 +614,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function processGuestAnswer(textCode) {
+    const hostLinkSection = document.getElementById('hostLinkSection');
+    const hostRawSection = document.getElementById('hostRawSection');
+
     if (hostQrSubtitle) hostQrSubtitle.textContent = 'Establishing connection...';
-    if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'none';
+    if (hostLinkSection) hostLinkSection.style.display = 'none';
+    if (hostRawSection) hostRawSection.style.display = 'none';
     if (hostShareBtn) hostShareBtn.style.display = 'none';
     if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'none';
     if (hostInstructions) hostInstructions.style.display = 'none';
@@ -617,7 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (hostQrSubtitle) hostQrSubtitle.textContent = 'Share this connection with your guest:';
       if (hostQrContainer) hostQrContainer.style.display = 'flex';
-      if (hostCodeCopyContainer) hostCodeCopyContainer.style.display = 'flex';
+      if (hostLinkSection) hostLinkSection.style.display = 'block';
+      if (hostRawSection) hostRawSection.style.display = 'block';
       if (hostShareBtn) hostShareBtn.style.display = 'flex';
       if (hostPasteGuestBtn) hostPasteGuestBtn.style.display = 'block';
       if (hostInstructions) hostInstructions.style.display = 'block';
@@ -651,9 +674,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (guestInputStep) guestInputStep.style.display = 'none';
     if (guestAnswerStep) guestAnswerStep.style.display = 'block';
     
+    const guestLinkSection = document.getElementById('guestLinkSection');
+    const guestRawSection = document.getElementById('guestRawSection');
+    const guestRawCodeInput = document.getElementById('guestRawCodeInput');
+    const guestRawCopyBtn = document.getElementById('guestRawCopyBtn');
+
     if (guestQrContainer) guestQrContainer.innerHTML = '';
     if (guestCodeInput) guestCodeInput.value = '';
-    if (guestCodeCopyContainer) guestCodeCopyContainer.style.display = 'none';
+    if (guestRawCodeInput) guestRawCodeInput.value = '';
+    if (guestLinkSection) guestLinkSection.style.display = 'none';
+    if (guestRawSection) guestRawSection.style.display = 'none';
     if (guestShareBtn) guestShareBtn.style.display = 'none';
     if (guestSpinner) {
       guestSpinner.textContent = '⏳ Creating response...';
@@ -669,20 +699,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const answerUrl = window.location.origin + window.location.pathname + '#join=' + answer;
 
-      // Render Guest Answer QR code
+      // Render Guest Answer QR code (larger size)
       if (guestQrContainer) {
         guestQrContainer.innerHTML = '';
         new QRCode(guestQrContainer, {
           text: answerUrl,
-          width: 180,
-          height: 180,
+          width: 260,
+          height: 260,
           correctLevel: QRCode.CorrectLevel.L
         });
         guestQrContainer.style.display = 'flex';
       }
 
       if (guestCodeInput) guestCodeInput.value = answerUrl;
-      if (guestCodeCopyContainer) guestCodeCopyContainer.style.display = 'flex';
+      if (guestRawCodeInput) guestRawCodeInput.value = answer;
+      
+      if (guestLinkSection) guestLinkSection.style.display = 'block';
+      if (guestRawSection) guestRawSection.style.display = 'block';
       if (guestShareBtn) guestShareBtn.style.display = 'flex';
 
       startConnectionTimeout();
@@ -692,6 +725,14 @@ document.addEventListener('DOMContentLoaded', () => {
           navigator.clipboard.writeText(answerUrl)
             .then(() => showToast('📋 Connection link copied!'))
             .catch(() => showToast('❌ Failed copying link.'));
+        };
+      }
+
+      if (guestRawCopyBtn) {
+        guestRawCopyBtn.onclick = () => {
+          navigator.clipboard.writeText(answer)
+            .then(() => showToast('📋 Connection code copied!'))
+            .catch(() => showToast('❌ Failed copying code.'));
         };
       }
 
