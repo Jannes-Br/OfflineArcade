@@ -1120,8 +1120,32 @@
 
       initMode();
 
-      addRandomTile();
-      addRandomTile();
+      // Show/Hide restart controls in multiplayer based on host authority
+      if (gameMode === 'multi') {
+        if (mySymbol !== 'X') {
+          restartBtn.style.display = 'none';
+        } else {
+          restartBtn.style.display = 'block';
+        }
+      } else {
+        restartBtn.style.display = 'block';
+      }
+
+      if (gameMode !== 'multi') {
+        addRandomTile();
+        addRandomTile();
+      } else {
+        if (mySymbol === 'X') {
+          addRandomTile();
+          addRandomTile();
+          // Host broadcasts initial state
+          gameMP.send('move', { game: '2048', data: { grid, scores } });
+        } else {
+          messageElement.textContent = 'Waiting for host state...';
+          // Guest requests initial sync state
+          gameMP.send('guest_rejoin', { game: '2048' });
+        }
+      }
       
       updateButtons();
       syncTileDOM();
@@ -1173,7 +1197,10 @@
 
     function syncTileDOM() {
       const containerWidth = tilesContainer.clientWidth;
-      if (containerWidth <= 0) return; // Wait for layout visibility
+      if (containerWidth <= 0) {
+        setTimeout(syncTileDOM, 100);
+        return;
+      }
 
       const gap = 12;
       const tileSize = (containerWidth - gap * 3) / 4;
@@ -1839,7 +1866,13 @@
         
         overlayTitle.textContent = won ? '🎉 Victory!' : 'Game Over';
         overlaySub.textContent = winnerMsg;
-        overlayBtn.textContent = 'Play Again';
+        if (gameMode === 'multi' && mySymbol !== 'X') {
+          overlayBtn.style.display = 'none';
+          overlaySub.textContent += '\nWaiting for Host to restart...';
+        } else {
+          overlayBtn.textContent = 'Play Again';
+          overlayBtn.style.display = 'block';
+        }
         playSound(won ? 'win' : 'over');
         overlay.classList.add('visible');
       }
@@ -2084,12 +2117,19 @@
         }
       };
 
+      onGuestRejoinHandler = () => {
+        if (mySymbol === 'X') {
+          gameMP.send('move', { game: '2048', data: { grid, scores } });
+        }
+      };
+
       gameMP.on('move', onMoveHandler);
       gameMP.on('guest_move', onGuestMoveHandler);
       gameMP.on('chat', onChatHandler);
       gameMP.on('disconnected', onDisconnectedHandler);
       gameMP.on('menu', onMenuHandler);
       gameMP.on('restart_game', onRestartHandler);
+      gameMP.on('guest_rejoin', onGuestRejoinHandler);
     }
 
     // Clean up WebRTC listeners when iframe is closed/unloaded to prevent dead object references
@@ -2101,6 +2141,7 @@
         if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
         if (onMenuHandler) gameMP.off('menu', onMenuHandler);
         if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
+        if (onGuestRejoinHandler) gameMP.off('guest_rejoin', onGuestRejoinHandler);
       }
     });
 
