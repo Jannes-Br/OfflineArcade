@@ -14,8 +14,16 @@ const MP = (() => {
   let dc   = null;   // RTCDataChannel
   let role = null;   // 'host' | 'guest'
   let opponentName = null;
+  let opponentDeviceId = null;
   let myName       = null;
   const listeners  = {};
+
+  // Persistent device ID
+  let myDeviceId = localStorage.getItem('mpDeviceId');
+  if (!myDeviceId) {
+    myDeviceId = 'device_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('mpDeviceId', myDeviceId);
+  }
 
   /* Dynamic ICE config (disabled when offline to generate codes instantly) */
   function getIceConfig() {
@@ -107,8 +115,8 @@ const MP = (() => {
   function setupDC(chan) {
     dc = chan;
     dc.onopen = () => {
-      send('_hello', { name: myName });
-      emit('ready', { opponent: opponentName, role });
+      send('_hello', { name: myName, deviceId: myDeviceId });
+      emit('ready', { opponent: opponentName, role, deviceId: opponentDeviceId });
     };
     dc.onclose  = () => handleDisconnect();
     dc.onerror  = () => handleDisconnect();
@@ -117,8 +125,9 @@ const MP = (() => {
       try { msg = JSON.parse(e.data); } catch { return; }
       if (msg.type === '_hello') {
         opponentName = msg.name;
-        emit('connected', { opponent: opponentName, role });
-        emit('ready',     { opponent: opponentName, role });
+        opponentDeviceId = msg.deviceId;
+        emit('connected', { opponent: opponentName, role, deviceId: opponentDeviceId });
+        emit('ready',     { opponent: opponentName, role, deviceId: opponentDeviceId });
       } else {
         emit(msg.type, msg);
         emit('message', msg);
@@ -127,6 +136,7 @@ const MP = (() => {
   }
 
   function handleDisconnect() {
+    opponentDeviceId = null;
     emit('disconnected', { opponent: opponentName });
   }
 
@@ -211,9 +221,10 @@ const MP = (() => {
   const instance = {
     on, off, send, isConnected,
     createOffer, receiveOffer, receiveAnswer, disconnect,
-    get role()     { return role; },
-    get opponent() { return opponentName; },
-    get myName()   { return myName; }
+    get role()             { return role; },
+    get opponent()         { return opponentName; },
+    get opponentDeviceId() { return opponentDeviceId || opponentName || 'unknown_peer'; },
+    get myName()           { return myName; }
   };
   window.MP = instance;
   return instance;
