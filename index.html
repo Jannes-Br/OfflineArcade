@@ -14,7 +14,7 @@
 
   <link rel="stylesheet" href="style.css">
   <script src="assets/qrcode.min.js"></script>
-  <script src="assets/jsqr.min.js"></script>
+
   <script defer src="multiplayer.js"></script>
   <script defer src="main.js"></script>
 </head>
@@ -37,6 +37,28 @@
       document.getElementById('loadingOverlay').style.display = 'flex';
     }
   </script>
+
+  <!-- Browser Helper Overlay for QR Scanning (outside standalone mode) -->
+  <div id="qrHelperOverlay" style="display: none; position: fixed; inset: 0; background: #0f172a; z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="modal-box" style="max-width: 400px; text-align: center; border: 1px solid var(--accent); box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);">
+      <div style="font-size: 40px; margin-bottom: 12px;">📡</div>
+      <div class="modal-title">Connection Code Detected</div>
+      <p class="modal-subtitle" style="margin-bottom: 20px;">Copy this code and paste it inside the installed OfflineArcade app.</p>
+      
+      <button class="modal-btn primary" id="qrHelperCopyBtn" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 0;">
+        <span>📋</span> Copy Connection Code
+      </button>
+      
+      <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; text-align: left; font-size: 13px; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 14px; border-radius: 12px; border: 1px solid var(--box-border);">
+        <div style="font-weight: bold; color: var(--accent);">Instructions:</div>
+        <ol style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 6px;">
+          <li>Tap the button above to copy the connection code.</li>
+          <li>Open the <strong>OfflineArcade PWA</strong> from your Home Screen.</li>
+          <li>Choose <strong>Multiplayer</strong>, click <strong>"Join Connection"</strong> or <strong>"Create Connection"</strong>, and paste the code!</li>
+        </ol>
+      </div>
+    </div>
+  </div>
 
   <div class="app">
     <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
@@ -284,27 +306,30 @@
       <!-- QR code display container -->
       <div id="hostQrContainer" class="qr-wrap"></div>
 
-      <!-- Camera Scanner view (shown when scanning guest response QR) -->
-      <div id="hostScannerView" style="display:none; margin-top: 10px;">
-        <p class="modal-subtitle">Scan the Guest's QR Code:</p>
-        <div class="camera-wrap">
-          <video id="hostVideo" autoplay playsinline muted></video>
-          <div class="scan-reticle"></div>
-        </div>
+      <!-- Single-line Copy box -->
+      <div class="code-copy-container" id="hostCodeCopyContainer" style="display: none;">
+        <input type="text" id="hostCodeInput" readonly class="code-copy-input">
+        <button id="hostCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
       </div>
 
-      <!-- Code text box fallback (initially hidden) -->
-      <div id="hostCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 10px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
+      <!-- Share action -->
+      <button class="modal-btn secondary" id="hostShareBtn" style="display: none; width: 100%; gap: 8px;">
+        <span>📤</span> Share Code Link
+      </button>
 
-      <div class="scanner-fallback-actions" id="hostShareActions" style="margin-top: 12px; display: none; gap: 8px;">
-        <button class="modal-btn secondary" id="hostCopyBtn" style="margin-top:0; flex: 1;">📋 Copy Text</button>
-        <button class="modal-btn secondary" id="hostShareBtn" style="margin-top:0; flex: 1;">📤 Share</button>
-      </div>
+      <!-- Paste Guest action -->
+      <button class="modal-btn primary" id="hostPasteGuestBtn" style="display: none; width: 100%; margin-top: 12px;">
+        <span>📋</span> Paste Guest Code
+      </button>
 
-      <div id="hostScanActionArea" style="margin-top: 12px; display: none; flex-direction: column; gap: 8px;">
-        <button class="modal-btn" id="hostScanGuestBtn">📸 Scan Guest QR Code</button>
-        <button class="modal-btn secondary" id="hostToggleTextBtn">📋 Show Text Code fallback</button>
-        <button class="modal-btn" id="hostPasteGuestBtn" style="display:none;">📋 Paste Guest Text Code</button>
+      <!-- Steps instructions -->
+      <div class="modal-instructions" id="hostInstructions" style="display: none; margin-top: 16px; text-align: left; font-size: 13px;">
+        <div style="font-weight: bold; margin-bottom: 6px; color: var(--accent);">Connection Steps:</div>
+        <ol style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 4px; opacity: 0.85;">
+          <li>Ask the Guest to scan the QR code with their native Camera app.</li>
+          <li>They should open the link to copy your connection code.</li>
+          <li>Once they generate their code, click <strong>"Paste Guest Code"</strong> above to connect!</li>
+        </ol>
       </div>
 
       <div class="qr-spinner" id="hostSpinner">⏳ Gathering network candidates…</div>
@@ -317,41 +342,46 @@
       <button class="modal-close" id="guestJoinClose">✕</button>
       <div class="modal-title" id="guestJoinTitle">📡 Join Connection</div>
       
-      <!-- Step 1: Scan Host QR Code -->
-      <div id="guestScanStep">
-        <p class="modal-subtitle">Scan the Host's QR Code:</p>
-        <div class="camera-wrap" id="guestScannerView">
-          <video id="guestVideo" autoplay playsinline muted></video>
-          <div class="scan-reticle"></div>
+      <!-- Step 1: Input Host Code -->
+      <div id="guestInputStep">
+        <p class="modal-subtitle">Paste the connection code from the Host to join:</p>
+        <button class="modal-btn primary" id="guestPasteHostBtn" style="width: 100%;">
+          <span>📋</span> Paste Host Code
+        </button>
+        <div class="modal-instructions" style="margin-top: 16px; text-align: left; font-size: 13px;">
+          <div style="font-weight: bold; margin-bottom: 6px; color: var(--accent);">How to Join:</div>
+          <ol style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 4px; opacity: 0.85;">
+            <li>Scan the Host's QR code using your phone's native Camera app.</li>
+            <li>Open the link in Safari/Chrome and click "Copy Connection Code".</li>
+            <li>Return to this app and click <strong>"Paste Host Code"</strong> above.</li>
+          </ol>
         </div>
-        
-        <!-- Text Paste Fallback area -->
-        <div id="guestTextPasteArea" style="display:none; margin-top: 10px;">
-          <p class="modal-subtitle">Paste the Host's text code:</p>
-          <button class="modal-btn" id="guestPasteHostBtn">📋 Paste Host Text Code</button>
-        </div>
-
-        <button class="modal-btn secondary" id="guestToggleTextBtn" style="margin-top: 12px; width: 100%;">📋 Use Text Code Instead</button>
       </div>
 
       <!-- Step 2: Show Guest QR Code -->
-      <div id="guestAnswerStep" style="display:none;">
-        <p class="modal-subtitle">Share this Guest QR Code with the Host:</p>
+      <div id="guestAnswerStep" style="display: none;">
+        <p class="modal-subtitle">Share this Guest code back with the Host:</p>
         
         <!-- QR Code display for Guest Answer -->
         <div id="guestQrContainer" class="qr-wrap"></div>
 
-        <!-- Text Answer fallback (initially hidden) -->
-        <div id="guestAnswerCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 10px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
-
-        <div class="scanner-fallback-actions" id="guestShareActions" style="margin-top: 12px; display: none; gap: 8px;">
-          <button class="modal-btn secondary" id="guestCopyBtn" style="margin-top:0; flex: 1;">📋 Copy Text</button>
-          <button class="modal-btn secondary" id="guestShareBtn" style="margin-top:0; flex: 1;">📤 Share</button>
+        <div class="code-copy-container" id="guestCodeCopyContainer" style="display: none;">
+          <input type="text" id="guestCodeInput" readonly class="code-copy-input">
+          <button id="guestCopyBtn" class="code-copy-btn" title="Copy Code">📋</button>
         </div>
 
-        <button class="modal-btn secondary" id="guestToggleAnswerTextBtn" style="margin-top: 12px; width:100%;">📋 Show Text Code fallback</button>
+        <button class="modal-btn secondary" id="guestShareBtn" style="display: none; width: 100%; gap: 8px; margin-top: 8px;">
+          <span>📤</span> Share Code Link
+        </button>
 
-        <p class="modal-hint" style="margin-top: 16px;">Wait until the host has scanned your QR code.</p>
+        <div class="modal-instructions" style="margin-top: 16px; text-align: left; font-size: 13px;">
+          <div style="font-weight: bold; margin-bottom: 6px; color: var(--accent);">Final Step:</div>
+          <ul style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 4px; opacity: 0.85; list-style-type: disc;">
+            <li>Let the Host scan this Guest QR code, or share your code link.</li>
+            <li>Keep this screen open. Once the Host pastes your code, you will connect!</li>
+          </ul>
+        </div>
+
         <div class="qr-spinner" id="guestSpinner">⏳ Waiting for direct connection…</div>
       </div>
     </div>
