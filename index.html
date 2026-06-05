@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>OfflineArcade</title>
-  <meta name="description" content="Spielesammlung – offline spielbar. Tic Tac Toe, 2048, Pong und mehr.">
+  <meta name="description" content="Game collection – playable offline. Tic Tac Toe, 2048, Pong and more.">
 
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-512.png">
@@ -13,11 +13,30 @@
   <meta name="theme-color" content="#0f172a">
 
   <link rel="stylesheet" href="style.css">
+  <script src="assets/qrcode.min.js"></script>
+  <script src="assets/jsqr.min.js"></script>
   <script defer src="multiplayer.js"></script>
   <script defer src="main.js"></script>
 </head>
 <body class="dark-mode">
   <div class="background"></div>
+
+  <!-- Loading Screen Overlay (Only shown on fresh tab sessions) -->
+  <div id="loadingOverlay" style="display: none;">
+    <div class="loading-box">
+      <img src="assets/icon-512.png" alt="Logo" class="loading-logo">
+      <div class="loading-bar-container">
+        <div id="loadingBar" class="loading-bar"></div>
+      </div>
+      <div id="loadingStatus" class="loading-status">Starting OfflineArcade...</div>
+      <div id="loadingFile" class="loading-file"></div>
+    </div>
+  </div>
+  <script>
+    if (sessionStorage.getItem('appLoadedThisSession') !== 'true') {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+  </script>
 
   <div class="app">
     <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
@@ -26,17 +45,17 @@
         <h1>OfflineArcade</h1>
         <div class="header-actions">
           <!-- Profil-Pill -->
-          <div class="profile-pill" id="profilePill" title="Profil öffnen">
+          <div class="profile-pill" id="profilePill" title="Open profile">
             <div class="profile-avatar" id="profileAvatar">😎</div>
             <span class="profile-name" id="playerNameDisplay">...</span>
           </div>
 
-          <button id="chat-header-btn" style="display:none;" title="Chat öffnen">
+          <button id="chat-header-btn" style="display:none;" title="Open chat">
             💬
             <span class="chat-badge-header" id="chatBadgeHeader" style="display:none;">0</span>
           </button>
-          <button id="random-btn" title="Zufälliges Spiel">🎲</button>
-          <button id="settings-btn" title="Einstellungen">⚙️</button>
+          <button id="random-btn" title="Random Game">🎲</button>
+          <button id="settings-btn" title="Settings">⚙️</button>
         </div>
       </div>
     </header>
@@ -51,7 +70,7 @@
             <div class="game-content">
               <div class="game-title">Escape Road</div>
               <div class="game-description">Escape the police and survive the chase.</div>
-              <div class="game-meta"><span class="game-size">💾 0,72 MB</span></div>
+              <div class="game-meta"><span class="game-size">💾 0.72 MB</span></div>
             </div>
           </a>
 
@@ -71,18 +90,18 @@
             <div class="game-content">
               <div class="game-title">Block Smasher</div>
               <div class="game-description">Smash blocks and survive as long as possible.</div>
-              <div class="game-meta"><span class="game-size">💾 62,5 KB</span></div>
+              <div class="game-meta"><span class="game-size">💾 62.5 KB</span></div>
             </div>
           </a>
 
-          <!-- Tic Tac Toe – Multiplayer-fähig -->
+          <!-- Tic Tac Toe – Multiplayer -->
           <a class="game-card" href="games/tic-tac-toe/index.html" data-game="tic-tac-toe" data-multiplayer="true">
             <div class="mp-badge">Multiplayer</div>
             <img class="game-thumb" src="assets/thumbnails/tic-tac-toe.png" alt="Tic Tac Toe">
             <div class="game-content">
               <div class="game-title">Tic Tac Toe</div>
               <div class="game-description">Play against friends or a smart AI bot.</div>
-              <div class="game-meta"><span class="game-size">💾 24,3 KB</span></div>
+              <div class="game-meta"><span class="game-size">💾 24.3 KB</span></div>
             </div>
           </a>
 
@@ -93,7 +112,7 @@
             <div class="game-content">
               <div class="game-title">2048</div>
               <div class="game-description">Merge numbers and reach 2048.</div>
-              <div class="game-meta"><span class="game-size">💾 10,8 KB</span></div>
+              <div class="game-meta"><span class="game-size">💾 10.8 KB</span></div>
             </div>
           </a>
 
@@ -104,7 +123,7 @@
             <div class="game-content">
               <div class="game-title">Pong</div>
               <div class="game-description">Play against friends or an impossible AI.</div>
-              <div class="game-meta"><span class="game-size">💾 11,6 KB</span></div>
+              <div class="game-meta"><span class="game-size">💾 11.6 KB</span></div>
             </div>
           </a>
 
@@ -122,62 +141,62 @@
       <div class="lobby-panel" id="lobbyPanel" style="display:none;">
         <div class="lobby-actions" id="lobbyActions">
           <button class="lobby-btn primary" id="createLobbyBtn">
-            <span>📡</span> Verbindung erstellen
+            <span>📡</span> Create Connection
           </button>
           <button class="lobby-btn" id="joinLobbyBtn">
-            <span>📋</span> Beitreten (Code einfügen)
+            <span>📋</span> Join Connection
           </button>
         </div>
         <div class="lobby-actions" id="lobbyConnectedActions" style="display:none;">
           <button class="lobby-btn danger" id="lobbyDisconnectBtn" style="background:#ef4444; color:white; border-color:transparent; box-shadow:0 4px 14px rgba(239,68,68,0.4);">
-            <span>✕</span> Verbindung trennen
+            <span>✕</span> Disconnect
           </button>
         </div>
-        <p class="lobby-hint" id="lobbyHint">Erstelle eine Verbindung und tausche den Code per Kopieren/Teilen aus.</p>
+        <p class="lobby-hint" id="lobbyHint">Establish a connection and share the code via Scanning or Copy/Share.</p>
       </div>
 
       <!-- ═══════════════════════════ INSTRUCTIONS ══════════════════════ -->
       <div class="instructions-wrap" id="instructionsWrap">
         <button class="instructions-toggle" id="instructionsToggle">
-          ℹ️ So funktioniert OfflineArcade <span class="instr-arrow">▾</span>
+          ℹ️ How OfflineArcade works <span class="instr-arrow">▾</span>
         </button>
         <div class="instructions-body" id="instructionsBody">
           <div class="instr-grid">
             <div class="instr-item">
               <div class="instr-icon">🎮</div>
-              <div><strong>Solo</strong> – Alleine oder zu zweit auf einem Gerät spielen.</div>
+              <div><strong>Solo</strong> – Play alone or with two players on one device.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">🤖</div>
-              <div><strong>vs. Bot</strong> – Tritt gegen eine KI auf deinem Gerät an.</div>
+              <div><strong>vs. Bot</strong> – Play against a smart AI bot on your device.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">📡</div>
-              <div><strong>Multiplayer</strong> – Verbinde dich per Code-Austausch mit einem Freund im gleichen WLAN.</div>
+              <div><strong>Multiplayer</strong> – Connect with a friend in the same WLAN/Hotspot via code exchange.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">📶</div>
-              <div>Spiele sind <strong>offline spielbar</strong>, sobald die Seite einmal mit Internet geöffnet wurde.</div>
+              <div>Games are <strong>playable offline</strong> once the website has been opened with internet.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">1️⃣</div>
-              <div>Drücke <strong>„Verbindung erstellen"</strong> – kopiere oder teile deinen Host-Code.</div>
+              <div>Click <strong>"Create Connection"</strong> – scan the QR code or copy/share your Host code.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">2️⃣</div>
-              <div>Dein Freund klickt <strong>„Beitreten"</strong>, fügt deinen Code ein und teilt seinen Code.</div>
+              <div>Your friend clicks <strong>"Join Connection"</strong>, scans your QR, and shows their Guest QR code.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">3️⃣</div>
-              <div>Du fügst seinen Antwort-Code ein → <strong>Verbunden!</strong> Wähle ein Spiel.</div>
+              <div>Scan their Guest QR code → <strong>Connected!</strong> Select a game to play together.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">📵</div>
-              <div><strong>Bildschirm an lassen!</strong> Sperrt sich ein Gerät, bricht die Verbindung ab.</div>
+              <div><strong>Keep screen on!</strong> If a device locks or goes to sleep, the connection breaks.</div>
             </div>
             <div class="instr-item">
               <div class="instr-icon">📶</div>
-              <div>Bleibt im <strong>selben WLAN</strong> oder Hotspot – Verbindungswechsel trennt die Verbindung.</div>
+              <div>Stay in the **same WLAN** or Hotspot – switching network connections disconnects you.</div>
             </div>
           </div>
         </div>
@@ -214,17 +233,17 @@
   <div class="overlay" id="settingsOverlay"></div>
   <div class="drawer" id="settingsDrawer">
     <div class="drawer-header">
-      <span class="drawer-title">⚙️ Einstellungen</span>
+      <span class="drawer-title">⚙️ Settings</span>
       <button class="drawer-close" id="settingsClose">✕</button>
     </div>
     <div class="drawer-body">
-      <label class="setting-label">Spielername</label>
+      <label class="setting-label">Player Name</label>
       <div class="setting-row">
-        <input type="text" id="nameInput" class="setting-input" maxlength="20" placeholder="Dein Name...">
+        <input type="text" id="nameInput" class="setting-input" maxlength="20" placeholder="Your name...">
         <button class="setting-save-btn" id="nameSaveBtn">✓</button>
       </div>
 
-      <label class="setting-label" style="margin-top:18px;">Profilbild</label>
+      <label class="setting-label" style="margin-top:18px;">Profile Avatar</label>
       <div class="avatar-grid" id="avatarGrid">
         <button class="avatar-option" data-emoji="😎">😎</button>
         <button class="avatar-option" data-emoji="🦊">🦊</button>
@@ -244,13 +263,13 @@
         <button class="avatar-option" data-emoji="💎">💎</button>
       </div>
 
-      <label class="setting-label" style="margin-top:18px;">Design</label>
+      <label class="setting-label" style="margin-top:18px;">Theme</label>
       <div class="setting-row">
         <button class="setting-theme-btn" id="themeToggleDrawer">☀️ Light Mode</button>
       </div>
       <div id="settingsDisconnectWrap" style="display:none; margin-top:18px;">
         <label class="setting-label">Multiplayer</label>
-        <button class="setting-danger-btn" id="settingsDisconnectBtn">Verbindung trennen</button>
+        <button class="setting-danger-btn" id="settingsDisconnectBtn">Disconnect Connection</button>
       </div>
     </div>
   </div>
@@ -259,28 +278,36 @@
   <div class="modal-overlay" id="hostQrOverlay">
     <div class="modal-box">
       <button class="modal-close" id="hostQrClose">✕</button>
-      <div class="modal-title">📡 Verbindung erstellen</div>
-      <p class="modal-subtitle" id="hostQrSubtitle">Code wird erstellt…</p>
+      <div class="modal-title">📡 Create Connection</div>
+      <p class="modal-subtitle" id="hostQrSubtitle">Generating connection QR code…</p>
       
-      <!-- Code box (styled like a box) -->
-      <div id="hostCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 11px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
+      <!-- QR code display container -->
+      <div id="hostQrContainer" class="qr-wrap"></div>
 
-      <div class="scanner-fallback-actions" id="hostShareActions" style="margin-top: 12px; display: none; gap: 8px;">
-        <button class="modal-btn secondary" id="hostCopyBtn" style="margin-top:0; flex: 1;">
-          📋 Kopieren
-        </button>
-        <button class="modal-btn secondary" id="hostShareBtn" style="margin-top:0; flex: 1;">
-          📤 Teilen
-        </button>
+      <!-- Camera Scanner view (shown when scanning guest response QR) -->
+      <div id="hostScannerView" style="display:none; margin-top: 10px;">
+        <p class="modal-subtitle">Scan the Guest's QR Code:</p>
+        <div class="camera-wrap">
+          <video id="hostVideo" autoplay playsinline muted></video>
+          <div class="scan-reticle"></div>
+        </div>
       </div>
 
-      <p class="modal-hint" style="margin-top: 16px;">Sobald dein Gast deinen Code eingefügt hat, erhältst du von ihm einen Gast-Code. Füge diesen hier ein:</p>
-      
-      <button class="modal-btn" id="hostPasteGuestBtn" style="display:none; margin-top: 8px;">
-        📋 Gast-Code einfügen
-      </button>
+      <!-- Code text box fallback (initially hidden) -->
+      <div id="hostCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 10px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
 
-      <div class="qr-spinner" id="hostSpinner">⏳ ICE wird gesammelt…</div>
+      <div class="scanner-fallback-actions" id="hostShareActions" style="margin-top: 12px; display: none; gap: 8px;">
+        <button class="modal-btn secondary" id="hostCopyBtn" style="margin-top:0; flex: 1;">📋 Copy Text</button>
+        <button class="modal-btn secondary" id="hostShareBtn" style="margin-top:0; flex: 1;">📤 Share</button>
+      </div>
+
+      <div id="hostScanActionArea" style="margin-top: 12px; display: none; flex-direction: column; gap: 8px;">
+        <button class="modal-btn" id="hostScanGuestBtn">📸 Scan Guest QR Code</button>
+        <button class="modal-btn secondary" id="hostToggleTextBtn">📋 Show Text Code fallback</button>
+        <button class="modal-btn" id="hostPasteGuestBtn" style="display:none;">📋 Paste Guest Text Code</button>
+      </div>
+
+      <div class="qr-spinner" id="hostSpinner">⏳ Gathering network candidates…</div>
     </div>
   </div>
 
@@ -288,55 +315,80 @@
   <div class="modal-overlay" id="guestJoinOverlay">
     <div class="modal-box">
       <button class="modal-close" id="guestJoinClose">✕</button>
-      <div class="modal-title" id="guestJoinTitle">📡 Beitreten</div>
+      <div class="modal-title" id="guestJoinTitle">📡 Join Connection</div>
       
-      <!-- Step 1: Paste Host Code -->
+      <!-- Step 1: Scan Host QR Code -->
       <div id="guestScanStep">
-        <p class="modal-subtitle">Füge den Code des Hosts ein:</p>
-        <button class="modal-btn" id="guestPasteHostBtn">
-          📋 Host-Code einfügen
-        </button>
-      </div>
-
-      <!-- Step 2: Show Guest Code -->
-      <div id="guestAnswerStep" style="display:none;">
-        <p class="modal-subtitle">Teile diesen Code mit dem Host:</p>
+        <p class="modal-subtitle">Scan the Host's QR Code:</p>
+        <div class="camera-wrap" id="guestScannerView">
+          <video id="guestVideo" autoplay playsinline muted></video>
+          <div class="scan-reticle"></div>
+        </div>
         
-        <div id="guestAnswerCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 11px; padding: 12px; max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
-
-        <div class="scanner-fallback-actions" style="margin-top: 12px; display: flex; gap: 8px;">
-          <button class="modal-btn secondary" id="guestCopyBtn" style="margin-top:0; flex: 1;">
-            📋 Kopieren
-          </button>
-          <button class="modal-btn secondary" id="guestShareBtn" style="margin-top:0; flex: 1;">
-            📤 Teilen
-          </button>
+        <!-- Text Paste Fallback area -->
+        <div id="guestTextPasteArea" style="display:none; margin-top: 10px;">
+          <p class="modal-subtitle">Paste the Host's text code:</p>
+          <button class="modal-btn" id="guestPasteHostBtn">📋 Paste Host Text Code</button>
         </div>
 
-        <p class="modal-hint" style="margin-top: 16px;">Warte bis der Host deinen Code eingetragen hat.</p>
-        <div class="qr-spinner" id="guestSpinner">⏳ Warte auf Verbindung…</div>
+        <button class="modal-btn secondary" id="guestToggleTextBtn" style="margin-top: 12px; width: 100%;">📋 Use Text Code Instead</button>
+      </div>
+
+      <!-- Step 2: Show Guest QR Code -->
+      <div id="guestAnswerStep" style="display:none;">
+        <p class="modal-subtitle">Share this Guest QR Code with the Host:</p>
+        
+        <!-- QR Code display for Guest Answer -->
+        <div id="guestQrContainer" class="qr-wrap"></div>
+
+        <!-- Text Answer fallback (initially hidden) -->
+        <div id="guestAnswerCodeBox" class="qr-wrap" style="min-height: auto; font-family: monospace; word-break: break-all; font-size: 10px; padding: 12px; max-height: 100px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--box-border); color: var(--text-color);"></div>
+
+        <div class="scanner-fallback-actions" id="guestShareActions" style="margin-top: 12px; display: none; gap: 8px;">
+          <button class="modal-btn secondary" id="guestCopyBtn" style="margin-top:0; flex: 1;">📋 Copy Text</button>
+          <button class="modal-btn secondary" id="guestShareBtn" style="margin-top:0; flex: 1;">📤 Share</button>
+        </div>
+
+        <button class="modal-btn secondary" id="guestToggleAnswerTextBtn" style="margin-top: 12px; width:100%;">📋 Show Text Code fallback</button>
+
+        <p class="modal-hint" style="margin-top: 16px;">Wait until the host has scanned your QR code.</p>
+        <div class="qr-spinner" id="guestSpinner">⏳ Waiting for direct connection…</div>
       </div>
     </div>
   </div>
 
   <!-- Game Suggestion Toast -->
   <div class="suggest-toast" id="suggestToast" style="display:none;">
-    <span id="suggestText">Dein Gegner schlägt ein Spiel vor…</span>
+    <span id="suggestText">Your opponent suggests a game…</span>
   </div>
 
   <!-- Chat Drawer -->
   <div class="overlay chat-overlay" id="chatOverlay"></div>
   <div class="chat-drawer" id="chatDrawer">
     <div class="drawer-header">
-      <span class="drawer-title">💬 Chat – <span id="chatPartnerName">Gegner</span></span>
-      <button class="drawer-close" id="chatClose">✕</button>
+      <span class="drawer-title" id="chatHeaderTitle">💬 Chat – <span id="chatPartnerName">Opponent</span></span>
+      <div style="display:flex; gap: 6px;">
+        <button class="drawer-close" id="chatDeleteBtn" title="Clear chat history" style="font-size:15px; margin-right: 0;">🗑️</button>
+        <button class="drawer-close" id="chatClose">✕</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
+    
+    <!-- Confirm chat deletion box (rendered in the middle of drawer) -->
+    <div id="chatConfirmDelete" style="display:none; position:absolute; inset: 0; background:rgba(15,23,42,0.9); backdrop-filter:blur(6px); z-index:500; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:16px;">
+      <div style="font-size:16px; font-weight:800; text-align:center; color:white;">Delete chat history?</div>
+      <div style="font-size:12px; opacity:0.6; text-align:center;">This action cannot be undone.</div>
+      <div style="display:flex; gap:12px; width:100%;">
+        <button class="modal-btn" id="confirmDeleteYes" style="flex:1; background:#ef4444; color:white; border-color:transparent;">Yes</button>
+        <button class="modal-btn secondary" id="confirmDeleteNo" style="flex:1; margin-top:0;">Cancel</button>
+      </div>
+    </div>
+
     <div class="chat-input-row">
-      <input type="text" id="chatInput" class="chat-input" placeholder="Nachricht…" maxlength="200">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Message…" maxlength="200">
       <button class="chat-send-btn" id="chatSend">➤</button>
     </div>
-    <p class="chat-disclaimer">Chats werden lokal auf deinem Gerät gespeichert (max. 100 Nachrichten, ältere werden automatisch gelöscht). Keine Haftung für Chat-Inhalte.</p>
+    <p class="chat-disclaimer">Chats are stored locally on your device (max 100 messages).</p>
   </div>
 
   <!-- Toast Notification -->
