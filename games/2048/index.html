@@ -345,12 +345,15 @@
       border: 1px solid var(--box-border);
       padding: 12px;
       border-radius: 24px;
+      width: 320px;
+      height: 320px;
       aspect-ratio: 1;
-      width: 100%;
-      max-width: min(100%, calc(100vh - 380px));
+      max-width: 100%;
       max-height: 100%;
+      box-sizing: border-box;
       touch-action: none;
       user-select: none;
+      margin: 0 auto;
     }
 
     body.dark-mode .board {
@@ -711,11 +714,11 @@
 
   <!-- Navigation Header -->
   <div class="game-header">
-    <a href="../../index.html" class="back-btn" id="backBtn">← Menü</a>
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menu</a>
     <span class="mode-badge" id="modeBadge">Solo</span>
     <div class="header-right">
       <button id="chat-btn" title="Chat" style="display:none;">💬<span class="chat-badge-hdr" id="chatBadgeHdr"></span></button>
-      <button id="mute-btn" title="Ton stummschalten">🔊</button>
+      <button id="mute-btn" title="Mute audio">🔊</button>
     </div>
   </div>
 
@@ -729,7 +732,7 @@
         <div class="opponent-bar" id="opponentBar">
           <div class="opp-avatar" id="oppAvatar">?</div>
           <div>
-            <div class="opp-name" id="oppName">Gegner</div>
+            <div class="opp-name" id="oppName">Opponent</div>
             <div class="opp-role" id="oppRole">O</div>
           </div>
         </div>
@@ -744,11 +747,11 @@
       <!-- Multiplayer/Bot Scoreboard -->
       <div class="multi-scoreboard" id="scoreboard" style="display:none;">
         <div class="multi-score-box">
-          <div class="multi-score-label" id="p1Label">👤 Du</div>
+          <div class="multi-score-label" id="p1Label">👤 You</div>
           <div class="multi-score-value" id="p1Score">0</div>
         </div>
         <div class="multi-score-box">
-          <div class="multi-score-label" id="p2Label">Gegner</div>
+          <div class="multi-score-label" id="p2Label">Opponent</div>
           <div class="multi-score-value" id="p2Score">0</div>
         </div>
       </div>
@@ -766,8 +769,8 @@
           <!-- Game Screen Overlay -->
           <div class="overlay" id="overlay">
             <div class="overlay-title" id="overlay-title">Game Over</div>
-            <div class="overlay-sub" id="overlay-sub">Keine Züge mehr!</div>
-            <button class="overlay-btn" id="overlay-btn">Nochmal versuchen</button>
+            <div class="overlay-sub" id="overlay-sub">No more moves!</div>
+            <button class="overlay-btn" id="overlay-btn">Try Again</button>
           </div>
         </div>
       </div>
@@ -776,7 +779,7 @@
 
       <!-- Controls Wrapper -->
       <div class="controls four-buttons" id="controlsWrap">
-        <button id="trashBtn">🗑 Löschen (<span id="trashCount">3</span>)</button>
+        <button id="trashBtn">🗑 Delete (<span id="trashCount">3</span>)</button>
         <button id="mergeBtn">Merge (<span id="mergeCount">3</span>)</button>
         <button id="undoBtn">Undo</button>
         <button id="restartBtn">Restart</button>
@@ -789,15 +792,29 @@
   <div class="chat-overlay-local" id="chatOverlay"></div>
   <div class="chat-drawer-local" id="chatDrawer">
     <div class="chat-header-local">
-      <span class="chat-title-local">💬 Chat – <span id="chatWith">Gegner</span></span>
-      <button class="chat-close-local" id="chatClose">✕</button>
+      <span class="chat-title-local">💬 Chat – <span id="chatWith">Opponent</span></span>
+      <div style="display:flex; gap: 6px;">
+        <button class="chat-close-local" id="chatDeleteBtn" title="Clear chat history" style="margin-right: 0; font-size: 13px;">🗑️</button>
+        <button class="chat-close-local" id="chatClose">✕</button>
+      </div>
     </div>
     <div class="chat-messages-local" id="chatMessages"></div>
+    
+    <!-- Confirm chat deletion box -->
+    <div id="chatConfirmDelete" style="display:none; position:absolute; inset: 0; background:rgba(15,23,42,0.9); backdrop-filter:blur(6px); z-index:500; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:16px;">
+      <div style="font-size:16px; font-weight:800; text-align:center; color:white;">Delete chat history?</div>
+      <div style="font-size:12px; opacity:0.6; text-align:center; color:rgba(255,255,255,0.7);">This action cannot be undone.</div>
+      <div style="display:flex; gap:12px; width:100%;">
+        <button class="overlay-btn" id="confirmDeleteYes" style="flex:1; background:#ef4444; color:white; border-color:transparent; padding: 10px; font-size: 13px; font-weight: 700; border-radius: 10px;">Yes</button>
+        <button class="overlay-btn" id="confirmDeleteNo" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding: 10px; font-size: 13px; font-weight: 700; border-radius: 10px;">Cancel</button>
+      </div>
+    </div>
+
     <div class="chat-input-row-local">
-      <input type="text" class="chat-input-local" id="chatInput" placeholder="Nachricht…" maxlength="200">
+      <input type="text" class="chat-input-local" id="chatInput" placeholder="Message…" maxlength="200">
       <button class="chat-send-local" id="chatSend">➤</button>
     </div>
-    <p class="chat-disclaimer-local">Chats werden lokal auf deinem Gerät gespeichert (max. 100 Nachrichten, ältere werden automatisch gelöscht). Keine Haftung für Chat-Inhalte.</p>
+    <p class="chat-disclaimer-local">Chats are stored locally on your device (max 100 messages).</p>
   </div>
 
   <div class="toast-local" id="toast"></div>
@@ -1054,18 +1071,19 @@
         scores.X = 0;
         scores.O = 0;
 
-        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Opponent';
         localStorage.setItem('lastOpponent', opponent);
         chatWith.textContent = opponent;
         oppAvatar.textContent = opponent[0].toUpperCase();
         oppName.textContent = opponent;
-        oppRole.textContent = 'Verbunden';
+        oppRole.textContent = 'Connected';
         opponentBar.classList.add('show');
 
-        p1Label.textContent = mySymbol === 'X' ? '👤 Du' : `👤 ${opponent}`;
-        p2Label.textContent = mySymbol === 'O' ? '👤 Du' : `👤 ${opponent}`;
+        p1Label.textContent = mySymbol === 'X' ? '👤 You' : `👤 ${opponent}`;
+        p2Label.textContent = mySymbol === 'O' ? '👤 You' : `👤 ${opponent}`;
 
-        try { chatHistory = JSON.parse(localStorage.getItem(`chat2048_${opponent}`) || '[]'); } catch {}
+        const key = gameMP.opponentDeviceId || 'unknown_peer';
+        try { chatHistory = JSON.parse(localStorage.getItem(`chat2048_${key}`) || '[]'); } catch {}
         renderChatHistory();
 
         setupMultiplayerEvents();
@@ -1242,9 +1260,9 @@
       });
 
       if (isMyTurnNow) {
-        messageElement.textContent = `✅ Du bist dran`;
+        messageElement.textContent = `✅ Your Turn`;
       } else {
-        messageElement.textContent = `⏳ ${gameMP.opponent || 'Gegner'} ist dran…`;
+        messageElement.textContent = `⏳ ${gameMP.opponent || 'Opponent'}'s Turn…`;
       }
     }
 
@@ -1608,8 +1626,7 @@
         prevMergeUses = mergeUses;
       }
 
-      animateMovements(grid, newGrid);
-
+      const oldGrid = copyGrid(grid);
       grid = newGrid;
       
       if (gameMode === 'solo') {
@@ -1618,14 +1635,18 @@
         scores[currentPlayer] += slideScore;
       }
 
+      // Add random tile BEFORE sending!
+      addRandomTile();
+
       // Sync move to multiplayer
       if (gameMode === 'multi') {
         gameMP.send('move', { game: '2048', data: { direction, grid, scores } });
       }
       
+      // Animate from old grid to the new grid (which has the random tile)
+      animateMovements(oldGrid, grid);
+      
       setTimeout(() => {
-        addRandomTile();
-
         if (slideScore > 0) {
           playSound('merge');
         } else {
@@ -1658,18 +1679,22 @@
           
           if (gameMode === 'bot' && currentPlayer === 'O') {
             board.style.pointerEvents = 'none';
-            messageElement.textContent = '🤖 Bot denkt…';
+            messageElement.textContent = '🤖 Bot thinking…';
             setTimeout(() => {
               const botDir = getBotMove();
               
               const botResult = getNextState(botDir);
               if (botResult.moved) {
-                animateMovements(grid, botResult.newGrid);
+                const botOldGrid = copyGrid(grid);
                 grid = botResult.newGrid;
                 scores.O += botResult.slideScore;
                 
+                // Add random tile for bot move
+                addRandomTile();
+
+                animateMovements(botOldGrid, grid);
+                
                 setTimeout(() => {
-                  addRandomTile();
                   playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
                   syncTileDOM();
                   
@@ -1756,9 +1781,9 @@
       
       if (gameMode === 'solo') {
         const won = hasWon();
-        overlayTitle.textContent = won ? '🎉 Gewonnen!' : 'Game Over';
-        overlaySub.textContent = won ? 'Du hast 2048 erreicht!' : 'Keine Züge mehr!';
-        overlayBtn.textContent = won ? 'Weiterspielen' : 'Nochmal versuchen';
+        overlayTitle.textContent = won ? '🎉 You Win!' : 'Game Over';
+        overlaySub.textContent = won ? 'You reached 2048!' : 'No more moves!';
+        overlayBtn.textContent = won ? 'Keep Playing' : 'Try Again';
         playSound(won ? 'win' : 'over');
         overlay.classList.add('visible');
         if (won) gameActive = true; // Let them keep playing
@@ -1769,22 +1794,22 @@
         
         if (gameMode === 'bot') {
           won = scores.X > scores.O;
-          winnerMsg = won ? `🎉 Du hast gewonnen! (${scores.X} vs ${scores.O})` : `🤖 Bot hat gewonnen! (${scores.O} vs ${scores.X})`;
+          winnerMsg = won ? `🎉 You won! (${scores.X} vs ${scores.O})` : `🤖 Bot won! (${scores.O} vs ${scores.X})`;
         } else {
           const iWon = (mySymbol === 'X' && scores.X > scores.O) || (mySymbol === 'O' && scores.O > scores.X);
           const draw = scores.X === scores.O;
           won = iWon;
           
           if (draw) {
-            winnerMsg = `👔 Unentschieden! (${scores.X} : ${scores.O})`;
+            winnerMsg = `👔 Draw! (${scores.X} : ${scores.O})`;
           } else {
-            winnerMsg = iWon ? `🎉 Du hast gewonnen! (${scores.X} vs ${scores.O})` : `😔 ${gameMP.opponent || 'Gegner'} gewinnt! (${scores.O} vs ${scores.X})`;
+            winnerMsg = iWon ? `🎉 You won! (${scores.X} vs ${scores.O})` : `😔 ${gameMP.opponent || 'Opponent'} wins! (${scores.O} vs ${scores.X})`;
           }
         }
         
-        overlayTitle.textContent = won ? '🎉 Sieg!' : 'Spiel beendet';
+        overlayTitle.textContent = won ? '🎉 Victory!' : 'Game Over';
         overlaySub.textContent = winnerMsg;
-        overlayBtn.textContent = 'Nochmal spielen';
+        overlayBtn.textContent = 'Play Again';
         playSound(won ? 'win' : 'over');
         overlay.classList.add('visible');
       }
@@ -1820,20 +1845,24 @@
       switch (e.key) {
         case 'ArrowLeft':
         case 'a':
+        case 'a':
         case 'A':
           move('left');
           break;
         case 'ArrowRight':
+        case 'd':
         case 'd':
         case 'D':
           move('right');
           break;
         case 'ArrowUp':
         case 'w':
+        case 'w':
         case 'W':
           move('up');
           break;
         case 'ArrowDown':
+        case 's':
         case 's':
         case 'S':
           move('down');
@@ -1845,14 +1874,17 @@
     let startY = 0;
     let touchActive = false;
 
-    board.addEventListener('touchstart', e => {
+    // Attach touch listeners to board-wrapper to expand target swipe capture zone
+    const boardWrapper = document.querySelector('.board-wrapper');
+
+    boardWrapper.addEventListener('touchstart', e => {
       if (e.touches.length > 1) return; // ignore multi-touch
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       touchActive = true;
     }, { passive: true });
 
-    board.addEventListener('touchmove', e => {
+    boardWrapper.addEventListener('touchmove', e => {
       if (!touchActive || deleteMode || mergeMode || !gameActive || isMoving) return;
 
       const dx = e.touches[0].clientX - startX;
@@ -1873,11 +1905,11 @@
       if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    board.addEventListener('touchend', () => {
+    boardWrapper.addEventListener('touchend', () => {
       touchActive = false;
     });
 
-    board.addEventListener('touchcancel', () => {
+    boardWrapper.addEventListener('touchcancel', () => {
       touchActive = false;
     });
 
@@ -2000,19 +2032,19 @@
       };
 
       onDisconnectedHandler = () => {
-        showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+        showToast(`${gameMP.opponent || 'Opponent'} disconnected.`);
         gameActive = false;
-        messageElement.textContent = '⚡ Verbindung unterbrochen';
+        messageElement.textContent = '⚡ Connection lost';
       };
 
       onMenuHandler = () => {
-        showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
+        showToast(`${gameMP.opponent || 'Opponent'} returned to the menu.`);
       };
 
       onRestartHandler = (data) => {
         if (data && data.game === '2048') {
           restartGame(false);
-          showToast(`${gameMP.opponent || 'Gegner'} hat das Spiel neu gestartet.`);
+          showToast(`${gameMP.opponent || 'Opponent'} restarted the game.`);
         }
       };
 
@@ -2083,7 +2115,7 @@
       const msg = { text, name, mine };
       chatHistory.push(msg);
       if (chatHistory.length > 100) chatHistory.shift();
-      const key = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      const key = gameMP.opponentDeviceId || 'unknown_peer';
       try { localStorage.setItem(`chat2048_${key}`, JSON.stringify(chatHistory)); } catch {}
       if (chatDrawer.classList.contains('open')) {
         appendBubble(msg);
@@ -2109,6 +2141,38 @@
       t.textContent = text;
       div.appendChild(t);
       chatMessages.appendChild(div);
+    }
+
+    /* Chat Delete Handlers */
+    const chatDeleteBtn = document.getElementById('chatDeleteBtn');
+    const chatConfirmDelete = document.getElementById('chatConfirmDelete');
+    const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+    const confirmDeleteNo = document.getElementById('confirmDeleteNo');
+
+    if (chatDeleteBtn) {
+      chatDeleteBtn.addEventListener('click', () => {
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'flex';
+      });
+    }
+
+    if (confirmDeleteNo) {
+      confirmDeleteNo.addEventListener('click', () => {
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+      });
+    }
+
+    if (confirmDeleteYes) {
+      confirmDeleteYes.addEventListener('click', () => {
+        const key = gameMP.opponentDeviceId || 'unknown_peer';
+        chatHistory = [];
+        try {
+          localStorage.removeItem(`chat2048_${key}`);
+        } catch (e) {}
+        
+        chatMessages.innerHTML = '';
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+        showToast('Chat history cleared.');
+      });
     }
 
     /* ── Toast ── */
