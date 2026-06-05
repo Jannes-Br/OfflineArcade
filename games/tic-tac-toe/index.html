@@ -383,6 +383,15 @@
         difficultyBox.style.display = 'none';
         chatBtn.style.display   = 'flex';
 
+        // Hide/Show restart and reset buttons depending on host authority
+        if (mpRole !== 'X') {
+          restartBtn.style.display = 'none';
+          resetBtn.style.display = 'none';
+        } else {
+          restartBtn.style.display = 'block';
+          resetBtn.style.display = 'block';
+        }
+
         mySymbol  = mpRole; // X=host, O=guest
         myTurn    = (mySymbol === 'X'); // X starts
 
@@ -403,6 +412,9 @@
         renderChatHistory();
 
         setupMultiplayerEvents();
+        if (mySymbol === 'O') {
+          gameMP.send('guest_rejoin', { game: 'tic-tac-toe' });
+        }
       }
     }
 
@@ -442,7 +454,11 @@
 
     /* ── Move handler ── */
     function handleMove(index) {
-      if (!gameActive) { restartGame(); return; }
+      if (!gameActive) {
+        if (gameMode === 'multi' && mySymbol !== 'X') return;
+        restartGame();
+        return;
+      }
       if (boardState[index] !== '') return;
 
       /* In multi: only allow move when it's my turn */
@@ -490,11 +506,15 @@
 
       if (gameMode === 'multi') {
         const iWon = winner === mySymbol;
-        statusText.textContent = iWon ? '🎉 You won!' : `😔 ${gameMP.opponent} won!`;
+        if (mySymbol === 'X') {
+          statusText.textContent = (iWon ? '🎉 You won!' : `😔 ${gameMP.opponent} won!`) + ' Tap board to restart';
+        } else {
+          statusText.textContent = (iWon ? '🎉 You won!' : `😔 ${gameMP.opponent} won!`) + ' Waiting for Host…';
+        }
       } else if (gameMode === 'bot') {
-        statusText.textContent = winner === 'X' ? '🎉 You won!' : '🤖 Bot wins!';
+        statusText.textContent = winner === 'X' ? '🎉 You won! Tap board to restart' : '🤖 Bot wins! Tap board to restart';
       } else {
-        statusText.textContent = winner + ' Wins! Tap to play again';
+        statusText.textContent = winner + ' Wins! Tap board to restart';
       }
     }
 
@@ -502,7 +522,15 @@
       scores.draw++;
       updateScores();
       gameActive = false;
-      statusText.textContent = 'Draw! Tap to play again';
+      if (gameMode === 'multi') {
+        if (mySymbol === 'X') {
+          statusText.textContent = 'Draw! Tap board to restart';
+        } else {
+          statusText.textContent = 'Draw! Waiting for Host…';
+        }
+      } else {
+        statusText.textContent = 'Draw! Tap board to restart';
+      }
       playSound('draw');
     }
 
@@ -568,7 +596,7 @@
     }
 
     /* ── Multiplayer Events ── */
-    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler;
+    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onGuestRejoinHandler, onSyncStateHandler;
 
     function setupMultiplayerEvents() {
       onMoveHandler = ({ data }) => {
@@ -605,11 +633,33 @@
         showToast(`${gameMP.opponent || 'Opponent'} restarted the game.`);
       };
 
+      onGuestRejoinHandler = () => {
+        if (mySymbol === 'X') {
+          gameMP.send('sync_state', { boardState, currentPlayer, scores });
+        }
+      };
+
+      onSyncStateHandler = ({ boardState: bState, currentPlayer: currPlayer, scores: scr }) => {
+        boardState = bState;
+        currentPlayer = currPlayer;
+        scores.X = scr.X;
+        scores.O = scr.O;
+        scores.draw = scr.draw;
+        updateScores();
+        boardState.forEach((val, idx) => {
+          cells[idx].className = 'cell' + (val ? ' taken pop ' + val.toLowerCase() : '');
+          cells[idx].textContent = val;
+        });
+        updateBoardInteractivity();
+      };
+
       gameMP.on('move', onMoveHandler);
       gameMP.on('chat', onChatHandler);
       gameMP.on('disconnected', onDisconnectedHandler);
       gameMP.on('menu', onMenuHandler);
       gameMP.on('restart_game', onRestartHandler);
+      gameMP.on('guest_rejoin', onGuestRejoinHandler);
+      gameMP.on('sync_state', onSyncStateHandler);
     }
 
     // Clean up WebRTC listeners when iframe is closed/unloaded to prevent dead object references
@@ -620,6 +670,8 @@
         if (onDisconnectedHandler) gameMP.off('disconnected', onDisconnectedHandler);
         if (onMenuHandler) gameMP.off('menu', onMenuHandler);
         if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
+        if (onGuestRejoinHandler) gameMP.off('guest_rejoin', onGuestRejoinHandler);
+        if (onSyncStateHandler) gameMP.off('sync_state', onSyncStateHandler);
       }
     });
 
