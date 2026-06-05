@@ -364,11 +364,11 @@
 
   <!-- Navigation Header -->
   <div class="game-header">
-    <a href="../../index.html" class="back-btn" id="backBtn">← Menü</a>
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menu</a>
     <span class="mode-badge" id="modeBadge">Solo</span>
     <div class="header-right">
       <button id="chat-btn" title="Chat" style="display:none;">💬<span class="chat-badge-hdr" id="chatBadgeHdr"></span></button>
-      <button id="mute-btn" title="Ton stummschalten">🔊</button>
+      <button id="mute-btn" title="Mute audio">🔊</button>
     </div>
   </div>
 
@@ -378,8 +378,8 @@
     <div class="opponent-bar" id="opponentBar">
       <div class="opp-avatar" id="oppAvatar">?</div>
       <div>
-        <div class="opp-name" id="oppName">Gegner</div>
-        <div class="opp-role" id="oppRole">Verbunden</div>
+        <div class="opp-name" id="oppName">Opponent</div>
+        <div class="opp-role" id="oppRole">Connected</div>
       </div>
     </div>
 
@@ -409,8 +409,8 @@
       <!-- Screens overlay -->
       <div class="overlay" id="overlay">
         <div class="overlay-title" id="overlay-title">Hold To Play</div>
-        <div class="overlay-sub" id="overlay-sub">Drücke und halte den Bildschirm (oder W/S / Pfeiltasten), um zu starten. Beide Spieler müssen halten!</div>
-        <button class="overlay-btn" id="overlay-btn" style="display:none;">Nochmal spielen</button>
+        <div class="overlay-sub" id="overlay-sub">Press and hold screen (or W/S / Arrow keys) to start. Both players must hold!</div>
+        <button class="overlay-btn" id="overlay-btn" style="display:none;">Play Again</button>
       </div>
     </div>
 
@@ -420,15 +420,29 @@
   <div class="chat-overlay-local" id="chatOverlay"></div>
   <div class="chat-drawer-local" id="chatDrawer">
     <div class="chat-header-local">
-      <span class="chat-title-local">💬 Chat – <span id="chatWith">Gegner</span></span>
-      <button class="chat-close-local" id="chatClose">✕</button>
+      <span class="chat-title-local">💬 Chat – <span id="chatWith">Opponent</span></span>
+      <div style="display:flex; gap: 6px;">
+        <button class="chat-close-local" id="chatDeleteBtn" title="Clear chat history" style="margin-right: 0; font-size: 13px;">🗑️</button>
+        <button class="chat-close-local" id="chatClose">✕</button>
+      </div>
     </div>
     <div class="chat-messages-local" id="chatMessages"></div>
+
+    <!-- Confirm chat deletion box -->
+    <div id="chatConfirmDelete" style="display:none; position:absolute; inset: 0; background:rgba(15,23,42,0.9); backdrop-filter:blur(6px); z-index:500; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:16px;">
+      <div style="font-size:16px; font-weight:800; text-align:center; color:white;">Delete chat history?</div>
+      <div style="font-size:12px; opacity:0.6; text-align:center; color:rgba(255,255,255,0.7);">This action cannot be undone.</div>
+      <div style="display:flex; gap:12px; width:100%;">
+        <button class="overlay-btn" id="confirmDeleteYes" style="flex:1; background:#ef4444; color:white; border-color:transparent; padding: 10px; font-size: 13px; font-weight: 700; border-radius: 10px;">Yes</button>
+        <button class="overlay-btn" id="confirmDeleteNo" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding: 10px; font-size: 13px; font-weight: 700; border-radius: 10px;">Cancel</button>
+      </div>
+    </div>
+
     <div class="chat-input-row-local">
-      <input type="text" class="chat-input-local" id="chatInput" placeholder="Nachricht…" maxlength="200">
+      <input type="text" class="chat-input-local" id="chatInput" placeholder="Message…" maxlength="200">
       <button class="chat-send-local" id="chatSend">➤</button>
     </div>
-    <p class="chat-disclaimer-local">Chats werden lokal auf deinem Gerät gespeichert. Keine Haftung für Chat-Inhalte.</p>
+    <p class="chat-disclaimer-local">Chats are stored locally on your device (max 100 messages).</p>
   </div>
 
   <div class="toast-local" id="toast"></div>
@@ -643,15 +657,16 @@
           pauseBtn.style.opacity = '0.5';
         }
 
-        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+        const opponent = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Opponent';
         localStorage.setItem('lastOpponent', opponent);
         chatWith.textContent = opponent;
         oppAvatar.textContent = opponent[0].toUpperCase();
         oppName.textContent = opponent;
-        oppRole.textContent = mpRole === 'X' ? 'Host (Links)' : 'Gast (Rechts)';
+        oppRole.textContent = mpRole === 'X' ? 'Host (Left)' : 'Guest (Right)';
         opponentBar.classList.add('show');
 
-        try { chatHistory = JSON.parse(localStorage.getItem(`chatPong_${opponent}`) || '[]'); } catch {}
+        const key = gameMP.opponentDeviceId || 'unknown_peer';
+        try { chatHistory = JSON.parse(localStorage.getItem(`chatPong_${key}`) || '[]'); } catch {}
         renderChatHistory();
         setupMultiplayerEvents();
       }
@@ -790,7 +805,7 @@
     function updateOverlay() {
       if (paused) {
         overlayTitle.textContent = 'Pause';
-        overlaySub.textContent = gameMode === 'multi' ? 'Der Host hat das Spiel pausiert.' : 'Drücke den Play-Knopf zum Weiterspielen.';
+        overlaySub.textContent = gameMode === 'multi' ? 'The Host has paused the game.' : 'Press the Play button to resume.';
         overlayBtn.style.display = 'none';
         overlay.classList.add('visible');
         return;
@@ -799,11 +814,11 @@
       if (gameState === 'hold') {
         overlayTitle.textContent = 'Hold To Play';
         if (gameMode === 'multi') {
-          overlaySub.textContent = 'Drücke und halte den Bildschirm (oder W/S), um spielbereit zu sein. Beide müssen halten!';
+          overlaySub.textContent = 'Press and hold screen (or W/S) to be ready. Both must hold!';
         } else if (mode === 'vs') {
-          overlaySub.textContent = 'Beide Spieler müssen drücken/halten (W/S & Pfeile oder auf dem Bildschirm), um zu starten.';
+          overlaySub.textContent = 'Both players must press/hold (W/S & Arrows or on screen) to start.';
         } else {
-          overlaySub.textContent = 'Drücke und halte den Bildschirm (oder W/S) zum Starten.';
+          overlaySub.textContent = 'Press and hold screen (or W/S) to start.';
         }
         overlayBtn.style.display = 'none';
         overlay.classList.add('visible');
@@ -812,7 +827,7 @@
 
       if (gameState === 'countdown') {
         overlayTitle.textContent = countdown > 0 ? countdown : 'GO!';
-        overlaySub.textContent = 'Bereitmachen...';
+        overlaySub.textContent = 'Get Ready...';
         overlayBtn.style.display = 'none';
         overlay.classList.add('visible');
         return;
@@ -823,22 +838,22 @@
         let isWin = false;
         if (gameMode === 'multi') {
           isWin = (mpRole === 'X' && left.score >= 10) || (mpRole === 'O' && right.score >= 10);
-          text = isWin ? '🎉 Du hast gewonnen!' : `😔 Gegner gewinnt! (${left.score} vs ${right.score})`;
+          text = isWin ? '🎉 You won!' : `😔 Opponent wins! (${left.score} vs ${right.score})`;
         } else if (mode === 'bot') {
           isWin = left.score >= 10;
-          text = isWin ? '🎉 Gewonnen!' : '🤖 Bot hat gewonnen!';
+          text = isWin ? '🎉 You won!' : '🤖 Bot won!';
         } else {
-          text = left.score >= 10 ? '👤 Spieler Links gewinnt!' : '👤 Spieler Rechts gewinnt!';
+          text = left.score >= 10 ? '👤 Left Player wins!' : '👤 Right Player wins!';
         }
-        overlayTitle.textContent = 'Spiel beendet';
+        overlayTitle.textContent = 'Game Over';
         overlaySub.textContent = text;
         
         // Only Host/Solo can click restart button
         if (gameMode !== 'multi' || mpRole === 'X') {
-          overlayBtn.textContent = 'Nochmal spielen';
+          overlayBtn.textContent = 'Play Again';
           overlayBtn.style.display = 'block';
         } else {
-          overlaySub.textContent += '\nWarte auf den Host für einen Neustart...';
+          overlaySub.textContent += '\nWaiting for Host to restart...';
           overlayBtn.style.display = 'none';
         }
         
@@ -1341,22 +1356,22 @@
 
       // Connection states
       onDisconnectedHandler = () => {
-        showToast(`${gameMP.opponent || 'Gegner'} hat die Verbindung getrennt.`);
+        showToast(`${gameMP.opponent || 'Opponent'} disconnected.`);
         paused = true;
         updateOverlay();
-        oppRole.textContent = 'Getrennt';
+        oppRole.textContent = 'Disconnected';
       };
       gameMP.on('disconnected', onDisconnectedHandler);
 
       onMenuHandler = () => {
-        showToast(`${gameMP.opponent || 'Gegner'} ist zurück im Menü.`);
+        showToast(`${gameMP.opponent || 'Opponent'} returned to the menu.`);
       };
       gameMP.on('menu', onMenuHandler);
 
       onRestartHandler = (data) => {
         if (data && data.game === 'pong') {
           restartGame(false);
-          showToast(`${gameMP.opponent || 'Gegner'} hat das Spiel neu gestartet.`);
+          showToast(`${gameMP.opponent || 'Opponent'} restarted the game.`);
         }
       };
       gameMP.on('restart_game', onRestartHandler);
@@ -1424,7 +1439,7 @@
       const msg = { text, name, mine };
       chatHistory.push(msg);
       if (chatHistory.length > 100) chatHistory.shift();
-      const key = gameMP.opponent || localStorage.getItem('lastOpponent') || 'Gegner';
+      const key = gameMP.opponentDeviceId || 'unknown_peer';
       try { localStorage.setItem(`chatPong_${key}`, JSON.stringify(chatHistory)); } catch {}
       if (chatDrawer.classList.contains('open')) {
         appendBubble(msg);
@@ -1450,6 +1465,38 @@
       t.textContent = text;
       div.appendChild(t);
       chatMessages.appendChild(div);
+    }
+
+    /* Chat Delete Handlers */
+    const chatDeleteBtn = document.getElementById('chatDeleteBtn');
+    const chatConfirmDelete = document.getElementById('chatConfirmDelete');
+    const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+    const confirmDeleteNo = document.getElementById('confirmDeleteNo');
+
+    if (chatDeleteBtn) {
+      chatDeleteBtn.addEventListener('click', () => {
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'flex';
+      });
+    }
+
+    if (confirmDeleteNo) {
+      confirmDeleteNo.addEventListener('click', () => {
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+      });
+    }
+
+    if (confirmDeleteYes) {
+      confirmDeleteYes.addEventListener('click', () => {
+        const key = gameMP.opponentDeviceId || 'unknown_peer';
+        chatHistory = [];
+        try {
+          localStorage.removeItem(`chatPong_${key}`);
+        } catch (e) {}
+        
+        chatMessages.innerHTML = '';
+        if (chatConfirmDelete) chatConfirmDelete.style.display = 'none';
+        showToast('Chat history cleared.');
+      });
     }
 
     let toastTimer;
