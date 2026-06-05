@@ -218,9 +218,19 @@ const MP = (() => {
     emit('disconnected', {});
   }
 
+  function clearGameListeners() {
+    const gameEvents = [
+      'move', 'chat', 'disconnected', 'menu', 'restart_game', 
+      'paddle_update', 'speed_change', 'pause_change', 'ready', 'guest_move'
+    ];
+    gameEvents.forEach(evt => {
+      listeners[evt] = [];
+    });
+  }
+
   const instance = {
     on, off, send, isConnected,
-    createOffer, receiveOffer, receiveAnswer, disconnect,
+    createOffer, receiveOffer, receiveAnswer, disconnect, clearGameListeners,
     get role()             { return role; },
     get opponent()         { return opponentName; },
     get opponentDeviceId() { return opponentDeviceId || opponentName || 'unknown_peer'; },
