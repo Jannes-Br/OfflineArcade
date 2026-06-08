@@ -345,9 +345,11 @@
       border: 1px solid var(--box-border);
       padding: 12px;
       border-radius: 24px;
-      width: 100%;
+      width: 320px;
+      height: 320px;
+      max-width: 100%;
+      max-height: 100%;
       aspect-ratio: 1;
-      max-width: min(320px, calc(100vh - 340px));
       box-sizing: border-box;
       touch-action: none;
       user-select: none;
@@ -826,7 +828,7 @@
 
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName    = localStorage.getItem('playerName') || 'You';
-    const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest
+    const mpRole    = (gameMP.role === 'host') ? 'X' : 'O';
 
     const board = document.getElementById('board');
     const tilesContainer = document.getElementById('tiles-container');
@@ -1084,7 +1086,10 @@
         p2Label.textContent = mySymbol === 'O' ? '👤 You' : `👤 ${opponent}`;
 
         const key = gameMP.opponentDeviceId || 'unknown_peer';
-        try { chatHistory = JSON.parse(localStorage.getItem(`chat2048_${key}`) || '[]'); } catch {}
+        try {
+          const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+          chatHistory = fullHistory[key] || [];
+        } catch {}
         renderChatHistory();
 
         setupMultiplayerEvents();
@@ -1139,7 +1144,7 @@
           addRandomTile();
           addRandomTile();
           // Host broadcasts initial state
-          gameMP.send('move', { game: '2048', data: { grid, scores } });
+          gameMP.send('move', { game: '2048', data: { grid, scores, currentPlayer: 'X' } });
         } else {
           messageElement.textContent = 'Waiting for host state...';
           // Guest requests initial sync state
@@ -1649,7 +1654,8 @@
       scores[currentPlayer] += slideScore;
       addRandomTile();
 
-      gameMP.send('move', { game: '2048', data: { grid, scores } });
+      const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      gameMP.send('move', { game: '2048', data: { grid, scores, currentPlayer: nextPlayer } });
 
       animateMovements(oldGrid, grid);
       
@@ -1671,7 +1677,7 @@
           return;
         }
 
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        currentPlayer = nextPlayer;
         updateBoardInteractivity();
         isMoving = false;
       }, 140);
@@ -2046,7 +2052,7 @@
     }
 
     /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
-    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onGuestMoveHandler;
+    let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onGuestMoveHandler, onSyncStateHandler;
 
     function setupMultiplayerEvents() {
       onMoveHandler = ({ game, data }) => {
@@ -2079,7 +2085,11 @@
             return;
           }
 
-          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          if (data.currentPlayer) {
+            currentPlayer = data.currentPlayer;
+          } else {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          }
           updateBoardInteractivity();
           isMoving = false;
         }, 140);
@@ -2119,8 +2129,17 @@
 
       onGuestRejoinHandler = () => {
         if (mySymbol === 'X') {
-          gameMP.send('move', { game: '2048', data: { grid, scores } });
+          gameMP.send('sync_state', { grid, scores, currentPlayer });
         }
+      };
+
+      onSyncStateHandler = ({ grid: syncGrid, scores: syncScores, currentPlayer: syncPlayer }) => {
+        grid = syncGrid;
+        scores.X = syncScores.X;
+        scores.O = syncScores.O;
+        currentPlayer = syncPlayer;
+        syncTileDOM();
+        updateBoardInteractivity();
       };
 
       gameMP.on('move', onMoveHandler);
@@ -2130,6 +2149,7 @@
       gameMP.on('menu', onMenuHandler);
       gameMP.on('restart_game', onRestartHandler);
       gameMP.on('guest_rejoin', onGuestRejoinHandler);
+      gameMP.on('sync_state', onSyncStateHandler);
     }
 
     // Clean up WebRTC listeners when iframe is closed/unloaded to prevent dead object references
@@ -2142,6 +2162,7 @@
         if (onMenuHandler) gameMP.off('menu', onMenuHandler);
         if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
         if (onGuestRejoinHandler) gameMP.off('guest_rejoin', onGuestRejoinHandler);
+        if (onSyncStateHandler) gameMP.off('sync_state', onSyncStateHandler);
       }
     });
 
@@ -2195,7 +2216,11 @@
       chatHistory.push(msg);
       if (chatHistory.length > 100) chatHistory.shift();
       const key = gameMP.opponentDeviceId || 'unknown_peer';
-      try { localStorage.setItem(`chat2048_${key}`, JSON.stringify(chatHistory)); } catch {}
+      try {
+        const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+        fullHistory[key] = chatHistory;
+        localStorage.setItem('chatHistory', JSON.stringify(fullHistory));
+      } catch (e) {}
       if (chatDrawer.classList.contains('open')) {
         appendBubble(msg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2245,7 +2270,9 @@
         const key = gameMP.opponentDeviceId || 'unknown_peer';
         chatHistory = [];
         try {
-          localStorage.removeItem(`chat2048_${key}`);
+          const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+          delete fullHistory[key];
+          localStorage.setItem('chatHistory', JSON.stringify(fullHistory));
         } catch (e) {}
         
         chatMessages.innerHTML = '';
