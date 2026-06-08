@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v96';
+const CACHE_VERSION = 'v97';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -48,7 +48,7 @@ if (hash.startsWith('#join=')) {
           navigator.clipboard.writeText(joinCode)
             .then(() => {
               showToast('📋 Code copied! Open OfflineArcade.');
-              qrHelperCopyBtn.innerHTML = '<span>✓</span> Code Copied!';
+              qrHelperCopyBtn.innerHTML = '<span>✓</span> Copied! Close tab or reload for new scan';
               qrHelperCopyBtn.style.background = '#22c55e';
             })
             .catch(() => {
@@ -59,7 +59,7 @@ if (hash.startsWith('#join=')) {
               document.execCommand('copy');
               document.body.removeChild(temp);
               showToast('📋 Code copied! Open OfflineArcade.');
-              qrHelperCopyBtn.innerHTML = '<span>✓</span> Code Copied!';
+              qrHelperCopyBtn.innerHTML = '<span>✓</span> Copied! Close tab or reload for new scan';
               qrHelperCopyBtn.style.background = '#22c55e';
             });
         };
