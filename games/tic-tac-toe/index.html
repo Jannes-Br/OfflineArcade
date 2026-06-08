@@ -292,7 +292,7 @@
 
     const gameMode  = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName    = localStorage.getItem('playerName') || 'You';
-    const mpRole    = localStorage.getItem('mpRole') || 'X'; // X=host, O=guest (only used in multi)
+    const mpRole    = (gameMP.role === 'host') ? 'X' : 'O';
 
     /* ── Elements ── */
     const boardEl       = document.getElementById('board');
@@ -406,9 +406,11 @@
         xLabel.textContent = mySymbol === 'X' ? '👤 You (X)' : `👤 ${opponent} (X)`;
         oLabel.textContent = mySymbol === 'O' ? '👤 You (O)' : `👤 ${opponent} (O)`;
 
-        /* Load local chat history using device ID */
         const key = gameMP.opponentDeviceId || 'unknown_peer';
-        try { chatHistory = JSON.parse(localStorage.getItem(`chatTTT_${key}`) || '[]'); } catch {}
+        try {
+          const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+          chatHistory = fullHistory[key] || [];
+        } catch {}
         renderChatHistory();
 
         setupMultiplayerEvents();
@@ -743,7 +745,11 @@
       chatHistory.push(msg);
       if (chatHistory.length > 100) chatHistory.shift();
       const key = gameMP.opponentDeviceId || 'unknown_peer';
-      try { localStorage.setItem(`chatTTT_${key}`, JSON.stringify(chatHistory)); } catch {}
+      try {
+        const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+        fullHistory[key] = chatHistory;
+        localStorage.setItem('chatHistory', JSON.stringify(fullHistory));
+      } catch (e) {}
       if (chatDrawer.classList.contains('open')) {
         appendBubble(msg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -768,7 +774,9 @@
         const key = gameMP.opponentDeviceId || 'unknown_peer';
         chatHistory = [];
         try {
-          localStorage.removeItem(`chatTTT_${key}`);
+          const fullHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+          delete fullHistory[key];
+          localStorage.setItem('chatHistory', JSON.stringify(fullHistory));
         } catch (e) {}
         
         if (chatMessages) chatMessages.innerHTML = '';
