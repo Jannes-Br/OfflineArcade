@@ -402,7 +402,7 @@ main {
   flex-shrink: 0;
   margin: 20px 20px 0;
   border-top: 1px solid var(--box-border);
-  padding-bottom: 90px;
+  padding-bottom: 20px;
 }
 .instructions-toggle {
   width: 100%; background: none; border: none;
@@ -781,10 +781,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 
 /* ───────────────────────── FOOTER ───────────────────────────── */
 .footer {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  gap: 12px;
-  padding: 6px 20px max(12px, env(safe-area-inset-bottom));
-  flex-shrink: 0; z-index: 100; pointer-events: none;
+  display: none !important;
 }
 #install-info, #app-info {
   pointer-events: auto;
