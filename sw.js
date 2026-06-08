@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v96';
+const CACHE = 'offlinearcade-v97';
 
 // Essential App Shell files (SW fails if these cannot be loaded)
 const ESSENTIAL_ASSETS = [
