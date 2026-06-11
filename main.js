@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v97';
+const CACHE_VERSION = 'v98';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
@@ -250,6 +250,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (versionEl) versionEl.textContent = CACHE_VERSION;
 
+  // OS detection and fun message
+  const deviceInfoText = document.getElementById('deviceInfoText');
+  const ua = navigator.userAgent;
+  const isApple = /iPad|iPhone|iPod|Macintosh|MacIntel/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let osText = "Mystery Device 👾";
+  if (isApple) {
+    osText = "Apple Device  (Stylish choice!)";
+  } else if (/Windows/.test(ua)) {
+    osText = "Windows PC 💻 (Power User!)";
+  } else if (/Android/.test(ua)) {
+    osText = "Android Device 🤖 (Tech Enthusiast!)";
+  } else if (/Linux/.test(ua)) {
+    osText = "Linux System 🐧 (Open Source Geek!)";
+  }
+  if (deviceInfoText) {
+    deviceInfoText.textContent = `Detected: ${osText}`;
+  }
+
+  // Apple Avatar Apple Logo: replace Panda 🐼 with Apple Logo 
+  const avatarGrid = document.getElementById('avatarGrid');
+  if (avatarGrid && isApple) {
+    const pandaBtn = avatarGrid.querySelector('.avatar-option[data-emoji="🐼"]');
+    if (pandaBtn) pandaBtn.remove();
+    
+    // Add Apple logo option at the beginning
+    const appleBtn = document.createElement('button');
+    appleBtn.className = 'avatar-option';
+    appleBtn.dataset.emoji = '';
+    appleBtn.textContent = '';
+    avatarGrid.insertBefore(appleBtn, avatarGrid.firstChild);
+
+    // If their current avatar was Panda, auto-switch to Apple logo
+    if (playerAvatar === '🐼') {
+      playerAvatar = '';
+      localStorage.setItem('playerAvatar', '');
+    }
+  }
+
   if (!playerName) {
     playerName = randomName();
     localStorage.setItem('playerName', playerName);
@@ -280,6 +318,47 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Avatar saved! ' + playerAvatar);
     });
   });
+
+  // Sound toggle drawer
+  const soundToggleDrawer = document.getElementById('soundToggleDrawer');
+  let isMutedSetting = localStorage.getItem('mute') === 'true';
+  function updateSoundBtnText() {
+    if (soundToggleDrawer) {
+      soundToggleDrawer.textContent = isMutedSetting ? '🔇 Sound: Off' : '🔊 Sound: On';
+    }
+  }
+  updateSoundBtnText();
+  if (soundToggleDrawer) {
+    soundToggleDrawer.addEventListener('click', () => {
+      isMutedSetting = !isMutedSetting;
+      localStorage.setItem('mute', isMutedSetting ? 'true' : 'false');
+      updateSoundBtnText();
+      showToast(isMutedSetting ? 'Sound muted 🔇' : 'Sound enabled 🔊');
+    });
+  }
+
+  // Share App button
+  const shareAppBtn = document.getElementById('shareAppBtn');
+  if (shareAppBtn) {
+    shareAppBtn.addEventListener('click', () => {
+      const shareUrl = window.location.origin + window.location.pathname;
+      if (navigator.share) {
+         navigator.share({
+           title: 'OfflineArcade',
+           text: 'Play offline-ready retro arcade games like 2048, Pong, and Tic Tac Toe!',
+           url: shareUrl
+         }).catch(() => {});
+      } else {
+         navigator.clipboard.writeText(shareUrl)
+           .then(() => showToast('📋 App link copied to clipboard!'))
+           .catch(() => showToast('❌ Failed copying link.'));
+      }
+    });
+  }
+
+  // Render playtime cards
+  updatePlaytimeDisplays();
+
 
   /* Profile pill opens settings */
   const profilePill = document.getElementById('profilePill');
@@ -516,6 +595,12 @@ document.addEventListener('DOMContentLoaded', () => {
   MP.onParent('connected', ({ opponent }) => {
     stopConnectionTimeout();
     stopCameraScanner();
+    
+    // Clear chat history on connection
+    chatHistory = {};
+    try { localStorage.setItem('chatHistory', '{}'); } catch (e) {}
+    if (chatMessages) chatMessages.innerHTML = '';
+    
     if (chatPartnerName) chatPartnerName.textContent = opponent || 'Opponent';
     closeAllModals();
     setMode(currentMode, false);
@@ -575,6 +660,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function onDisconnected() {
     stopConnectionTimeout();
     stopCameraScanner();
+    
+    // Clear chat history on disconnection
+    chatHistory = {};
+    try { localStorage.setItem('chatHistory', '{}'); } catch (e) {}
+    if (chatMessages) chatMessages.innerHTML = '';
+    
     if (chatFab) chatFab.style.display = 'none';
     if (settingsDisconnectWrap) settingsDisconnectWrap.style.display = 'none';
     gameCards.forEach(c => c.classList.remove('mp-disabled', 'suggested', 'active-host-game'));
@@ -849,7 +940,52 @@ document.addEventListener('DOMContentLoaded', () => {
   if (guestJoinClose) guestJoinClose.addEventListener('click', () => { stopConnectionTimeout(); closeModal(guestJoinOverlay); MP.disconnect(); });
 
   /* ══════════════════ GAME FRAME OVERLAY CONTROL ══════════════════ */
+  let activeGameStartTime = null;
+  let activeGameName = null;
+
+  function savePlaytime(game, seconds) {
+    if (seconds <= 0) return;
+    const playtimes = JSON.parse(localStorage.getItem('arcadePlaytimes') || '{}');
+    playtimes[game] = (playtimes[game] || 0) + seconds;
+    localStorage.setItem('arcadePlaytimes', JSON.stringify(playtimes));
+    updatePlaytimeDisplays();
+  }
+
+  function updatePlaytimeDisplays() {
+    const playtimes = JSON.parse(localStorage.getItem('arcadePlaytimes') || '{}');
+    document.querySelectorAll('.game-playtime').forEach(el => {
+      const game = el.dataset.game;
+      const seconds = playtimes[game] || 0;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes > 0) {
+        if (minutes < 60) {
+          el.textContent = ` • ${minutes}m`;
+        } else {
+          const h = Math.floor(minutes / 60);
+          const m = minutes % 60;
+          if (m === 0) {
+            el.textContent = ` • ${h}h`;
+          } else {
+            el.textContent = ` • ${h}h ${m}m`;
+          }
+        }
+      } else {
+        el.textContent = '';
+      }
+    });
+  }
+  window.updatePlaytimeDisplays = updatePlaytimeDisplays;
+
+  window.addEventListener('pagehide', () => {
+    if (activeGameStartTime && activeGameName) {
+      const elapsed = Math.round((Date.now() - activeGameStartTime) / 1000);
+      savePlaytime(activeGameName, elapsed);
+    }
+  });
+
   function openGameFrame(game) {
+    activeGameStartTime = Date.now();
+    activeGameName = game;
     if (gameFrame) {
       gameFrame.src = `games/${game}/index.html`;
       gameFrame.onload = () => {
@@ -865,7 +1001,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openGameFrame = openGameFrame;
 
   function closeGameFrame() {
-    const game = MP.activeGame;
+    const game = MP.activeGame || activeGameName;
+    if (activeGameStartTime && activeGameName) {
+      const elapsed = Math.round((Date.now() - activeGameStartTime) / 1000);
+      savePlaytime(activeGameName, elapsed);
+      activeGameStartTime = null;
+      activeGameName = null;
+    }
     if (gameFrame) gameFrame.src = "";
     if (gameFrameOverlay) gameFrameOverlay.style.display = "none";
     
