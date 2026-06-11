@@ -176,14 +176,7 @@
     }
 
     .mode-badge {
-      pointer-events: none;
-      background: var(--btn-active-bg);
-      color: var(--btn-active-color);
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
+      display: none !important;
     }
 
     .container {
@@ -339,90 +332,52 @@
       margin: 4px 0;
     }
 
+    .mode-badge { display: none !important; }
+
     .board {
-      position: relative;
-      background: rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--box-border);
-      padding: 12px;
-      border-radius: 24px;
-      width: 320px;
-      height: 320px;
-      max-width: 100%;
-      max-height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+      width: 100%;
+      max-width: 340px;
       aspect-ratio: 1;
       box-sizing: border-box;
       touch-action: none;
       user-select: none;
       margin: 0 auto;
+      position: relative;
     }
 
     body.dark-mode .board {
       background: rgba(255, 255, 255, 0.04);
     }
 
-    .grid-cells {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      width: 100%;
-      height: 100%;
-    }
-
     .cell {
       aspect-ratio: 1;
       border-radius: 18px;
       background: rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      user-select: none;
+      transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+      font-size: min(8vw, 36px);
     }
 
     body.dark-mode .cell {
       background: rgba(255, 255, 255, 0.03);
     }
 
-    .tiles-container {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-    }
-
-    .tile {
-      position: absolute;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      border-radius: 18px;
+    /* Tile Colors applied directly to cell when it has the tile class */
+    .cell[class*="tile-"] {
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-      transition: left 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      user-select: none;
     }
-
-    body.dark-mode .tile {
+    body.dark-mode .cell[class*="tile-"] {
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
 
-    .tile.new {
-      animation: pop 0.14s ease-out forwards;
-    }
-
-    .tile.merged-pop {
-      animation: mergePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      z-index: 5;
-    }
-
-    @keyframes pop {
-      0% { transform: scale(0.6); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes mergePop {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-      100% { transform: scale(1); }
-    }
-
-    /* Tile Colors */
     .tile-2 { background: #f8fafc; color: #111827; }
     .tile-4 { background: #f1f5f9; color: #111827; }
     .tile-8 { background: #e2e8f0; color: #111827; }
@@ -447,7 +402,7 @@
     body.dark-mode .tile-1024 { background: rgba(244, 63, 94, 0.48); color: #fecdd3; border: 1px solid rgba(244, 63, 94, 0.65); }
     body.dark-mode .tile-2048 { background: rgba(245, 158, 11, 0.38); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.55); box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
 
-    .tile.waiting-turn {
+    .cell.waiting-turn {
       opacity: 0.6;
     }
 
@@ -516,12 +471,12 @@
     }
 
     /* Delete / Merge interactive states */
-    body.delete-active .tile {
+    body.delete-active .cell[class*="tile-"] {
       animation: wiggle 0.22s infinite alternate ease-in-out;
       cursor: pointer;
     }
 
-    body.merge-active .tile {
+    body.merge-active .cell[class*="tile-"] {
       animation: pulse-glow 0.35s infinite alternate ease-in-out;
       cursor: pointer;
     }
@@ -758,13 +713,10 @@
 
       <div class="board-wrapper">
         <div class="board" id="board">
-          <div class="grid-cells">
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-          </div>
-          <div class="tiles-container" id="tiles-container"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
           
           <!-- Game Screen Overlay -->
           <div class="overlay" id="overlay">
@@ -831,7 +783,6 @@
     const mpRole    = (gameMP.role === 'host') ? 'X' : 'O';
 
     const board = document.getElementById('board');
-    const tilesContainer = document.getElementById('tiles-container');
     const scoreElement = document.getElementById('score');
     const messageElement = document.getElementById('message');
     const restartBtn = document.getElementById('restartBtn');
@@ -904,8 +855,7 @@
     let hasReachedWin = false;
     let isMoving = false; // Lock swipe inputs during animation
 
-    // Track Tile DOM Elements by ID
-    const tileDomElements = new Map();
+
 
     // Theme Engine setup
     function applyTheme() {
@@ -1098,8 +1048,20 @@
 
     function init() {
       grid = createEmptyGrid();
-      tilesContainer.innerHTML = '';
-      tileDomElements.clear();
+
+      const cells = Array.from(board.querySelectorAll('.cell'));
+      cells.forEach((cellEl, i) => {
+        cellEl.textContent = '';
+        cellEl.className = 'cell';
+        cellEl.style.fontSize = '';
+        
+        // Bind click event once
+        const r = Math.floor(i / 4);
+        const c = i % 4;
+        cellEl.onclick = () => {
+          tileClick(r, c);
+        };
+      });
 
       score = 0;
       scores.X = 0;
@@ -1201,76 +1163,40 @@
     }
 
     function syncTileDOM() {
-      const containerWidth = tilesContainer.clientWidth;
-      if (containerWidth <= 0) {
-        setTimeout(syncTileDOM, 100);
-        return;
-      }
-
-      const gap = 12;
-      const tileSize = (containerWidth - gap * 3) / 4;
-      const currentIds = new Set();
+      const cells = Array.from(board.querySelectorAll('.cell'));
       
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const tile = grid[r][c];
-          if (!tile) continue;
+      for (let i = 0; i < 16; i++) {
+        const r = Math.floor(i / 4);
+        const c = i % 4;
+        const tile = grid[r][c];
+        const cellEl = cells[i];
+        
+        if (!cellEl) continue;
+        
+        if (tile) {
+          cellEl.textContent = tile.value;
+          cellEl.className = `cell tile-${tile.value}`;
           
-          currentIds.add(tile.id);
-          
-          let el = tileDomElements.get(tile.id);
-          if (!el) {
-            el = document.createElement('div');
-            el.textContent = tile.value;
-            el.dataset.id = tile.id;
-            
-            el.addEventListener('click', (e) => {
-              const row = parseInt(e.currentTarget.dataset.row);
-              const col = parseInt(e.currentTarget.dataset.col);
-              tileClick(row, col);
-            });
-            
-            tilesContainer.appendChild(el);
-            tileDomElements.set(tile.id, el);
-            
-            if (tile.isMerged) {
-              el.className = `tile tile-${tile.value} merged-pop`;
-            } else {
-              el.className = `tile tile-${tile.value} new`;
-            }
-          } else {
-            el.textContent = tile.value;
-            el.className = `tile tile-${tile.value}`;
-          }
-          
-          el.dataset.row = r;
-          el.dataset.col = c;
-          
-          el.style.width = tileSize + 'px';
-          el.style.height = tileSize + 'px';
-          el.style.left = c * (tileSize + gap) + 'px';
-          el.style.top = r * (tileSize + gap) + 'px';
-          
-          const baseFontSize = tileSize * 0.45;
+          // Adjust font size dynamically based on cell width
+          const baseFontSize = cellEl.clientWidth * 0.45;
           if (tile.value >= 1024) {
-            el.style.fontSize = (baseFontSize * 0.72) + 'px';
+            cellEl.style.style = ''; // Reset inline style so class sizes can kick in
+            cellEl.style.fontSize = (baseFontSize * 0.72) + 'px';
           } else if (tile.value >= 128) {
-            el.style.fontSize = (baseFontSize * 0.85) + 'px';
+            cellEl.style.style = '';
+            cellEl.style.fontSize = (baseFontSize * 0.85) + 'px';
           } else {
-            el.style.fontSize = baseFontSize + 'px';
+            cellEl.style.style = '';
+            cellEl.style.fontSize = baseFontSize + 'px';
           }
 
           // Visual cue for who can move in multiplayer
           const isMyTurnNow = (gameMode !== 'multi') || (currentPlayer === mySymbol);
-          el.classList.toggle('waiting-turn', !isMyTurnNow);
-        }
-      }
-      
-      // Clean up orphaned DOM elements
-      for (const [id, el] of tileDomElements.entries()) {
-        if (!currentIds.has(id)) {
-          el.remove();
-          tileDomElements.delete(id);
+          cellEl.classList.toggle('waiting-turn', !isMyTurnNow);
+        } else {
+          cellEl.textContent = '';
+          cellEl.className = 'cell';
+          cellEl.style.fontSize = '';
         }
       }
       
@@ -1287,8 +1213,8 @@
       if (gameMode !== 'multi') return;
       const isMyTurnNow = (currentPlayer === mySymbol) && gameActive;
       
-      // Update tile styling
-      tileDomElements.forEach((el) => {
+      const cells = Array.from(board.querySelectorAll('.cell'));
+      cells.forEach((el) => {
         el.classList.toggle('waiting-turn', !isMyTurnNow);
       });
 
@@ -1299,53 +1225,7 @@
       }
     }
 
-    function animateMovements(oldGrid, newGrid) {
-      const containerWidth = tilesContainer.clientWidth;
-      if (containerWidth <= 0) return;
-
-      const gap = 12;
-      const tileSize = (containerWidth - gap * 3) / 4;
-
-      function getCoords(r, c) {
-        return {
-          left: c * (tileSize + gap) + 'px',
-          top: r * (tileSize + gap) + 'px'
-        };
-      }
-
-      const targets = new Map();
-      
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const tile = newGrid[r][c];
-          if (!tile) continue;
-          
-          if (tile.mergedFrom) {
-            targets.set(tile.mergedFrom[0], { r, c });
-            targets.set(tile.mergedFrom[1], { r, c });
-          } else {
-            targets.set(tile.id, { r, c });
-          }
-        }
-      }
-
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const tile = oldGrid[r][c];
-          if (!tile) continue;
-          
-          const dest = targets.get(tile.id);
-          if (dest) {
-            const el = tileDomElements.get(tile.id);
-            if (el) {
-              const coords = getCoords(dest.r, dest.c);
-              el.style.left = coords.left;
-              el.style.top = coords.top;
-            }
-          }
-        }
-      }
-    }
+    function animateMovements(oldGrid, newGrid) {}
 
     function tileClick(r, c) {
       if (gameMode !== 'solo') return; // powerups are disabled in Multi/Bot mode
@@ -1649,7 +1529,6 @@
       if (!moved) return;
 
       isMoving = true;
-      const oldGrid = copyGrid(grid);
       grid = newGrid;
       scores[currentPlayer] += slideScore;
       addRandomTile();
@@ -1657,30 +1536,26 @@
       const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
       gameMP.send('move', { game: '2048', data: { grid, scores, currentPlayer: nextPlayer } });
 
-      animateMovements(oldGrid, grid);
-      
-      setTimeout(() => {
-        playSound(slideScore > 0 ? 'merge' : 'slide');
-        syncTileDOM();
+      playSound(slideScore > 0 ? 'merge' : 'slide');
+      syncTileDOM();
 
-        for (let r = 0; r < 4; r++) {
-          for (let c = 0; c < 4; c++) {
-            if (grid[r][c]) {
-              grid[r][c].mergedFrom = null;
-              grid[r][c].isMerged = false;
-            }
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (grid[r][c]) {
+            grid[r][c].mergedFrom = null;
+            grid[r][c].isMerged = false;
           }
         }
+      }
 
-        if (hasWon() || !canMove()) {
-          endGame();
-          return;
-        }
+      if (hasWon() || !canMove()) {
+        endGame();
+        return;
+      }
 
-        currentPlayer = nextPlayer;
-        updateBoardInteractivity();
-        isMoving = false;
-      }, 140);
+      currentPlayer = nextPlayer;
+      updateBoardInteractivity();
+      isMoving = false;
     }
 
     function move(direction) {
@@ -1708,7 +1583,6 @@
         prevMergeUses = mergeUses;
       }
 
-      const oldGrid = copyGrid(grid);
       grid = newGrid;
       
       if (gameMode === 'solo') {
@@ -1719,81 +1593,72 @@
 
       addRandomTile();
 
-      animateMovements(oldGrid, grid);
-      
-      setTimeout(() => {
-        playSound(slideScore > 0 ? 'merge' : 'slide');
-        syncTileDOM();
+      playSound(slideScore > 0 ? 'merge' : 'slide');
+      syncTileDOM();
 
-        for (let r = 0; r < 4; r++) {
-          for (let c = 0; c < 4; c++) {
-            if (grid[r][c]) {
-              grid[r][c].mergedFrom = null;
-              grid[r][c].isMerged = false;
-            }
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (grid[r][c]) {
+            grid[r][c].mergedFrom = null;
+            grid[r][c].isMerged = false;
           }
         }
+      }
 
-        if (hasWon()) {
+      if (hasWon()) {
+        endGame();
+        return;
+      } else if (!canMove()) {
+        if (gameMode === 'solo' && (trashUses > 0 || mergeUses > 0)) {
+          messageElement.textContent = 'Use your power-ups to continue!';
+        } else {
           endGame();
           return;
-        } else if (!canMove()) {
-          if (gameMode === 'solo' && (trashUses > 0 || mergeUses > 0)) {
-            messageElement.textContent = 'Use your power-ups to continue!';
-          } else {
-            endGame();
-            return;
-          }
         }
+      }
 
-        if (gameMode === 'bot') {
-          currentPlayer = 'O';
-          board.style.pointerEvents = 'none';
-          messageElement.textContent = '🤖 Bot thinking…';
-          setTimeout(() => {
-            const botDir = getBotMove();
-            const botResult = getNextState(botDir);
-            if (botResult.moved) {
-              const botOldGrid = copyGrid(grid);
-              grid = botResult.newGrid;
-              scores.O += botResult.slideScore;
-              addRandomTile();
+      if (gameMode === 'bot') {
+        currentPlayer = 'O';
+        board.style.pointerEvents = 'none';
+        messageElement.textContent = '🤖 Bot thinking…';
+        setTimeout(() => {
+          const botDir = getBotMove();
+          const botResult = getNextState(botDir);
+          if (botResult.moved) {
+            grid = botResult.newGrid;
+            scores.O += botResult.slideScore;
+            addRandomTile();
 
-              animateMovements(botOldGrid, grid);
-              
-              setTimeout(() => {
-                playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
-                syncTileDOM();
-                
-                for (let r = 0; r < 4; r++) {
-                  for (let c = 0; c < 4; c++) {
-                    if (grid[r][c]) {
-                      grid[r][c].mergedFrom = null;
-                      grid[r][c].isMerged = false;
-                    }
-                  }
+            playSound(botResult.slideScore > 0 ? 'merge' : 'slide');
+            syncTileDOM();
+            
+            for (let r = 0; r < 4; r++) {
+              for (let c = 0; c < 4; c++) {
+                if (grid[r][c]) {
+                  grid[r][c].mergedFrom = null;
+                  grid[r][c].isMerged = false;
                 }
-                
-                board.style.pointerEvents = 'auto';
-
-                if (hasWon() || !canMove()) {
-                  endGame();
-                  return;
-                }
-                
-                currentPlayer = 'X';
-                updateBoardInteractivity();
-              }, 140);
-            } else {
-              board.style.pointerEvents = 'auto';
-              currentPlayer = 'X';
-              updateBoardInteractivity();
+              }
             }
-          }, 500);
-        }
+            
+            board.style.pointerEvents = 'auto';
 
-        isMoving = false;
-      }, 140);
+            if (hasWon() || !canMove()) {
+              endGame();
+              return;
+            }
+            
+            currentPlayer = 'X';
+            updateBoardInteractivity();
+          } else {
+            board.style.pointerEvents = 'auto';
+            currentPlayer = 'X';
+            updateBoardInteractivity();
+          }
+        }, 500);
+      }
+
+      isMoving = false;
     }
 
     // Bot move decision heuristic
@@ -2035,21 +1900,9 @@
       window.focus();
     });
 
-    // Monitor tilesContainer size changes to cleanly adjust tile widths/heights
-    if (window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(entries => {
-        for (let entry of entries) {
-          if (entry.contentRect.width > 0) {
-            syncTileDOM();
-          }
-        }
-      });
-      resizeObserver.observe(tilesContainer);
-    } else {
-      window.addEventListener('resize', () => {
-        syncTileDOM();
-      });
-    }
+    window.addEventListener('resize', () => {
+      syncTileDOM();
+    });
 
     /* ══════════════════ MULTIPLAYER EVENTS ══════════════════ */
     let onMoveHandler, onChatHandler, onDisconnectedHandler, onMenuHandler, onRestartHandler, onGuestMoveHandler, onSyncStateHandler;
@@ -2060,39 +1913,36 @@
         
         isMoving = true;
         const oldGrid = copyGrid(grid);
-        animateMovements(oldGrid, data.grid);
         
         grid = data.grid;
         scores.X = data.scores.X;
         scores.O = data.scores.O;
 
-        setTimeout(() => {
-          playSound(JSON.stringify(oldGrid) !== JSON.stringify(grid) ? 'slide' : 'click');
-          syncTileDOM();
-          
-          // Clear animations
-          for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-              if (grid[r][c]) {
-                grid[r][c].mergedFrom = null;
-                grid[r][c].isMerged = false;
-              }
+        playSound(JSON.stringify(oldGrid) !== JSON.stringify(grid) ? 'slide' : 'click');
+        syncTileDOM();
+        
+        // Clear animations
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            if (grid[r][c]) {
+              grid[r][c].mergedFrom = null;
+              grid[r][c].isMerged = false;
             }
           }
+        }
 
-          if (hasWon() || !canMove()) {
-            endGame();
-            return;
-          }
+        if (hasWon() || !canMove()) {
+          endGame();
+          return;
+        }
 
-          if (data.currentPlayer) {
-            currentPlayer = data.currentPlayer;
-          } else {
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-          }
-          updateBoardInteractivity();
-          isMoving = false;
-        }, 140);
+        if (data.currentPlayer) {
+          currentPlayer = data.currentPlayer;
+        } else {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+        updateBoardInteractivity();
+        isMoving = false;
       };
 
       onGuestMoveHandler = ({ direction }) => {
