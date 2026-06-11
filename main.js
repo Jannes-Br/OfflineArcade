@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v99';
+const CACHE_VERSION = 'v100';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong'];
 
 /* ── Random name generator ── */
