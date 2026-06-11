@@ -718,6 +718,7 @@
       // Ensure some horizontal velocity, random vertical
       ball.vx = ball.currentSpeed * direction;
       ball.vy = (Math.random() * 4 - 2);
+      ball.spin = 0;
 
       ball.trail = [];
       updatePrediction();
@@ -744,7 +745,7 @@
     function startCountdown() {
       gameState = 'countdown';
       countdown = 3;
-      countdownTimer = performance.now();
+      countdownTimer = 0;
       playSound('countdown');
       updateOverlay();
     }
@@ -909,7 +910,7 @@
     // ── Update loop ──
     let lastGuestSend = 0;
 
-    function update() {
+    function update(dt) {
       if (paused) return;
 
       // Update paddle position from input locally
@@ -950,6 +951,13 @@
 
       clampPaddles();
 
+      // Track paddle vertical speeds
+      left.speedY = left.y - (left.prevY !== undefined ? left.prevY : left.y);
+      left.prevY = left.y;
+
+      right.speedY = right.y - (right.prevY !== undefined ? right.prevY : right.y);
+      right.prevY = right.y;
+
       // Guest sends paddle update to Host at 60 FPS
       if (gameMode === 'multi' && mpRole === 'O') {
         const now = performance.now();
@@ -962,15 +970,17 @@
 
 
       if (gameState === 'countdown') {
-        const now = performance.now();
-        if (now - countdownTimer > 1000) {
-          countdown--;
-          countdownTimer = now;
-          if (countdown > 0) {
-            playSound('countdown');
-          } else if (countdown === 0) {
-            playSound('countdown-start');
-            if (gameMode !== 'multi' || mpRole === 'X') {
+        if (gameMode !== 'multi' || mpRole === 'X') {
+          countdownTimer += dt;
+          if (countdownTimer >= 1000) {
+            countdown--;
+            countdownTimer -= 1000;
+            if (countdown > 0) {
+              playSound('countdown');
+              updateOverlay();
+            } else if (countdown === 0) {
+              playSound('countdown-start');
+              updateOverlay();
               startGame();
             }
           }
@@ -991,7 +1001,18 @@
           clampPaddles();
         }
 
-        // Move ball
+        // Move ball (apply spin curvature if active)
+        if (ball.spin && ball.spin !== 0) {
+          ball.vy += ball.spin;
+          ball.spin *= 0.97; // Gradually decay spin over time for natural curvature
+          if (Math.abs(ball.spin) < 0.01) ball.spin = 0;
+          // Re-normalize velocity vector to maintain speed
+          const len = Math.hypot(ball.vx, ball.vy);
+          if (len > 0) {
+            ball.vx = (ball.vx / len) * ball.currentSpeed;
+            ball.vy = (ball.vy / len) * ball.currentSpeed;
+          }
+        }
         ball.x += ball.vx;
         ball.y += ball.vy;
 
@@ -1003,11 +1024,13 @@
         if (ball.y - ball.size < 0 && ball.vy < 0) {
           ball.y = ball.size;
           ball.vy *= -1;
+          ball.spin = 0;
           playSound('bounce');
         }
         if (ball.y + ball.size > ch && ball.vy > 0) {
           ball.y = ch - ball.size;
           ball.vy *= -1;
+          ball.spin = 0;
           playSound('bounce');
         }
 
@@ -1095,6 +1118,13 @@
         ball.x = right.x - ball.size;
       }
 
+      // Apply spin if paddle is moving fast enough Y
+      if (p.speedY && Math.abs(p.speedY) > 2) {
+        ball.spin = -p.speedY * 0.08;
+      } else {
+        ball.spin = 0;
+      }
+
       p.glow = 1.0;
       playSound('hit');
       updatePrediction();
@@ -1146,16 +1176,9 @@
     }
 
     function drawPaddleElement(p, color) {
-      ctx.shadowBlur = 16 + p.glow * 50;
+      ctx.shadowBlur = 16 + p.glow * 70;
       ctx.shadowColor = color;
-
-      let drawColor = color;
-      if (p.glow > 0.6) {
-        drawColor = '#ffffff';
-      } else if (p.glow > 0.3) {
-        drawColor = '#93c5fd';
-      }
-      ctx.fillStyle = drawColor;
+      ctx.fillStyle = color;
 
       ctx.beginPath();
       ctx.roundRect(p.x, p.y, paddle.width, paddle.height, 8);
@@ -1164,7 +1187,7 @@
     }
 
     function drawBallElement() {
-      if (gameState === 'hold') return;
+      if (gameState === 'hold' || gameState === 'countdown') return;
 
       // Draw trail
       ball.trail.forEach((t, i) => {
@@ -1186,9 +1209,14 @@
 
     // ── Main Loop ──
     let lastHostSend = 0;
+    let lastTime = performance.now();
 
     function loop() {
-      update();
+      const now = performance.now();
+      const dt = Math.min(now - lastTime, 100);
+      lastTime = now;
+
+      update(dt);
       draw();
 
       // Host sends game state to Guest at ~60 FPS
@@ -1383,6 +1411,7 @@
       chatDrawer.classList.add('open');
       unreadChat = 0;
       chatBadgeHdr.style.display = 'none';
+      renderChatHistory();
       setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
     }
     function closeChat() {
