@@ -347,6 +347,9 @@
       user-select: none;
       margin: 0 auto;
       position: relative;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 20px;
+      padding: 10px;
     }
 
     body.dark-mode .board {
@@ -357,17 +360,55 @@
       aspect-ratio: 1;
       border-radius: 18px;
       background: rgba(0, 0, 0, 0.04);
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+
+    body.dark-mode .cell {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tiles-container {
+      position: absolute;
+      inset: 10px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .tile {
+      position: absolute;
+      width: calc((100% - 30px) / 4);
+      height: calc((100% - 30px) / 4);
+      border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
       user-select: none;
-      transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+      transition: transform 0.12s ease-in-out;
+      transform: translate(
+        calc(var(--col) * 100% + var(--col) * 10px),
+        calc(var(--row) * 100% + var(--row) * 10px)
+      );
       font-size: min(8vw, 36px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
     }
 
-    body.dark-mode .cell {
-      background: rgba(255, 255, 255, 0.03);
+    body.dark-mode .tile {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .tile.pop {
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: translate(calc(var(--col) * 100% + var(--col) * 10px), calc(var(--row) * 100% + var(--row) * 10px)) scale(0.5); opacity: 0; }
+      100% { transform: translate(calc(var(--col) * 100% + var(--col) * 10px), calc(var(--row) * 100% + var(--row) * 10px)) scale(1); opacity: 1; }
+    }
+
+    .tile.waiting-turn {
+      opacity: 0.6;
     }
 
     /* Tile Colors applied directly to cell when it has the tile class */
@@ -471,13 +512,16 @@
     }
 
     /* Delete / Merge interactive states */
-    body.delete-active .cell[class*="tile-"] {
+    body.delete-active .tile {
       animation: wiggle 0.22s infinite alternate ease-in-out;
+    }
+    body.merge-active .tile {
+      animation: pulse-glow 0.35s infinite alternate ease-in-out;
+    }
+    body.delete-active .cell {
       cursor: pointer;
     }
-
-    body.merge-active .cell[class*="tile-"] {
-      animation: pulse-glow 0.35s infinite alternate ease-in-out;
+    body.merge-active .cell {
       cursor: pointer;
     }
 
@@ -717,6 +761,8 @@
           <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
           <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
           <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          
+          <div id="tilesContainer" class="tiles-container"></div>
           
           <!-- Game Screen Overlay -->
           <div class="overlay" id="overlay">
@@ -1048,6 +1094,8 @@
 
     function init() {
       grid = createEmptyGrid();
+      const tilesContainer = document.getElementById('tilesContainer');
+      if (tilesContainer) tilesContainer.innerHTML = '';
 
       const cells = Array.from(board.querySelectorAll('.cell'));
       cells.forEach((cellEl, i) => {
@@ -1163,43 +1211,73 @@
     }
 
     function syncTileDOM() {
-      const cells = Array.from(board.querySelectorAll('.cell'));
-      
-      for (let i = 0; i < 16; i++) {
-        const r = Math.floor(i / 4);
-        const c = i % 4;
-        const tile = grid[r][c];
-        const cellEl = cells[i];
-        
-        if (!cellEl) continue;
-        
-        if (tile) {
-          cellEl.textContent = tile.value;
-          cellEl.className = `cell tile-${tile.value}`;
-          
-          // Adjust font size dynamically based on cell width
-          const baseFontSize = cellEl.clientWidth * 0.45;
-          if (tile.value >= 1024) {
-            cellEl.style.style = ''; // Reset inline style so class sizes can kick in
-            cellEl.style.fontSize = (baseFontSize * 0.72) + 'px';
-          } else if (tile.value >= 128) {
-            cellEl.style.style = '';
-            cellEl.style.fontSize = (baseFontSize * 0.85) + 'px';
-          } else {
-            cellEl.style.style = '';
-            cellEl.style.fontSize = baseFontSize + 'px';
-          }
+      const tilesContainer = document.getElementById('tilesContainer');
+      if (!tilesContainer) return;
 
-          // Visual cue for who can move in multiplayer
-          const isMyTurnNow = (gameMode !== 'multi') || (currentPlayer === mySymbol);
-          cellEl.classList.toggle('waiting-turn', !isMyTurnNow);
-        } else {
-          cellEl.textContent = '';
-          cellEl.className = 'cell';
-          cellEl.style.fontSize = '';
+      const activeTiles = [];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const tile = grid[r][c];
+          if (tile) {
+            activeTiles.push({ r, c, tile });
+          }
         }
       }
-      
+
+      // Handle merged tiles animations (slide parents before they die)
+      activeTiles.forEach(({ r, c, tile }) => {
+        if (tile.mergedFrom && tile.mergedFrom.length > 0) {
+          tile.mergedFrom.forEach(parentId => {
+            const parentEl = tilesContainer.querySelector(`.tile[data-id="${parentId}"]`);
+            if (parentEl) {
+              parentEl.style.setProperty('--col', c);
+              parentEl.style.setProperty('--row', r);
+            }
+          });
+        }
+      });
+
+      const existingTileEls = Array.from(tilesContainer.querySelectorAll('.tile:not(.dying)'));
+      const activeIds = activeTiles.map(item => item.tile.id);
+
+      // 1. Remove elements that are no longer active (with a slide animation delay)
+      existingTileEls.forEach(el => {
+        const id = parseInt(el.dataset.id);
+        if (!activeIds.includes(id)) {
+          el.classList.add('dying');
+          setTimeout(() => el.remove(), 120);
+        }
+      });
+
+      // 2. Create or update elements for active tiles
+      activeTiles.forEach(({ r, c, tile }) => {
+        let el = tilesContainer.querySelector(`.tile[data-id="${tile.id}"]`);
+        if (!el) {
+          el = document.createElement('div');
+          el.className = 'tile pop';
+          el.dataset.id = tile.id;
+          tilesContainer.appendChild(el);
+        }
+
+        el.style.setProperty('--col', c);
+        el.style.setProperty('--row', r);
+        el.textContent = tile.value;
+        el.className = `tile tile-${tile.value}`;
+
+        // Adjust font size dynamically based on cell width
+        const baseFontSize = el.clientWidth * 0.45 || 30;
+        if (tile.value >= 1024) {
+          el.style.fontSize = (baseFontSize * 0.72) + 'px';
+        } else if (tile.value >= 128) {
+          el.style.fontSize = (baseFontSize * 0.85) + 'px';
+        } else {
+          el.style.fontSize = baseFontSize + 'px';
+        }
+
+        const isMyTurnNow = (gameMode !== 'multi') || (currentPlayer === mySymbol);
+        el.classList.toggle('waiting-turn', !isMyTurnNow);
+      });
+
       if (gameMode === 'solo') {
         scoreElement.textContent = score;
       } else {
@@ -2038,6 +2116,7 @@
       chatDrawer.classList.add('open');
       unreadChat = 0;
       chatBadgeHdr.style.display = 'none';
+      renderChatHistory();
       setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50);
     }
     function closeChat() {
