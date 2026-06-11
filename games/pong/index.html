@@ -996,21 +996,54 @@
         if (mode === 'bot') {
           const target = ball.y - paddle.height / 2;
           const diff = target - right.y;
-          // Apply speed limit for bot
-          right.y += Math.max(-5.5, Math.min(5.5, diff * 0.12));
+          // Bot speed scales with ball speed to stay competitive
+          const botMaxSpeed = 3.5 + ball.currentSpeed * 0.25;
+          const botResponsiveness = 0.1 + (ball.currentSpeed / 30) * 0.05;
+          right.y += Math.max(-botMaxSpeed, Math.min(botMaxSpeed, diff * botResponsiveness));
           clampPaddles();
         }
 
         // Move ball (apply spin curvature if active)
         if (ball.spin && ball.spin !== 0) {
-          ball.vy += ball.spin;
-          ball.spin *= 0.97; // Gradually decay spin over time for natural curvature
-          if (Math.abs(ball.spin) < 0.01) ball.spin = 0;
+          // Rotate velocity vector by ball.spin radians
+          const dTheta = ball.spin;
+          const cosT = Math.cos(dTheta);
+          const sinT = Math.sin(dTheta);
+          const rx = ball.vx * cosT - ball.vy * sinT;
+          const ry = ball.vx * sinT + ball.vy * cosT;
+          
+          ball.vx = rx;
+          ball.vy = ry;
+
+          // Gradually decay spin over time for natural curvature
+          ball.spin *= 0.95;
+          if (Math.abs(ball.spin) < 0.001) ball.spin = 0;
+
           // Re-normalize velocity vector to maintain speed
           const len = Math.hypot(ball.vx, ball.vy);
           if (len > 0) {
             ball.vx = (ball.vx / len) * ball.currentSpeed;
             ball.vy = (ball.vy / len) * ball.currentSpeed;
+          }
+        } else {
+          // Prevent perfectly vertical or horizontal movement to avoid stuckness (only when no spin is active)
+          const minVx = 1.5;
+          const minVy = 0.8;
+          let adjusted = false;
+          if (Math.abs(ball.vx) < minVx) {
+            ball.vx = Math.sign(ball.vx || (Math.random() > 0.5 ? 1 : -1)) * minVx;
+            adjusted = true;
+          }
+          if (Math.abs(ball.vy) < minVy) {
+            ball.vy = Math.sign(ball.vy || (Math.random() > 0.5 ? 1 : -1)) * minVy;
+            adjusted = true;
+          }
+          if (adjusted) {
+            const len = Math.hypot(ball.vx, ball.vy);
+            if (len > 0) {
+              ball.vx = (ball.vx / len) * ball.currentSpeed;
+              ball.vy = (ball.vy / len) * ball.currentSpeed;
+            }
           }
         }
         ball.x += ball.vx;
@@ -1118,9 +1151,10 @@
         ball.x = right.x - ball.size;
       }
 
-      // Apply spin if paddle is moving fast enough Y
+      // Apply spin if paddle is moving fast enough Y (3x weaker base factor: 0.012)
+      const spinFactor = 0.012;
       if (p.speedY && Math.abs(p.speedY) > 2) {
-        ball.spin = -p.speedY * 0.08;
+        ball.spin = (isLeft ? -1 : 1) * p.speedY * spinFactor;
       } else {
         ball.spin = 0;
       }
