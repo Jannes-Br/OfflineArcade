@@ -127,14 +127,7 @@
     }
 
     .mode-badge {
-      pointer-events: none;
-      background: #3b82f6;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
+      display: none !important;
     }
 
     /* ── Opponent bar ── */
@@ -268,9 +261,7 @@
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(15, 23, 42, 0.85);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -384,11 +375,7 @@
     </div>
 
     <div id="topbar">
-      <!-- Game Mode selector (hidden in online mode) -->
-      <div class="group" id="modeGroup">
-        <button id="vsBtn" class="game-opt-btn active">2 Players</button>
-        <button id="botBtn" class="game-opt-btn">Bot</button>
-      </div>
+
 
       <!-- Speed selector (Host only in online mode) -->
       <div class="group" id="speedGroup">
@@ -462,15 +449,12 @@
     const ctx = canvas.getContext('2d');
     const wrap = document.getElementById('gameWrap');
 
-    const vsBtn = document.getElementById('vsBtn');
-    const botBtn = document.getElementById('botBtn');
     const normalBtn = document.getElementById('normalBtn');
     const fastBtn = document.getElementById('fastBtn');
     const superBtn = document.getElementById('superBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     
     const modeBadge = document.getElementById('modeBadge');
-    const modeGroup = document.getElementById('modeGroup');
     const speedGroup = document.getElementById('speedGroup');
     const backBtn = document.getElementById('backBtn');
 
@@ -637,20 +621,16 @@
       if (gameMode === 'solo') {
         mode = 'vs';
         modeBadge.textContent = '🎮 Solo';
-        modeGroup.style.display = 'flex';
         opponentBar.classList.remove('show');
         chatBtn.style.display = 'none';
       } else if (gameMode === 'bot') {
         mode = 'bot';
         modeBadge.textContent = '🤖 vs. Bot';
-        modeGroup.style.display = 'flex';
         opponentBar.classList.remove('show');
         chatBtn.style.display = 'none';
-        setMode('bot');
       } else if (gameMode === 'multi') {
         mode = 'multi';
         modeBadge.textContent = '📡 Online';
-        modeGroup.style.display = 'none';
         chatBtn.style.display = 'flex';
 
         // Guest cannot change speed or pause
@@ -685,31 +665,13 @@
     }
 
     function updateMenuButtons() {
-      // Mode Group Active class
-      vsBtn.classList.toggle('active', mode === 'vs');
-      botBtn.classList.toggle('active', mode === 'bot');
-
       // Speed Group Active class
       normalBtn.classList.toggle('active', speedMode === 'normal');
       fastBtn.classList.toggle('active', speedMode === 'fast');
       superBtn.classList.toggle('active', speedMode === 'super');
     }
 
-    function setMode(newMode) {
-      if (gameMode === 'multi') return;
-      mode = newMode;
-      left.score = 0;
-      right.score = 0;
-      gameState = 'hold';
-      paused = false;
-      pauseBtn.textContent = 'II';
-      resetBall(Math.random() > 0.5 ? 1 : -1);
-      updateMenuButtons();
-      updateOverlay();
-    }
 
-    vsBtn.onclick = () => setMode('vs');
-    botBtn.onclick = () => setMode('bot');
 
     function getBaseSpeed() {
       if (speedMode === 'normal') return 8;
@@ -739,6 +701,9 @@
     function togglePause(sync = true) {
       paused = !paused;
       pauseBtn.textContent = paused ? '▶' : 'II';
+      if (!paused && (gameState === 'playing' || gameState === 'countdown')) {
+        startCountdown();
+      }
       updateOverlay();
       if (gameMode === 'multi' && mpRole === 'X' && sync) {
         gameMP.send('pause_change', { paused });
@@ -791,6 +756,7 @@
 
     function endGame(winner) {
       gameState = 'gameover';
+      ball.trail = [];
       updateOverlay();
       playSound(winner === 'left' ? 'win' : 'gameover');
     }
@@ -798,11 +764,14 @@
     function restartGame(sync = true) {
       left.score = 0;
       right.score = 0;
-      gameState = 'hold';
       paused = false;
       pauseBtn.textContent = 'II';
       resetBall(Math.random() > 0.5 ? 1 : -1);
-      updateOverlay();
+      if (gameMode !== 'multi' || mpRole === 'X') {
+        startCountdown();
+      } else {
+        updateOverlay();
+      }
       if (gameMode === 'multi' && mpRole === 'X' && sync) {
         gameMP.send('restart_game', { game: 'pong' });
       }
@@ -810,22 +779,8 @@
 
     function updateOverlay() {
       if (paused) {
-        overlayTitle.textContent = 'Pause';
-        overlaySub.textContent = gameMode === 'multi' ? 'The Host has paused the game.' : 'Press the Play button to resume.';
-        overlayBtn.style.display = 'none';
-        overlay.classList.add('visible');
-        return;
-      }
-
-      if (gameState === 'hold') {
-        overlayTitle.textContent = 'Hold To Play';
-        if (gameMode === 'multi') {
-          overlaySub.textContent = 'Press and hold screen (or W/S) to be ready. Both must hold!';
-        } else if (mode === 'vs') {
-          overlaySub.textContent = 'Both players must press/hold (W/S & Arrows or on screen) to start.';
-        } else {
-          overlaySub.textContent = 'Press and hold screen (or W/S) to start.';
-        }
+        overlayTitle.textContent = 'II';
+        overlaySub.textContent = '';
         overlayBtn.style.display = 'none';
         overlay.classList.add('visible');
         return;
@@ -1004,25 +959,7 @@
         }
       }
 
-      // Check lobby state and start countdown if ready
-      if (gameState === 'hold') {
-        const myHold = checkInputsHold();
-        
-        if (gameMode === 'multi') {
-          if (mpRole === 'X') {
-            // Host collects both local hold and guest hold
-            const guestHold = opponentReadyState;
-            if (myHold && guestHold) {
-              startCountdown();
-            }
-          }
-        } else {
-          if (myHold) {
-            startCountdown();
-          }
-        }
-        return;
-      }
+
 
       if (gameState === 'countdown') {
         const now = performance.now();
@@ -1100,6 +1037,7 @@
           // Right scores
           right.score++;
           playSound('score');
+          ball.trail = [];
           if (right.score >= 10) {
             endGame('right');
           } else {
@@ -1110,6 +1048,7 @@
           // Left scores
           left.score++;
           playSound('score');
+          ball.trail = [];
           if (left.score >= 10) {
             endGame('left');
           } else {
@@ -1124,22 +1063,39 @@
     }
 
     function handlePaddleHit(p, isLeft) {
-      // Normalized intersection point on the paddle (from -1 to 1)
-      const relativeIntersectY = (p.y + paddle.height / 2) - ball.y;
-      const normalizedIntersectY = relativeIntersectY / (paddle.height / 2);
+      // Reverse horizontal speed directly and apply speed boost (cap at 30)
+      let vx = (isLeft ? 1 : -1) * Math.abs(ball.vx) * 1.05;
+
+      // Deflect vertical speed based on paddle hit point
+      const relativeIntersectY = ball.y - (p.y + paddle.height / 2);
+      const normalizedIntersectY = relativeIntersectY / (paddle.height / 2); // -1 to 1
       
-      // Calculate max angle of reflection (55 degrees)
       const maxBounceAngle = 55 * Math.PI / 180;
       const bounceAngle = normalizedIntersectY * maxBounceAngle;
+      
+      let vy = Math.abs(vx) * Math.tan(bounceAngle); 
 
-      // Increase speed slightly on hit (cap at 30)
-      ball.currentSpeed = Math.min(ball.currentSpeed * 1.06, 30);
+      // Increase speed on hit
+      ball.currentSpeed = Math.min(ball.currentSpeed * 1.05, 30);
 
-      // Set new velocities
-      ball.vx = (isLeft ? 1 : -1) * ball.currentSpeed * Math.cos(bounceAngle);
-      ball.vy = -ball.currentSpeed * Math.sin(bounceAngle);
+      // Re-normalize the velocity vector to match ball.currentSpeed
+      const currentLength = Math.hypot(vx, vy);
+      if (currentLength > 0) {
+        ball.vx = (vx / currentLength) * ball.currentSpeed;
+        ball.vy = (vy / currentLength) * ball.currentSpeed;
+      } else {
+        ball.vx = vx;
+        ball.vy = vy;
+      }
 
-      p.glow = 1;
+      // Push ball outside paddle width to prevent clipping
+      if (isLeft) {
+        ball.x = left.x + paddle.width + ball.size;
+      } else {
+        ball.x = right.x - ball.size;
+      }
+
+      p.glow = 1.0;
       playSound('hit');
       updatePrediction();
     }
@@ -1190,12 +1146,18 @@
     }
 
     function drawPaddleElement(p, color) {
-      ctx.shadowBlur = 16 + p.glow * 35;
+      ctx.shadowBlur = 16 + p.glow * 50;
       ctx.shadowColor = color;
-      ctx.fillStyle = color;
+
+      let drawColor = color;
+      if (p.glow > 0.6) {
+        drawColor = '#ffffff';
+      } else if (p.glow > 0.3) {
+        drawColor = '#93c5fd';
+      }
+      ctx.fillStyle = drawColor;
 
       ctx.beginPath();
-      // Round rect paddle design
       ctx.roundRect(p.x, p.y, paddle.width, paddle.height, 8);
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1344,6 +1306,9 @@
         if (mpRole === 'O') {
           paused = data.paused;
           pauseBtn.textContent = paused ? '▶' : 'II';
+          if (!paused && (gameState === 'playing' || gameState === 'countdown')) {
+            startCountdown();
+          }
           updateOverlay();
         }
       };
@@ -1527,7 +1492,11 @@
     // Initialize Game
     initMode();
     resetBall(Math.random() > 0.5 ? 1 : -1);
-    updateOverlay();
+    if (gameMode !== 'multi' || mpRole === 'X') {
+      startCountdown();
+    } else {
+      updateOverlay();
+    }
     loop();
 
   </script>
