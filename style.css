@@ -159,7 +159,7 @@ h1 {
 }
 .profile-avatar {
   width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  background: var(--bg-color);
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -518,7 +518,7 @@ main {
   border-bottom: 1px solid var(--box-border);
   flex-shrink: 0;
 }
-.drawer-title { font-size: 17px; font-weight: 800; }
+.drawer-title { font-size: 24px; font-weight: 800; }
 .drawer-close {
   border: 1px solid var(--btn-border); background: var(--btn-bg);
   color: var(--text-color);
@@ -529,7 +529,7 @@ main {
 }
 .drawer-close:hover { background: var(--btn-hover-bg); }
 .drawer-body { padding: 20px; flex: 1; overflow-y: auto; }
-.setting-label { display: block; font-size: 12px; font-weight: 700; opacity: 0.55; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.setting-label { display: block; font-size: 14px; font-weight: 700; opacity: 0.55; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 .setting-row { display: flex; gap: 8px; }
 .setting-input {
   flex: 1; padding: 10px 14px;
@@ -551,7 +551,7 @@ main {
   width: 100%; padding: 11px;
   background: var(--btn-bg); border: 1px solid var(--btn-border);
   color: var(--btn-color); border-radius: 12px;
-  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-size: 15px; font-weight: 700; cursor: pointer;
   transition: background 0.2s;
 }
 .setting-theme-btn:hover { background: var(--btn-hover-bg); }
@@ -559,7 +559,7 @@ main {
   width: 100%; padding: 11px;
   background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
   color: var(--danger); border-radius: 12px;
-  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-size: 15px; font-weight: 700; cursor: pointer;
   transition: background 0.2s;
 }
 .setting-danger-btn:hover { background: rgba(239,68,68,0.2); }
@@ -783,21 +783,42 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 .footer {
   display: none !important;
 }
-#install-info, #app-info {
+#install-info {
   pointer-events: auto;
   background: var(--box-bg);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--box-border);
   border-radius: 16px; font-size: 12px; line-height: 1.6;
   transition: background-color 0.3s, border-color 0.3s;
+  width: 230px; padding: 12px;
 }
-#install-info { width: 230px; padding: 12px; }
 .install-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
 .install-text { opacity: 0.75; }
 #app-info {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; min-width: 160px;
-  margin-left: auto; /* Push version info to the right */
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  min-width: 160px;
+  z-index: 100;
+  pointer-events: auto;
+  background: var(--box-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--box-border);
+  border-radius: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.game-playtime {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-left: 8px;
+  font-weight: 500;
 }
 .info-left { display: flex; flex-direction: column; }
 .status-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
@@ -830,10 +851,31 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
 }
 @media (max-width: 500px) {
   .mode-tab { font-size: 11px; padding: 8px 4px; }
+  .header-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(44px, auto));
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .profile-pill {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-bottom: 4px;
+  }
+  #chat-header-btn, #random-btn, #settings-btn {
+    grid-row: 2;
+  }
 }
 @media (max-width: 900px) {
   .footer { flex-direction: column; align-items: center; gap: 8px; padding: 6px 14px max(10px,env(safe-area-inset-bottom)); }
-  #install-info, #app-info { width: 100%; max-width: 320px; }
+  #install-info { width: 100%; max-width: 320px; }
 }
 @media (max-height: 550px) {
   header { padding: max(8px,env(safe-area-inset-top)) 20px 0; margin-bottom: 6px; }
@@ -848,7 +890,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   .game-description { font-size: 10px; }
   .footer { flex-direction: row !important; justify-content: center; gap: 6px; padding: 4px 20px max(6px,env(safe-area-inset-bottom)); }
   #install-info { display: none !important; }
-  #app-info { width: auto; padding: 6px 10px; border-radius: 10px; margin-left: 0; }
+  #app-info { position: fixed; bottom: 10px; left: 10px; padding: 6px 10px; border-radius: 10px; }
   .status-row { margin-bottom: 0; }
   #online-status, .version-row { display: none; }
   #reload-btn { width: 30px; height: 30px; font-size: 14px; }
