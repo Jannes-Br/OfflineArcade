@@ -1151,10 +1151,10 @@
         ball.x = right.x - ball.size;
       }
 
-      // Apply spin if paddle is moving fast enough Y (3x weaker base factor: 0.0006)
-      const spinFactor = 0.0006;
+      // Apply spin if paddle is moving fast enough Y (quadratic speed scaling: 10x weaker on normal hits, loops back on fast flicks)
+      const spinFactor = 0.00002;
       if (p.speedY && Math.abs(p.speedY) > 2) {
-        const rawSpin = (isLeft ? -1 : 1) * p.speedY * spinFactor;
+        const rawSpin = (isLeft ? -1 : 1) * Math.sign(p.speedY) * Math.pow(p.speedY, 2) * spinFactor;
         const maxSpin = 0.09; // Cap maximum spin to prevent excessive looping (about 100 degrees max curve)
         ball.spin = Math.max(-maxSpin, Math.min(maxSpin, rawSpin));
       } else {
