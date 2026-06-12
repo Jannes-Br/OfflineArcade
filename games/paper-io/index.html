@@ -38,8 +38,10 @@
       height: 100vh;
       font-family: 'Fredoka', sans-serif;
       background:
-        radial-gradient(circle at top left, #1e1b4b 0%, transparent 40%),
-        radial-gradient(circle at bottom right, #064e3b 0%, transparent 40%),
+        radial-gradient(circle at 10% 10%, var(--p1-glow, rgba(59, 130, 246, 0.12)) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, var(--p2-glow, rgba(16, 185, 129, 0.12)) 0%, transparent 50%),
+        radial-gradient(circle at 90% 10%, var(--p3-glow, rgba(139, 92, 246, 0.08)) 0%, transparent 45%),
+        radial-gradient(circle at 10% 90%, var(--p4-glow, rgba(236, 72, 153, 0.08)) 0%, transparent 45%),
         #020617;
       color: var(--text-color);
       display: flex;
@@ -48,6 +50,7 @@
       justify-content: center;
       position: fixed;
       inset: 0;
+      transition: background 0.5s ease;
     }
 
     /* ── Header ── */
@@ -1417,12 +1420,20 @@
     }
 
     function getBotConfig(name) {
-      if (name === 'Claude') {
-        return { range: 10, maxTrail: 6, wanderChance: 0.03 };
-      } else if (name === 'DeepSeek') {
-        return { range: 25, maxTrail: 18, wanderChance: 0.10 };
-      } else { // ChatGPT, Gemini, Alexa, Siri
-        return { range: 15, maxTrail: 12, wanderChance: 0.06 };
+      if (name === 'Claude') { // Defensive, small square loops
+        return { range: 10, maxTrail: 6, wanderChance: 0.02, risk: 'low', shape: 'square' };
+      } else if (name === 'DeepSeek') { // Ultra aggressive, hunter, long rectangular loops
+        return { range: 25, maxTrail: 20, wanderChance: 0.12, risk: 'high', shape: 'long-rect' };
+      } else if (name === 'Gemini') { // Balanced, adaptive, circular/rounded loop plans
+        return { range: 16, maxTrail: 12, wanderChance: 0.06, risk: 'medium-high', shape: 'circle' };
+      } else if (name === 'ChatGPT') { // Standard balanced loops
+        return { range: 14, maxTrail: 10, wanderChance: 0.05, risk: 'medium', shape: 'rect' };
+      } else if (name === 'Siri') { // Erratically wandering
+        return { range: 12, maxTrail: 8, wanderChance: 0.15, risk: 'low-medium', shape: 'erratic' };
+      } else if (name === 'Alexa') { // Track and trace, defensive
+        return { range: 18, maxTrail: 9, wanderChance: 0.04, risk: 'medium-low', shape: 'rect' };
+      } else { // Fallback (Player 2 or others)
+        return { range: 15, maxTrail: 10, wanderChance: 0.05, risk: 'medium', shape: 'rect' };
       }
     }
 
@@ -1441,7 +1452,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 800) {
+      while (head < queue.length && head < 4000) {
         const curr = queue[head++];
         if (curr.x === targetX && curr.y === targetY) {
           return curr.path[0];
@@ -1491,7 +1502,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 800) {
+      while (head < queue.length && head < 4000) {
         const curr = queue[head++];
         if (grid[curr.x][curr.y].owner === botId) {
           return curr.path[0];
@@ -1531,7 +1542,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 800) {
+      while (head < queue.length && head < 4000) {
         const curr = queue[head++];
         if (grid[curr.x][curr.y].owner !== botId && !grid[curr.x][curr.y].void) {
           return curr.path[0];
@@ -1619,9 +1630,11 @@
         }
       }
 
-      // Scan for nearest opponent trail cell in range
+      // Scan for nearest opponent trail cell in range and evaluate strategically
       let targetTrailCell = null;
       let minTrailDist = Infinity;
+      let targetOpponent = null;
+      
       if (b.aiState !== 'returning') {
         players.forEach(other => {
           if (other.dead || other.id === b.id) return;
@@ -1630,14 +1643,33 @@
             if (dist < minTrailDist) {
               minTrailDist = dist;
               targetTrailCell = tCell;
+              targetOpponent = other;
             }
           });
         });
         
         if (targetTrailCell && minTrailDist <= conf.range) {
-          b.aiState = 'hunting';
+          // Strategic Math: check if it's worth chasing
+          const opponentDistHome = getDistanceToTerritory(targetOpponent.x, targetOpponent.y, targetOpponent.id);
+          
+          let worthIt = false;
+          if (b.name === 'DeepSeek') {
+            worthIt = minTrailDist < opponentDistHome + 4; // High risk, chases aggressively
+          } else if (b.name === 'Claude') {
+            worthIt = minTrailDist < opponentDistHome - 2 && minTrailDist < 6; // Very low risk
+          } else if (b.name === 'Siri') {
+            worthIt = Math.random() < 0.6; // Erratic
+          } else {
+            worthIt = minTrailDist < opponentDistHome + 1; // Standard strategic check
+          }
+          
+          if (worthIt) {
+            b.aiState = 'hunting';
+          } else if (b.aiState === 'hunting') {
+            b.aiState = 'returning';
+          }
         } else if (b.aiState === 'hunting') {
-          // Lost target, go back to returning or expanding
+          // Lost target or out of range
           b.aiState = 'returning';
         }
       }
@@ -1645,8 +1677,8 @@
       // Execute state logic
       if (b.aiState === 'inside') {
         // Check if there is an opponent trail to hunt
-        if (targetTrailCell && minTrailDist <= conf.range) {
-          b.aiState = 'hunting';
+        if (targetTrailCell && minTrailDist <= conf.range && b.aiState === 'hunting') {
+          // Handled above, we are already hunting
         } else {
           // Check if we can step outside
           const outDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
@@ -1659,16 +1691,20 @@
             b.planVy = chosenDir.vy;
             b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
             
-            if (b.name === 'Claude') {
-              b.planS1 = Math.floor(Math.random() * 2) + 2;
-              b.planS2 = Math.floor(Math.random() * 2) + 2;
-            } else if (b.name === 'DeepSeek') {
-              b.planS1 = Math.floor(Math.random() * 4) + 6;
-              b.planS2 = Math.floor(Math.random() * 4) + 6;
+            if (conf.shape === 'square') {
+              b.planS1 = Math.floor(Math.random() * 2) + 3;
+              b.planS2 = b.planS1; // Perfect square
+            } else if (conf.shape === 'long-rect') {
+              b.planS1 = Math.floor(Math.random() * 5) + 12; // Long sweep
+              b.planS2 = Math.floor(Math.random() * 2) + 3;
+            } else if (conf.shape === 'circle') {
+              b.planS1 = Math.floor(Math.random() * 2) + 3; // First arc
+              b.planS2 = Math.floor(Math.random() * 2) + 3;
             } else {
-              b.planS1 = Math.floor(Math.random() * 3) + 4;
+              b.planS1 = Math.floor(Math.random() * 3) + 5; // Standard rect
               b.planS2 = Math.floor(Math.random() * 3) + 4;
             }
+            
             b.planSteps = b.planS1;
             b.nextVx = chosenDir.vx;
             b.nextVy = chosenDir.vy;
@@ -1692,9 +1728,45 @@
       if (b.aiState === 'expanding') {
         // Look ahead for walls/boundaries
         const wallAhead = !isCellValid(b.x + b.planVx * 2, b.y + b.planVy * 2);
-        if (b.planSteps <= 0 || wallAhead) {
-          if (b.planPhase === 0) {
-            // Turn 90 degrees
+        
+        let shouldTurn = b.planSteps <= 0 || wallAhead;
+        
+        if (conf.shape === 'erratic') {
+          // Siri wanders erratically
+          if (Math.random() < 0.15 || wallAhead) {
+            shouldTurn = true;
+            b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
+          }
+        }
+        
+        if (shouldTurn) {
+          if (conf.shape === 'circle' && b.planPhase < 2) {
+            // Gemini rounded loop (3 phases)
+            const vx = b.planVx;
+            const vy = b.planVy;
+            if (b.planTurnDir === 'left') {
+              b.planVx = vy;
+              b.planVy = -vx;
+            } else {
+              b.planVx = -vy;
+              b.planVy = vx;
+            }
+            b.planPhase++;
+            b.planSteps = Math.floor(Math.random() * 2) + 3; // 3-4 steps per phase
+          } else if (conf.shape === 'erratic') {
+            // Siri erratic turn
+            const vx = b.planVx;
+            const vy = b.planVy;
+            if (b.planTurnDir === 'left') {
+              b.planVx = vy;
+              b.planVy = -vx;
+            } else {
+              b.planVx = -vy;
+              b.planVy = vx;
+            }
+            b.planSteps = Math.floor(Math.random() * 3) + 2;
+          } else if (b.planPhase === 0) {
+            // Standard Rect / Square Phase 0 -> Phase 1
             const vx = b.planVx;
             const vy = b.planVy;
             if (b.planTurnDir === 'left') {
@@ -2007,6 +2079,16 @@
 
     // Canvas Graphics Loop
     function draw() {
+      // Dynamic background glow updates based on alive players
+      const aliveList = players.filter(p => !p.dead).slice(0, 4);
+      aliveList.forEach((p, idx) => {
+        const opacity = idx < 2 ? '1e' : '14'; // ~12% or ~8% opacity in hex
+        document.documentElement.style.setProperty(`--p${idx+1}-glow`, p.color + opacity);
+      });
+      for (let i = aliveList.length; i < 4; i++) {
+        document.documentElement.style.setProperty(`--p${i+1}-glow`, 'rgba(0, 0, 0, 0)');
+      }
+
       // 1. Draw outer background
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, cw, ch);
