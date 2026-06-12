@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Paper.io – OfflineArcade</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #020617;
+      --text-color: #ffffff;
+      --box-bg: rgba(255, 255, 255, 0.03);
+      --box-border: rgba(255, 255, 255, 0.08);
+      --btn-bg: rgba(255, 255, 255, 0.06);
+      --btn-border: rgba(255, 255, 255, 0.08);
+      --btn-color: #ffffff;
+      --btn-hover-bg: rgba(255, 255, 255, 0.16);
+      --btn-hover-border: rgba(255, 255, 255, 0.2);
+      --btn-active-bg: rgba(255, 255, 255, 0.25);
+      --btn-active-color: #ffffff;
+      --accent-glow: rgba(96, 165, 250, 0.35);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Fredoka', sans-serif;
+      background:
+        radial-gradient(circle at top left, #1e1b4b 0%, transparent 40%),
+        radial-gradient(circle at bottom right, #064e3b 0%, transparent 40%),
+        #020617;
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      inset: 0;
+    }
+
+    /* ── Header ── */
+    .game-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: max(16px, env(safe-area-inset-top)) 16px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .back-btn, #mute-btn {
+      pointer-events: auto;
+      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--box-border);
+      color: var(--text-color);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    #mute-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      font-size: 16px;
+      position: relative;
+    }
+
+    .back-btn:hover, #mute-btn:hover {
+      transform: translateY(-2px);
+      background: var(--btn-hover-bg);
+      border-color: var(--btn-hover-border);
+    }
+
+    .back-btn:active, #mute-btn:active {
+      transform: scale(0.95);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .mode-badge {
+      font-size: 14px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--box-border);
+      backdrop-filter: blur(10px);
+    }
+
+    /* ── Container ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: max(80px, env(safe-area-inset-top) + 60px) 16px max(20px, env(safe-area-inset-bottom) + 10px);
+    }
+
+    #topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      z-index: 30;
+      justify-content: center;
+    }
+
+    .scoreboard {
+      display: flex;
+      gap: 16px;
+      padding: 8px 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--box-border);
+      backdrop-filter: blur(12px);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .score-item span {
+      color: #60a5fa;
+      margin-left: 4px;
+    }
+
+    #gameWrap {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16 / 10;
+      max-height: calc(100vh - 200px);
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--box-border);
+      background: rgba(255, 255, 255, 0.01);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ── Overlay ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .overlay-sub {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 80%;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .overlay-btn {
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    .overlay-btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    .overlay-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ── Leaderboard Overlay ── */
+    .leaderboard-box {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--box-border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      width: 170px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+      z-index: 5;
+    }
+
+    .leaderboard-title {
+      font-weight: 800;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .leaderboard-row.mine {
+      color: #60a5fa;
+    }
+
+    @media (max-width: 480px) {
+      .overlay-title {
+        font-size: 28px;
+      }
+      .leaderboard-box {
+        width: 130px;
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Header -->
+  <div class="game-header">
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menu</a>
+    <span class="mode-badge" id="modeBadge">Paper.io</span>
+    <div class="header-right">
+      <button id="mute-btn" title="Mute audio">🔊</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="topbar">
+      <div class="scoreboard">
+        <div class="score-item">Map: <span id="scoreVal">0.0%</span></div>
+        <div class="score-item">Kills: <span id="killsVal">0</span></div>
+      </div>
+    </div>
+
+    <div id="gameWrap">
+      <canvas id="game" width="800" height="500"></canvas>
+
+      <!-- Leaderboard Overlay inside canvas container -->
+      <div class="leaderboard-box">
+        <div class="leaderboard-title">
+          <span>Leaderboard</span>
+          <span>%</span>
+        </div>
+        <div id="leaderboardList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div class="overlay" id="overlay">
+        <div class="overlay-title" id="overlay-title">Paper.io</div>
+        <div class="overlay-sub" id="overlay-sub">Use Arrow Keys, WASD, or swipe to steer. Capture the board!</div>
+        <button class="overlay-btn" id="overlay-btn">Play Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const muteBtn = document.getElementById('mute-btn');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlaySub = document.getElementById('overlay-sub');
+    const overlayBtn = document.getElementById('overlay-btn');
+    const scoreVal = document.getElementById('scoreVal');
+    const killsVal = document.getElementById('killsVal');
+    const leaderboardList = document.getElementById('leaderboardList');
+    const backBtn = document.getElementById('backBtn');
+
+    // Load configurations
+    const myName = localStorage.getItem('playerName') || 'You';
+
+    // Grid Dimensions
+    const cw = 800;
+    const ch = 500;
+    const cols = 80;
+    const rows = 50;
+    const cellSize = 10; // 800/80 = 10, 500/50 = 10
+
+    // Grid State array
+    // Each element is an object: { owner: null|id, trail: null|id }
+    let grid = [];
+    function initGrid() {
+      grid = [];
+      for (let c = 0; c < cols; c++) {
+        grid[c] = [];
+        for (let r = 0; r < rows; r++) {
+          grid[c][r] = { owner: null, trail: null };
+        }
+      }
+    }
+
+    // Players list
+    let players = [];
+    let particles = [];
+    let gameState = 'hold'; // hold | playing | gameover
+    let isMuted = localStorage.getItem('mute') === 'true';
+
+    // Update Mute UI
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    muteBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      localStorage.setItem('mute', isMuted);
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    });
+
+    backBtn.addEventListener('click', (e) => {
+      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
+        e.preventDefault();
+        window.parent.closeGameFrame();
+      }
+    });
+
+    // Web Audio Sound Engine
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, initAudio, { once: true, passive: true });
+    });
+
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'score') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'gameover') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(60, now + 0.5);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        }
+      } catch (e) {}
+    }
+
+    // Colors list
+    const COLORS = [
+      { id: 1, name: myName, main: '#3b82f6', trail: 'rgba(59, 130, 246, 0.45)', head: '#60a5fa' }, // Blue (Player)
+      { id: 2, name: 'Siri', main: '#ec4899', trail: 'rgba(236, 72, 153, 0.45)', head: '#f472b6' },   // Pink (Bot 1)
+      { id: 3, name: 'Alexa', main: '#10b981', trail: 'rgba(16, 185, 129, 0.45)', head: '#34d399' },  // Emerald (Bot 2)
+      { id: 4, name: 'Cortana', main: '#f59e0b', trail: 'rgba(245, 158, 11, 0.45)', head: '#fbbf24' },// Orange (Bot 3)
+      { id: 5, name: 'Copilot', main: '#8b5cf6', trail: 'rgba(139, 92, 246, 0.45)', head: '#a78bfa' } // Violet (Bot 4)
+    ];
+
+    // Initialize Game Entities
+    function spawnPlayer(entityConfig, isBot = false) {
+      // Find a safe spot not occupied by owned cells
+      let startC, startR;
+      let attempts = 0;
+      while (attempts < 100) {
+        startC = Math.floor(Math.random() * (cols - 10)) + 5;
+        startR = Math.floor(Math.random() * (rows - 10)) + 5;
+        let clear = true;
+        // Ensure starting 3x3 territory is free from others' ownership
+        for (let dc = -2; dc <= 2; dc++) {
+          for (let dr = -2; dr <= 2; dr++) {
+            if (grid[startC + dc][startR + dr].owner !== null) {
+              clear = false;
+              break;
+            }
+          }
+        }
+        if (clear) break;
+        attempts++;
+      }
+
+      // Grant initial 3x3 territory
+      const id = entityConfig.id;
+      for (let dc = -1; dc <= 1; dc++) {
+        for (let dr = -1; dr <= 1; dr++) {
+          grid[startC + dc][startR + dr].owner = id;
+        }
+      }
+
+      // Setup Entity
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const startDir = directions[Math.floor(Math.random() * directions.length)];
+
+      return {
+        id: id,
+        name: entityConfig.name,
+        color: entityConfig.main,
+        trailColor: entityConfig.trail,
+        headColor: entityConfig.head,
+        x: startC,
+        y: startR,
+        vx: startDir[0],
+        vy: startDir[1],
+        nextVx: startDir[0],
+        nextVy: startDir[1],
+        trail: [],
+        dead: false,
+        isBot: isBot,
+        score: 0,
+        kills: 0,
+        botAiState: 'explore', // explore | returning
+        botTimer: 0
+      };
+    }
+
+    function restartGame() {
+      initGrid();
+      particles = [];
+      players = [];
+
+      // Spawn Player (ID 1)
+      players.push(spawnPlayer(COLORS[0], false));
+
+      // Spawn Bots (ID 2 to 5)
+      for (let i = 1; i < COLORS.length; i++) {
+        players.push(spawnPlayer(COLORS[i], true));
+      }
+
+      gameState = 'playing';
+      overlay.classList.remove('visible');
+    }
+
+    // Input Handling
+    window.addEventListener('keydown', e => {
+      if (gameState !== 'playing') return;
+      const p = players[0];
+      if (p.dead) return;
+
+      switch(e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          if (p.vy !== 1) { p.nextVx = 0; p.nextVy = -1; }
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          if (p.vy !== -1) { p.nextVx = 0; p.nextVy = 1; }
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          if (p.vx !== 1) { p.nextVx = -1; p.nextVy = 0; }
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          if (p.vx !== -1) { p.nextVx = 1; p.nextVy = 0; }
+          break;
+      }
+    });
+
+    // Touch Swipe Steer Support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    window.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', e => {
+      if (gameState !== 'playing') return;
+      const p = players[0];
+      if (p.dead || touchStartX === 0) return;
+
+      const diffX = e.touches[0].clientX - touchStartX;
+      const diffY = e.touches[0].clientY - touchStartY;
+      const threshold = 20;
+
+      if (Math.max(Math.abs(diffX), Math.abs(diffY)) > threshold) {
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          // Horizontal swipe
+          if (diffX > 0 && p.vx !== -1) { p.nextVx = 1; p.nextVy = 0; }
+          else if (diffX < 0 && p.vx !== 1) { p.nextVx = -1; p.nextVy = 0; }
+        } else {
+          // Vertical swipe
+          if (diffY > 0 && p.vy !== -1) { p.nextVx = 0; p.nextVy = 1; }
+          else if (diffY < 0 && p.vy !== 1) { p.nextVx = 0; p.nextVy = -1; }
+        }
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+      touchStartX = 0;
+      touchStartY = 0;
+    });
+
+    // Particle Explosions
+    function spawnDeathParticles(x, y, color) {
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: x * cellSize + cellSize / 2,
+          y: y * cellSize + cellSize / 2,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          size: Math.random() * 3 + 2,
+          color: color,
+          life: 1.0,
+          decay: Math.random() * 0.05 + 0.03
+        });
+      }
+    }
+
+    // BFS Territory Claiming Algorithm
+    // Claims all enclosed cells when returning back to owned territory.
+    function claimTerritory(player) {
+      const pid = player.id;
+
+      // 1. Create boundary map: mark owned + trail as visited/solid
+      let visited = [];
+      for (let c = 0; c < cols; c++) {
+        visited[c] = [];
+        for (let r = 0; r < rows; r++) {
+          const isBoundary = (grid[c][r].owner === pid) || (grid[c][r].trail === pid);
+          visited[c][r] = isBoundary;
+        }
+      }
+
+      // 2. BFS starting from all borders to mark "outside" cells
+      let queue = [];
+      
+      // Start BFS from left/right borders
+      for (let r = 0; r < rows; r++) {
+        if (!visited[0][r]) { visited[0][r] = true; queue.push({ c: 0, r: r }); }
+        if (!visited[cols - 1][r]) { visited[cols - 1][r] = true; queue.push({ c: cols - 1, r: r }); }
+      }
+      // Start BFS from top/bottom borders
+      for (let c = 1; c < cols - 1; c++) {
+        if (!visited[c][0]) { visited[c][0] = true; queue.push({ c: c, r: 0 }); }
+        if (!visited[c][rows - 1]) { visited[c][rows - 1] = true; queue.push({ c: c, r: rows - 1 }); }
+      }
+
+      // Process queue
+      let head = 0;
+      while (head < queue.length) {
+        const cell = queue[head++];
+        const nc = cell.c;
+        const nr = cell.r;
+
+        // Check 4 neighbors
+        const neighbors = [
+          { c: nc + 1, r: nr },
+          { c: nc - 1, r: nr },
+          { c: nc, r: nr + 1 },
+          { c: nc, r: nr - 1 }
+        ];
+
+        for (const n of neighbors) {
+          if (n.c >= 0 && n.c < cols && n.r >= 0 && n.r < rows) {
+            if (!visited[n.c][n.r]) {
+              visited[n.c][n.r] = true;
+              queue.push(n);
+            }
+          }
+        }
+      }
+
+      // 3. All unvisited cells are enclosed! Add them to player's territory.
+      let claimedCount = 0;
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          if (!visited[c][r] || grid[c][r].trail === pid) {
+            // If it belonged to someone else, turn off their ownership
+            grid[c][r].owner = pid;
+            grid[c][r].trail = null;
+            claimedCount++;
+          }
+        }
+      }
+
+      // Clear trail array
+      player.trail.forEach(cell => {
+        grid[cell.c][cell.r].trail = null;
+      });
+      player.trail = [];
+
+      if (claimedCount > 0) {
+        playSound('score');
+      }
+    }
+
+    // Kill/Clean player territory on death
+    function handleDeath(p) {
+      p.dead = true;
+      spawnDeathParticles(p.x, p.y, p.color);
+
+      // Clear all owned cells and trails
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          if (grid[c][r].owner === p.id) {
+            grid[c][r].owner = null;
+          }
+          if (grid[c][r].trail === p.id) {
+            grid[c][r].trail = null;
+          }
+        }
+      }
+
+      if (p.id === 1) {
+        // Human died
+        gameState = 'gameover';
+        playSound('gameover');
+        overlayTitle.textContent = 'Game Over';
+        overlaySub.textContent = `You captured ${p.score}% of the board and got ${p.kills} kills.`;
+        overlayBtn.textContent = 'Try Again';
+        overlay.classList.add('visible');
+
+        // Update Highscores
+        const currentBest = parseFloat(localStorage.getItem('highscore_paper-io') || '0');
+        if (parseFloat(p.score) > currentBest) {
+          localStorage.setItem('highscore_paper-io', p.score);
+        }
+      } else {
+        // Bot died
+        playSound('hit');
+        // Respawn the bot after a small delay
+        setTimeout(() => {
+          if (gameState !== 'playing') return;
+          // Find config matching bot id
+          const conf = COLORS.find(c => c.id === p.id);
+          const index = players.findIndex(item => item.id === p.id);
+          if (index !== -1) {
+            players[index] = spawnPlayer(conf, true);
+          }
+        }, 3000);
+      }
+    }
+
+    // Bot AI Logic
+    function updateBotAI(b) {
+      b.botTimer++;
+
+      const isSafe = grid[b.x][b.y].owner === b.id;
+
+      // 4 neighboring directions
+      const dirs = [
+        { vx: 1, vy: 0 },
+        { vx: -1, vy: 0 },
+        { vx: 0, vy: 1 },
+        { vx: 0, vy: -1 }
+      ];
+
+      // Filter directions: no out of bounds, no hitting own trail
+      const validDirs = dirs.filter(d => {
+        const nc = b.x + d.vx;
+        const nr = b.y + d.vy;
+        if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) return false;
+        if (grid[nc][nr].trail === b.id) return false;
+        return true;
+      });
+
+      if (validDirs.length === 0) return; // Trapped, will hit own trail and die
+
+      // State machine logic
+      if (isSafe) {
+        b.botAiState = 'explore';
+        // When inside owned territory, just wander around
+        const shouldChange = Math.random() < 0.15 || !validDirs.some(d => d.vx === b.vx && d.vy === b.vy);
+        if (shouldChange) {
+          const next = validDirs[Math.floor(Math.random() * validDirs.length)];
+          b.nextVx = next.vx;
+          b.nextVy = next.vy;
+        }
+      } else {
+        // Outside own territory (drawing trail)
+        const trailLen = b.trail.length;
+
+        // If trail is long, try returning home
+        if (trailLen > 12) {
+          b.botAiState = 'returning';
+        } else if (trailLen > 6 && Math.random() < 0.1) {
+          b.botAiState = 'returning';
+        }
+
+        if (b.botAiState === 'returning') {
+          // Find path home (closest cell we own)
+          let bestDir = null;
+          let minDist = Infinity;
+
+          validDirs.forEach(d => {
+            const nc = b.x + d.vx;
+            const nr = b.y + d.vy;
+            const dist = getDistanceToTerritory(nc, nr, b.id);
+            if (dist < minDist) {
+              minDist = dist;
+              bestDir = d;
+            }
+          });
+
+          if (bestDir) {
+            b.nextVx = bestDir.vx;
+            b.nextVy = bestDir.vy;
+          }
+        } else {
+          // Normal explore drawing
+          const shouldChange = Math.random() < 0.1 || !validDirs.some(d => d.vx === b.vx && d.vy === b.vy);
+          if (shouldChange) {
+            const next = validDirs[Math.floor(Math.random() * validDirs.length)];
+            b.nextVx = next.vx;
+            b.nextVy = next.vy;
+          }
+        }
+      }
+    }
+
+    // Helper: calculate Manhattan distance to nearest owned cell
+    function getDistanceToTerritory(sc, sr, pid) {
+      let minDist = Infinity;
+      // Scan grid to find nearest owned cell
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          if (grid[c][r].owner === pid) {
+            const dist = Math.abs(c - sc) + Math.abs(r - sr);
+            if (dist < minDist) {
+              minDist = dist;
+            }
+          }
+        }
+      }
+      return minDist;
+    }
+
+    // Update Game Logic Step (10 Hz step speed)
+    function step() {
+      if (gameState !== 'playing') return;
+
+      // 1. Update directions and move heads
+      players.forEach(p => {
+        if (p.dead) return;
+
+        // Bots run AI logic
+        if (p.isBot) {
+          updateBotAI(p);
+        }
+
+        // Apply next directions
+        p.vx = p.nextVx;
+        p.vy = p.nextVy;
+
+        // Calculate next cell position
+        let nx = p.x + p.vx;
+        let ny = p.y + p.vy;
+
+        // Block boundaries: slide along borders rather than dying
+        if (nx < 0) { nx = 0; p.nextVx = 0; p.nextVy = Math.random() > 0.5 ? 1 : -1; }
+        if (nx >= cols) { nx = cols - 1; p.nextVx = 0; p.nextVy = Math.random() > 0.5 ? 1 : -1; }
+        if (ny < 0) { ny = 0; p.nextVy = 0; p.nextVx = Math.random() > 0.5 ? 1 : -1; }
+        if (ny >= rows) { ny = rows - 1; p.nextVy = 0; p.nextVx = Math.random() > 0.5 ? 1 : -1; }
+
+        p.x = nx;
+        p.y = ny;
+      });
+
+      // 2. Check collisions
+      let deadList = new Set();
+      let scoreChange = false;
+
+      players.forEach(p => {
+        if (p.dead) return;
+
+        const cell = grid[p.x][p.y];
+
+        if (cell.owner === p.id) {
+          // Inside owned territory
+          if (p.trail.length > 0) {
+            // Completed loop! Claim territory
+            claimTerritory(p);
+            scoreChange = true;
+          }
+        } else {
+          // Outside owned territory, drawing trail
+          // If stepping on someone else's trail, cut it!
+          players.forEach(other => {
+            if (other.dead) return;
+
+            // Check if head hits other player's trail
+            const hitIndex = other.trail.findIndex(t => t.c === p.x && t.r === p.y);
+            if (hitIndex !== -1) {
+              // Other player dies!
+              deadList.add(other);
+              p.kills++;
+              if (p.id === 1) {
+                killsVal.textContent = p.kills;
+              }
+            }
+          });
+
+          // Check if player stepped on their own trail (suicide)
+          const hitSelf = p.trail.some(t => t.c === p.x && t.r === p.y);
+          if (hitSelf) {
+            deadList.add(p);
+          } else {
+            // Add current cell to trail
+            p.trail.push({ c: p.x, r: p.y });
+            cell.trail = p.id;
+          }
+        }
+      });
+
+      // Handle Head-to-Head Collisions
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const p1 = players[i];
+          const p2 = players[j];
+          if (p1.dead || p2.dead) continue;
+
+          if (p1.x === p2.x && p1.y === p2.y) {
+            // Head-on collision!
+            const p1Safe = grid[p1.x][p1.y].owner === p1.id;
+            const p2Safe = grid[p2.x][p2.y].owner === p2.id;
+
+            if (p1Safe && !p2Safe) {
+              deadList.add(p2);
+              p1.kills++;
+            } else if (!p1Safe && p2Safe) {
+              deadList.add(p1);
+              p2.kills++;
+            } else {
+              // Both outside or both inside, compare territory sizes
+              if (p1.score > p2.score) {
+                deadList.add(p2);
+                p1.kills++;
+              } else if (p2.score > p1.score) {
+                deadList.add(p1);
+                p2.kills++;
+              } else {
+                // Draw, both die
+                deadList.add(p1);
+                deadList.add(p2);
+              }
+            }
+          }
+        }
+      }
+
+      // Apply deaths
+      deadList.forEach(p => {
+        handleDeath(p);
+        scoreChange = true;
+      });
+
+      // 3. Recalculate owned percentages
+      if (scoreChange || Math.random() < 0.05) {
+        let cellCounts = {};
+        players.forEach(p => { cellCounts[p.id] = 0; });
+        let totalCells = cols * rows;
+
+        for (let c = 0; c < cols; c++) {
+          for (let r = 0; r < rows; r++) {
+            const owner = grid[c][r].owner;
+            if (owner !== null && cellCounts[owner] !== undefined) {
+              cellCounts[owner]++;
+            }
+          }
+        }
+
+        players.forEach(p => {
+          const count = cellCounts[p.id] || 0;
+          p.score = ((count / totalCells) * 100).toFixed(1);
+          if (p.id === 1) {
+            scoreVal.textContent = `${p.score}%`;
+          }
+        });
+
+        updateLeaderboard();
+      }
+    }
+
+    function updateLeaderboard() {
+      // Sort players by score
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      leaderboardList.innerHTML = '';
+
+      sorted.forEach((p, index) => {
+        if (p.dead) return;
+        const row = document.createElement('div');
+        row.className = `leaderboard-row ${p.id === 1 ? 'mine' : ''}`;
+        row.innerHTML = `
+          <span>#${index + 1} ${p.name}</span>
+          <span>${p.score}%</span>
+        `;
+        leaderboardList.appendChild(row);
+      });
+    }
+
+    // Particle Renderer
+    function updateParticles() {
+      particles.forEach((p, index) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+    }
+
+    // Canvas Drawing Loop
+    function draw() {
+      // Clear screen
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, cw, ch);
+
+      // Draw Grid cells
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const cell = grid[c][r];
+
+          // 1. Draw Owned Territories
+          if (cell.owner !== null) {
+            const owner = players.find(p => p.id === cell.owner);
+            if (owner && !owner.dead) {
+              ctx.fillStyle = owner.color;
+              ctx.globalAlpha = 0.3; // Transparency for territory
+              ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+              ctx.globalAlpha = 1.0;
+            }
+          }
+
+          // 2. Draw active trails
+          if (cell.trail !== null) {
+            const owner = players.find(p => p.id === cell.trail);
+            if (owner && !owner.dead) {
+              ctx.fillStyle = owner.trailColor;
+              ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+      }
+
+      // Draw grid lines (subtle dark grid)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 0.5;
+      for (let c = 0; c <= cols; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * cellSize, 0);
+        ctx.lineTo(c * cellSize, ch);
+        ctx.stroke();
+      }
+      for (let r = 0; r <= rows; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, r * cellSize);
+        ctx.lineTo(cw, r * cellSize);
+        ctx.stroke();
+      }
+
+      // 3. Draw Player Heads
+      players.forEach(p => {
+        if (p.dead) return;
+
+        ctx.fillStyle = p.headColor;
+        ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+
+        // Draw simple eyes on heads to make them look alive
+        ctx.fillStyle = '#000000';
+        if (p.vx === 1) { // moving right
+          ctx.fillRect(p.x * cellSize + 7, p.y * cellSize + 2, 2, 2);
+          ctx.fillRect(p.x * cellSize + 7, p.y * cellSize + 6, 2, 2);
+        } else if (p.vx === -1) { // moving left
+          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + 2, 2, 2);
+          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + 6, 2, 2);
+        } else if (p.vy === 1) { // moving down
+          ctx.fillRect(p.x * cellSize + 2, p.y * cellSize + 7, 2, 2);
+          ctx.fillRect(p.x * cellSize + 6, p.y * cellSize + 7, 2, 2);
+        } else if (p.vy === -1) { // moving up
+          ctx.fillRect(p.x * cellSize + 2, p.y * cellSize + 1, 2, 2);
+          ctx.fillRect(p.x * cellSize + 6, p.y * cellSize + 1, 2, 2);
+        }
+      });
+
+      // 4. Draw Death Particles
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+      });
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Timing Variables (Separate game physics rate from rendering frame rate)
+    let lastStepTime = 0;
+    const stepInterval = 100; // 10 steps per second (100ms)
+
+    function loop(timestamp) {
+      if (!lastStepTime) lastStepTime = timestamp;
+
+      // Update game physics at 10 Hz
+      if (gameState === 'playing' && timestamp - lastStepTime >= stepInterval) {
+        step();
+        lastStepTime = timestamp;
+      }
+
+      updateParticles();
+      draw();
+
+      requestAnimationFrame(loop);
+    }
+
+    // Start Button Overlay Click
+    overlayBtn.addEventListener('click', () => {
+      initAudio();
+      restartGame();
+    });
+
+    // Initialize Menu
+    initGrid();
+    overlay.classList.add('visible');
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
