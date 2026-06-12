@@ -499,14 +499,7 @@
               <button class="opt-btn active" data-value="large">Large</button>
             </div>
           </div>
-          <div class="settings-row">
-            <label>Map Shape:</label>
-            <div class="button-group" id="mapShapeGroup">
-              <button class="opt-btn active" data-value="rectangle">Rect</button>
-              <button class="opt-btn" data-value="circle">Circle</button>
-              <button class="opt-btn" data-value="triangle">Triangle</button>
-            </div>
-          </div>
+
           <div class="settings-row" id="botsCountRow">
             <label>Bots Count:</label>
             <div class="button-group" id="botsCountGroup">
@@ -581,19 +574,8 @@
     };
 
     const mapShapeSel = {
-      get value() {
-        const active = document.querySelector('#mapShapeGroup .opt-btn.active');
-        return active ? active.dataset.value : 'rectangle';
-      },
-      set value(val) {
-        document.querySelectorAll('#mapShapeGroup .opt-btn').forEach(btn => {
-          if (btn.dataset.value === val) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
-        });
-      }
+      get value() { return 'rectangle'; },
+      set value(val) {}
     };
 
     // Retrieve multiplayer details
@@ -792,26 +774,7 @@
 
     // Grid Boundary Validation
     function isCellValid(c, r) {
-      if (c < 0 || c >= cols || r < 0 || r >= rows) return false;
-      if (mapShapeSel.value === 'circle') {
-        const cx = cols / 2;
-        const cy = rows / 2;
-        const rad = Math.min(cols, rows) / 2 - 0.5;
-        return Math.hypot(c + 0.5 - cx, r + 0.5 - cy) <= rad;
-      }
-      if (mapShapeSel.value === 'triangle') {
-        const B = mapSizeSel.value === 'small' ? 1 : (mapSizeSel.value === 'medium' ? 2 : 3);
-        const cx = cols / 2;
-        const rStart = B;
-        const rEnd = rows - 1 - B;
-        if (r < rStart || r > rEnd) return false;
-        
-        const halfWidthMax = cols / 2 - B;
-        const t = (r - rStart) / (rEnd - rStart);
-        const halfWidth = 0.5 + t * (halfWidthMax - 0.5);
-        return Math.abs(c + 0.5 - cx) <= halfWidth;
-      }
-      return true;
+      return (c >= 0 && c < cols && r >= 0 && r < rows);
     }
 
     function initGrid() {
@@ -841,15 +804,13 @@
       }
     }
 
-    // Spawning players/bots
     function spawnPlayer(entityConfig, isBot = false) {
       let startC, startR;
       let attempts = 0;
-      
       while (attempts < 200) {
         startC = Math.floor(Math.random() * (cols - 4)) + 2;
         startR = Math.floor(Math.random() * (rows - 4)) + 2;
-        
+
         let clear = true;
         // Verify 3x3 territory is within valid boundary and unoccupied
         for (let dc = -1; dc <= 1; dc++) {
@@ -862,6 +823,21 @@
             }
           }
         }
+        
+        // Verify minimum distance to other players to prevent spawning too close
+        if (clear) {
+          const minSpawnDist = Math.min(cols, rows) * 0.35;
+          for (const other of players) {
+            if (!other.dead) {
+              const dist = Math.hypot(startC - other.x, startR - other.y);
+              if (dist < minSpawnDist) {
+                clear = false;
+                break;
+              }
+            }
+          }
+        }
+        
         if (clear) break;
         attempts++;
       }
@@ -1140,108 +1116,46 @@
     function claimTerritory(player) {
       const pid = player.id;
 
-      // 1. Visited map initialized with owned, trails, and void cells
+      // 1. Visited map initialized with owned and trail cells, including a virtual outer ring
       let visited = [];
-      for (let c = 0; c < cols; c++) {
-        visited[c] = [];
-        for (let r = 0; r < rows; r++) {
-          const cell = grid[c][r];
-          visited[c][r] = (cell.owner === pid) || (cell.trail === pid) || cell.void;
-        }
-      }
-
-      // 2. Find free boundary cells
-      let freeBoundaryCells = [];
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          if (visited[c][r]) continue;
-          
-          const isEdge = (c === 0 || c === cols - 1 || r === 0 || r === rows - 1);
-          let hasVoidNeighbor = false;
-          if (!isEdge) {
-            hasVoidNeighbor = (
-              grid[c + 1][r].void ||
-              grid[c - 1][r].void ||
-              grid[c][r + 1].void ||
-              grid[c][r - 1].void
-            );
-          }
-          if (isEdge || hasVoidNeighbor) {
-            freeBoundaryCells.push({ c, r });
+      for (let c = -1; c <= cols; c++) {
+        visited[c + 1] = [];
+        for (let r = -1; r <= rows; r++) {
+          if (c >= 0 && c < cols && r >= 0 && r < rows) {
+            const cell = grid[c][r];
+            visited[c + 1][r + 1] = (cell.owner === pid) || (cell.trail === pid);
+          } else {
+            visited[c + 1][r + 1] = false; // Virtual outer ring is passable
           }
         }
       }
 
-      // Group free boundary cells into components using BFS
-      let boundaryComponents = [];
-      let boundaryVisited = new Set();
-      freeBoundaryCells.forEach(cell => {
-        const key = `${cell.c},${cell.r}`;
-        if (boundaryVisited.has(key)) return;
-        
-        let comp = [];
-        let q = [cell];
-        boundaryVisited.add(key);
-        let qHead = 0;
-        
-        while (qHead < q.length) {
-          const curr = q[qHead++];
-          comp.push(curr);
-          
-          const neighbors = [
-            { c: curr.c + 1, r: curr.r }, { c: curr.c - 1, r: curr.r },
-            { c: curr.c, r: curr.r + 1 }, { c: curr.c, r: curr.r - 1 }
-          ];
-          neighbors.forEach(n => {
-            if (n.c >= 0 && n.c < cols && n.r >= 0 && n.r < rows) {
-              const nKey = `${n.c},${n.r}`;
-              if (!boundaryVisited.has(nKey)) {
-                const isFreeBoundary = freeBoundaryCells.some(f => f.c === n.c && f.r === n.r);
-                if (isFreeBoundary) {
-                  boundaryVisited.add(nKey);
-                  q.push(n);
-                }
-              }
-            }
-          });
-        }
-        boundaryComponents.push(comp);
-      });
-
-      // Find largest boundary segment representing the true map outside
-      let largestBoundarySegment = [];
-      let maxSize = -1;
-      boundaryComponents.forEach(comp => {
-        if (comp.length > maxSize) {
-          maxSize = comp.length;
-          largestBoundarySegment = comp;
-        }
-      });
-
-      // Seed the flood fill from the largest boundary segment
+      // 2. Seed the flood fill from the entire virtual outer ring
       let queue = [];
-      largestBoundarySegment.forEach(cell => {
-        visited[cell.c][cell.r] = true;
-        queue.push(cell);
-      });
+      for (let c = -1; c <= cols; c++) {
+        for (let r = -1; r <= rows; r++) {
+          if (c === -1 || c === cols || r === -1 || r === rows) {
+            visited[c + 1][r + 1] = true;
+            queue.push({ c, r });
+          }
+        }
+      }
 
+      // BFS Flood-fill
       let head = 0;
       while (head < queue.length) {
-        const cell = queue[head++];
-        const nc = cell.c;
-        const nr = cell.r;
-
+        const curr = queue[head++];
         const neighbors = [
-          { c: nc + 1, r: nr },
-          { c: nc - 1, r: nr },
-          { c: nc, r: nr + 1 },
-          { c: nc, r: nr - 1 }
+          { c: curr.c + 1, r: curr.r },
+          { c: curr.c - 1, r: curr.r },
+          { c: curr.c, r: curr.r + 1 },
+          { c: curr.c, r: curr.r - 1 }
         ];
 
         for (const n of neighbors) {
-          if (n.c >= 0 && n.c < cols && n.r >= 0 && n.r < rows) {
-            if (!visited[n.c][n.r]) {
-              visited[n.c][n.r] = true;
+          if (n.c >= -1 && n.c <= cols && n.r >= -1 && n.r <= rows) {
+            if (!visited[n.c + 1][n.r + 1]) {
+              visited[n.c + 1][n.r + 1] = true;
               queue.push(n);
             }
           }
@@ -1254,7 +1168,7 @@
 
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
-          const isClaimed = !visited[c][r] || grid[c][r].trail === pid;
+          const isClaimed = !visited[c + 1][r + 1] || grid[c][r].trail === pid;
           if (isClaimed) {
             // Check if another player's trail is inside our claimed area
             const cellTrail = grid[c][r].trail;
@@ -1701,13 +1615,14 @@
       if (b.trail.length > 0) {
         if (conf.smartThreat) {
           const distToHome = getDistanceToTerritory(b.x, b.y, b.id);
-          // Smart bots calculate: if enemy can reach the trail before we get home + 3 steps safety margin
-          if (minEnemyToTrailDist <= distToHome + 3) {
+          const margin = conf.threatMargin !== undefined ? conf.threatMargin : 3;
+          // Smart bots calculate: if enemy can reach the trail before we get home + margin steps safety margin
+          if (minEnemyToTrailDist <= distToHome + margin) {
             threatDetected = true;
           }
         } else {
-          // Dumb bots (Siri/Alexa): only flee if enemy is very close (< 4), and sometimes ignore threats (15% chance)
-          if (minEnemyToTrailDist < 4 && Math.random() > 0.15) {
+          // Dumb bots (Siri/Alexa): only flee if enemy is very close (< 3), and sometimes ignore threats (30% chance)
+          if (minEnemyToTrailDist < 3 && Math.random() > 0.3) {
             threatDetected = true;
           }
         }
@@ -1810,16 +1725,19 @@
               b.planVy = chosenDir.vy;
               b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
               
-              // Simplified rectangular loop based on risk
-              if (conf.risk === 'low') {
-                b.planS1 = Math.floor(Math.random() * 2) + 3; // 3-4
+              // Custom shapes
+              if (conf.shape === 'square') {
+                b.planS1 = Math.floor(Math.random() * 2) + 3;
+                b.planS2 = b.planS1;
+              } else if (conf.shape === 'long-rect') {
+                b.planS1 = Math.floor(Math.random() * 5) + 12;
                 b.planS2 = Math.floor(Math.random() * 2) + 3;
-              } else if (conf.risk === 'high') {
-                b.planS1 = Math.floor(Math.random() * 5) + 8; // 8-12
-                b.planS2 = Math.floor(Math.random() * 4) + 6; // 6-9
+              } else if (conf.shape === 'circle') {
+                b.planS1 = Math.floor(Math.random() * 2) + 3;
+                b.planS2 = Math.floor(Math.random() * 2) + 3;
               } else {
-                b.planS1 = Math.floor(Math.random() * 3) + 5; // 5-7
-                b.planS2 = Math.floor(Math.random() * 3) + 4; // 4-6
+                b.planS1 = Math.floor(Math.random() * 3) + 5;
+                b.planS2 = Math.floor(Math.random() * 3) + 4;
               }
               
               b.planSteps = b.planS1;
@@ -1870,8 +1788,38 @@
           const wallAhead = !isCellValid(b.x + b.planVx * 2, b.y + b.planVy * 2);
           let shouldTurn = b.planSteps <= 0 || wallAhead;
           
+          if (conf.shape === 'erratic') {
+            if (Math.random() < 0.15 || wallAhead) {
+              shouldTurn = true;
+              b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
+            }
+          }
+          
           if (shouldTurn) {
-            if (b.planPhase === 0) {
+            if (conf.shape === 'circle' && b.planPhase < 2) {
+              const vx = b.planVx;
+              const vy = b.planVy;
+              if (b.planTurnDir === 'left') {
+                b.planVx = vy;
+                b.planVy = -vx;
+              } else {
+                b.planVx = -vy;
+                b.planVy = vx;
+              }
+              b.planPhase++;
+              b.planSteps = Math.floor(Math.random() * 2) + 3;
+            } else if (conf.shape === 'erratic') {
+              const vx = b.planVx;
+              const vy = b.planVy;
+              if (b.planTurnDir === 'left') {
+                b.planVx = vy;
+                b.planVy = -vx;
+              } else {
+                b.planVx = -vy;
+                b.planVy = vx;
+              }
+              b.planSteps = Math.floor(Math.random() * 3) + 2;
+            } else if (b.planPhase === 0) {
               const vx = b.planVx;
               const vy = b.planVy;
               if (b.planTurnDir === 'left') {
