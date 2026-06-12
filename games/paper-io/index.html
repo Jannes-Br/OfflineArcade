@@ -937,14 +937,27 @@
     window.addEventListener('keydown', e => {
       if (gameState !== 'playing' || paused || spawnTimer > 0) return;
 
-      // Player 1 controls (WASD)
+      // Player 1 controls (WASD & Arrow Keys if not in local 2-Player solo mode)
       const p1 = players[0];
       if (p1 && !p1.dead) {
+        const inTerritory1 = grid[p1.x][p1.y].owner === p1.id;
+        
+        // WASD
         switch (e.key.toLowerCase()) {
-          case 'w': if (p1.vy !== 1) { p1.nextVx = 0; p1.nextVy = -1; } break;
-          case 's': if (p1.vy !== -1) { p1.nextVx = 0; p1.nextVy = 1; } break;
-          case 'a': if (p1.vx !== 1) { p1.nextVx = -1; p1.nextVy = 0; } break;
-          case 'd': if (p1.vx !== -1) { p1.nextVx = 1; p1.nextVy = 0; } break;
+          case 'w': if (inTerritory1 || p1.vy !== 1) { p1.nextVx = 0; p1.nextVy = -1; } break;
+          case 's': if (inTerritory1 || p1.vy !== -1) { p1.nextVx = 0; p1.nextVy = 1; } break;
+          case 'a': if (inTerritory1 || p1.vx !== 1) { p1.nextVx = -1; p1.nextVy = 0; } break;
+          case 'd': if (inTerritory1 || p1.vx !== -1) { p1.nextVx = 1; p1.nextVy = 0; } break;
+        }
+
+        // Arrow Keys (only if gameMode is NOT 'solo')
+        if (gameMode !== 'solo') {
+          switch (e.key) {
+            case 'ArrowUp':    if (inTerritory1 || p1.vy !== 1) { p1.nextVx = 0; p1.nextVy = -1; } break;
+            case 'ArrowDown':  if (inTerritory1 || p1.vy !== -1) { p1.nextVx = 0; p1.nextVy = 1; } break;
+            case 'ArrowLeft':  if (inTerritory1 || p1.vx !== 1) { p1.nextVx = -1; p1.nextVy = 0; } break;
+            case 'ArrowRight': if (inTerritory1 || p1.vx !== -1) { p1.nextVx = 1; p1.nextVy = 0; } break;
+          }
         }
       }
 
@@ -952,11 +965,12 @@
       if (gameMode === 'solo') {
         const p2 = players[1];
         if (p2 && !p2.dead) {
+          const inTerritory2 = grid[p2.x][p2.y].owner === p2.id;
           switch (e.key) {
-            case 'ArrowUp':    if (p2.vy !== 1) { p2.nextVx = 0; p2.nextVy = -1; } break;
-            case 'ArrowDown':  if (p2.vy !== -1) { p2.nextVx = 0; p2.nextVy = 1; } break;
-            case 'ArrowLeft':  if (p2.vx !== 1) { p2.nextVx = -1; p2.nextVy = 0; } break;
-            case 'ArrowRight': if (p2.vx !== -1) { p2.nextVx = 1; p2.nextVy = 0; } break;
+            case 'ArrowUp':    if (inTerritory2 || p2.vy !== 1) { p2.nextVx = 0; p2.nextVy = -1; } break;
+            case 'ArrowDown':  if (inTerritory2 || p2.vy !== -1) { p2.nextVx = 0; p2.nextVy = 1; } break;
+            case 'ArrowLeft':  if (inTerritory2 || p2.vx !== 1) { p2.nextVx = -1; p2.nextVy = 0; } break;
+            case 'ArrowRight': if (inTerritory2 || p2.vx !== -1) { p2.nextVx = 1; p2.nextVy = 0; } break;
           }
         }
       }
@@ -965,20 +979,21 @@
       if (gameMode === 'multi' && mpRole === 'guest') {
         const pGuest = players[1];
         if (pGuest && !pGuest.dead) {
+          const inTerritoryGuest = grid[pGuest.x][pGuest.y].owner === pGuest.id;
           let steerSent = false;
           let vx = 0, vy = 0;
           switch (e.key) {
             case 'ArrowUp': case 'w': case 'W':
-              if (pGuest.vy !== 1) { vx = 0; vy = -1; steerSent = true; }
+              if (inTerritoryGuest || pGuest.vy !== 1) { vx = 0; vy = -1; steerSent = true; }
               break;
             case 'ArrowDown': case 's': case 'S':
-              if (pGuest.vy !== -1) { vx = 0; vy = 1; steerSent = true; }
+              if (inTerritoryGuest || pGuest.vy !== -1) { vx = 0; vy = 1; steerSent = true; }
               break;
             case 'ArrowLeft': case 'a': case 'A':
-              if (pGuest.vx !== 1) { vx = -1; vy = 0; steerSent = true; }
+              if (inTerritoryGuest || pGuest.vx !== 1) { vx = -1; vy = 0; steerSent = true; }
               break;
             case 'ArrowRight': case 'd': case 'D':
-              if (pGuest.vx !== -1) { vx = 1; vy = 0; steerSent = true; }
+              if (inTerritoryGuest || pGuest.vx !== -1) { vx = 1; vy = 0; steerSent = true; }
               break;
           }
           if (steerSent) {
@@ -991,7 +1006,7 @@
     // Touch Swipe Steer divided vertically for local 2-Player (Solo) - Multi-touch enabled
     const activeTouches = {};
 
-    window.addEventListener('touchstart', e => {
+    gameWrap.addEventListener('touchstart', e => {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i];
         activeTouches[touch.identifier] = {
@@ -999,9 +1014,9 @@
           y: touch.clientY
         };
       }
-    });
+    }, { passive: true });
 
-    window.addEventListener('touchmove', e => {
+    gameWrap.addEventListener('touchmove', e => {
       if (e.cancelable) e.preventDefault();
       if (gameState !== 'playing' || paused || spawnTimer > 0) return;
 
@@ -1033,13 +1048,17 @@
               vy = diffY > 0 ? 1 : -1;
             }
 
+            const inTerritory = grid[p.x][p.y].owner === p.id;
             const isOpposite = (vx !== 0 && p.vx === -vx) || (vy !== 0 && p.vy === -vy);
-            if (!isOpposite && (vx !== p.vx || vy !== p.vy)) {
-              if (gameMode === 'multi' && mpRole === 'guest') {
-                gameMP.send('steer', { vx, vy });
-              } else {
-                p.nextVx = vx;
-                p.nextVy = vy;
+            
+            if (inTerritory || !isOpposite) {
+              if (vx !== p.vx || vy !== p.vy) {
+                if (gameMode === 'multi' && mpRole === 'guest') {
+                  gameMP.send('steer', { vx, vy });
+                } else {
+                  p.nextVx = vx;
+                  p.nextVy = vy;
+                }
               }
             }
           }
@@ -1050,14 +1069,14 @@
       }
     }, { passive: false });
 
-    window.addEventListener('touchend', e => {
+    gameWrap.addEventListener('touchend', e => {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i];
         delete activeTouches[touch.identifier];
       }
     });
 
-    window.addEventListener('touchcancel', e => {
+    gameWrap.addEventListener('touchcancel', e => {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i];
         delete activeTouches[touch.identifier];
@@ -1159,6 +1178,12 @@
                 playersToKill.add(other);
               }
             }
+            // Check if another player's head is inside our claimed area
+            players.forEach(other => {
+              if (!other.dead && other.id !== pid && other.x === c && other.y === r) {
+                playersToKill.add(other);
+              }
+            });
             grid[c][r].owner = pid;
             grid[c][r].trail = null;
             claimedCount++;
@@ -1167,6 +1192,11 @@
       }
 
       player.trail = [];
+      if (player.isBot) {
+        player.aiState = 'inside';
+        player.planPhase = 0;
+        player.planSteps = 0;
+      }
       rebuildOwnedCells();
 
       if (claimedCount > 0) {
@@ -1382,13 +1412,6 @@
         if (nearestThreatDist < 8) {
           threatDetected = true;
         }
-      }
-
-      // If safe inside own territory, reset state to 'inside'
-      if (isSafe) {
-        b.aiState = 'inside';
-        b.planPhase = 0;
-        b.planSteps = 0;
       }
 
       // AI Decision logic
@@ -1811,53 +1834,57 @@
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, cw, ch);
 
-      // 2. Draw map grid bounds
-      if (mapShapeSel.value === 'circle') {
-        ctx.fillStyle = '#020617';
-        ctx.beginPath();
-        const cx = cw / 2;
-        const cy = ch / 2;
-        const radius = (Math.min(cols, rows) / 2 - 1.5) * cellSize;
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else if (mapShapeSel.value === 'triangle') {
-        ctx.fillStyle = '#020617';
-        ctx.beginPath();
-        ctx.moveTo(cw / 2, 0);
-        ctx.lineTo(cw, ch);
-        ctx.lineTo(0, ch);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = '#020617';
-        ctx.fillRect(0, 0, cw, ch);
-      }
-
-      // 3. Draw Grid Owned/Trails
+      // 2. Draw blocky map grid & boundaries
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
           const cell = grid[c][r];
-          if (cell.void) continue;
+          if (cell.void) {
+            // Out of bounds cell: marked with a light/bright color
+            ctx.fillStyle = '#1e293b'; // light slate gray
+            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+          } else {
+            // Playable cell: dark background
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
 
-          // Owned Territories
-          if (cell.owner !== null) {
-            const owner = players.find(p => p.id === cell.owner);
-            if (owner && !owner.dead) {
-              ctx.fillStyle = owner.color;
-              ctx.globalAlpha = 0.16; // Very soft, clear territory background
-              
-              // Draw rounded rect cells for smooth styling
-              ctx.fillRect(c * cellSize + 0.5, r * cellSize + 0.5, cellSize - 1, cellSize - 1);
-              ctx.globalAlpha = 1.0;
+            // Draw a bright boundary border if adjacent to a void cell or grid edge
+            const leftVoid = (c === 0 || grid[c - 1][r].void);
+            const rightVoid = (c === cols - 1 || grid[c + 1][r].void);
+            const topVoid = (r === 0 || grid[c][r - 1].void);
+            const bottomVoid = (r === rows - 1 || grid[c][r + 1].void);
+
+            if (leftVoid || rightVoid || topVoid || bottomVoid) {
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // Bright boundary lines
+              ctx.lineWidth = 1;
+              if (leftVoid) {
+                ctx.beginPath(); ctx.moveTo(c * cellSize, r * cellSize); ctx.lineTo(c * cellSize, (r + 1) * cellSize); ctx.stroke();
+              }
+              if (rightVoid) {
+                ctx.beginPath(); ctx.moveTo((c + 1) * cellSize, r * cellSize); ctx.lineTo((c + 1) * cellSize, (r + 1) * cellSize); ctx.stroke();
+              }
+              if (topVoid) {
+                ctx.beginPath(); ctx.moveTo(c * cellSize, r * cellSize); ctx.lineTo((c + 1) * cellSize, r * cellSize); ctx.stroke();
+              }
+              if (bottomVoid) {
+                ctx.beginPath(); ctx.moveTo(c * cellSize, (r + 1) * cellSize); ctx.lineTo((c + 1) * cellSize, (r + 1) * cellSize); ctx.stroke();
+              }
             }
+          }
+        }
+      }
+
+      // 3. Draw Owned Territories on top of playable cells
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const cell = grid[c][r];
+          if (cell.void || cell.owner === null) continue;
+
+          const owner = players.find(p => p.id === cell.owner);
+          if (owner && !owner.dead) {
+            ctx.fillStyle = owner.color;
+            ctx.globalAlpha = 0.38; // Increased opacity: much brighter and clearer!
+            ctx.fillRect(c * cellSize + 0.5, r * cellSize + 0.5, cellSize - 1, cellSize - 1);
+            ctx.globalAlpha = 1.0;
           }
         }
       }
