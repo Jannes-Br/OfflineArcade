@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/28882035/README.md)
+[README.md](https://github.com/user-attachments/files/28897700/README.md)
 # OfflineArcade
 
 OfflineArcade is a modern, responsive, and fully offline-capable web application containing a collection of classic retro games. Designed as a Progressive Web App (PWA) with a premium glassmorphic dark-mode interface, it allows users to play alone, against smart AI bots, or with friends over local WebRTC peer-to-peer connections.
@@ -40,16 +40,10 @@ Open `http://localhost:8000` in your web browser.
 
 ## Licenses & Credits
 
-- **OfflineArcade Base Template**:
-  - Copyright (c) 2026 Grayson Brown ([Grayson-Brown Codepen](https://codepen.io/Grayson-Brown/pen/pvgejad))
-  - Modified by Thorge Mrowinski ([GitHub](https://github.com/thorge-mrk))
-  - Further modified and published by Jannes-Br ([GitHub](https://github.com/Jannes-Br))
-  - Licensed under the MIT License (see `LICENSE` or files for terms).
+- **OfflineArcade**:
+  - Created and developed entirely by [Jannes-Br](https://github.com/Jannes-Br).
+  - All core application framework logic, glassmorphic styles, WebRTC P2P multiplayer engine, offline service worker caching, and games (Paper.io, Pong, 2048, Tic Tac Toe, Block Smasher) are original creations by [Jannes-Br](https://github.com/Jannes-Br).
 
-- **Escape Road (WebGL Wrapper)**:
-  - Original code and assets by Thorge Mrowinski ([GitHub Repository](https://github.com/thorge-mrk/Games.Escape_Road))
-  - Modified and integrated under the MIT License (see [Escape Road License](games/escape-road/LICENSE)).
-
-- **Drive Mad (WebGL Wrapper)**:
-  - Original code and assets by Thorge Mrowinski ([GitHub Repository](https://github.com/thorge-mrk/Drive-Mad))
-  - Modified and integrated under the MIT License (see [Drive Mad License](games/drive-mad/LICENSE)).
+- **Escape Road & Drive Mad (WebGL Wrappers)**:
+  - Integration wrappers and WebGL base code obtained from Thorge Mrowinski ([GitHub](https://github.com/thorge-mrk)), who originally based them on templates by Grayson Brown ([Grayson-Brown Codepen](https://codepen.io/Grayson-Brown/pen/pvgejad)).
+  - Licensed under the MIT License (see game subdirectories for terms).
