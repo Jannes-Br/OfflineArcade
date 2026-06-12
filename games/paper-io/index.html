@@ -157,8 +157,38 @@
       margin-left: 4px;
     }
 
-    #gameWrap {
+    .topbar-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .top-action-btn {
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-color);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .top-action-btn:hover {
+      background: var(--btn-hover-bg);
+    }
+
+    /* ── Layout ── */
+    .game-layout {
+      display: flex;
+      gap: 16px;
       width: 100%;
+      max-width: 1030px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    #gameWrap {
+      flex: 1;
       max-width: 800px;
       aspect-ratio: 16 / 10;
       max-height: calc(100vh - 200px);
@@ -176,6 +206,109 @@
       width: 100%;
       height: 100%;
       display: block;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 210px;
+      flex-shrink: 0;
+    }
+
+    /* ── Leaderboard Overlay ── */
+    .leaderboard-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--box-border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      width: 100%;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      backdrop-filter: blur(6px);
+    }
+
+    .leaderboard-title {
+      font-weight: 800;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+      margin-bottom: 2px;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    /* ── Settings Box ── */
+    .settings-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--box-border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      width: 100%;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(6px);
+    }
+
+    .settings-title {
+      font-weight: 800;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .settings-row label {
+      font-weight: 700;
+      opacity: 0.8;
+      font-size: 11px;
+    }
+
+    .settings-row select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--box-border);
+      border-radius: 8px;
+      color: white;
+      padding: 6px 10px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .settings-row select option {
+      background: #0f172a;
+      color: white;
+    }
+
+    .checkbox-row {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
 
     /* ── Overlay ── */
@@ -207,11 +340,12 @@
     }
 
     .overlay-sub {
-      font-size: 16px;
+      font-size: 14px;
       color: rgba(255, 255, 255, 0.8);
       max-width: 80%;
       text-align: center;
       line-height: 1.4;
+      white-space: pre-line;
     }
 
     .overlay-btn {
@@ -236,54 +370,18 @@
       transform: scale(0.97);
     }
 
-    /* ── Leaderboard Overlay ── */
-    .leaderboard-box {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--box-border);
-      border-radius: 16px;
-      padding: 12px 16px;
-      width: 170px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      pointer-events: none;
-      backdrop-filter: blur(6px);
-      z-index: 5;
-    }
-
-    .leaderboard-title {
-      font-weight: 800;
-      font-size: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 4px;
-      margin-bottom: 2px;
-      color: rgba(255,255,255,0.9);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .leaderboard-row {
-      display: flex;
-      justify-content: space-between;
-      font-weight: 700;
-    }
-
-    .leaderboard-row.mine {
-      color: #60a5fa;
-    }
-
-    @media (max-width: 480px) {
-      .overlay-title {
-        font-size: 28px;
+    @media (max-width: 768px) {
+      .game-layout {
+        flex-direction: column;
+        align-items: center;
       }
-      .leaderboard-box {
-        width: 130px;
-        padding: 8px 10px;
-        font-size: 10px;
+      .side-panel {
+        width: 100%;
+        max-width: 800px;
+        flex-direction: row;
+      }
+      .leaderboard-box, .settings-box {
+        flex: 1;
       }
     }
   </style>
@@ -305,32 +403,70 @@
         <div class="score-item">Map: <span id="scoreVal">0.0%</span></div>
         <div class="score-item">Kills: <span id="killsVal">0</span></div>
       </div>
+      <div class="topbar-btns">
+        <button id="pauseBtn" class="top-action-btn">II</button>
+        <button id="restartBtn" class="top-action-btn">🔄 Restart</button>
+      </div>
     </div>
 
-    <div id="gameWrap">
-      <canvas id="game" width="800" height="500"></canvas>
+    <div class="game-layout">
+      <div id="gameWrap">
+        <canvas id="game" width="800" height="500"></canvas>
 
-      <!-- Leaderboard Overlay inside canvas container -->
-      <div class="leaderboard-box">
-        <div class="leaderboard-title">
-          <span>Leaderboard</span>
-          <span>%</span>
-        </div>
-        <div id="leaderboardList">
-          <!-- Populated dynamically -->
+        <!-- Game Over / Intro Overlay -->
+        <div class="overlay" id="overlay">
+          <div class="overlay-title" id="overlay-title">Paper.io</div>
+          <div class="overlay-sub" id="overlay-sub">Use Arrow Keys, WASD, or swipe to steer. Capture the board!</div>
+          <button class="overlay-btn" id="overlay-btn">Play Game</button>
         </div>
       </div>
 
-      <!-- Game Over Overlay -->
-      <div class="overlay" id="overlay">
-        <div class="overlay-title" id="overlay-title">Paper.io</div>
-        <div class="overlay-sub" id="overlay-sub">Use Arrow Keys, WASD, or swipe to steer. Capture the board!</div>
-        <button class="overlay-btn" id="overlay-btn">Play Game</button>
+      <div class="side-panel">
+        <!-- Leaderboard -->
+        <div class="leaderboard-box">
+          <div class="leaderboard-title">
+            <span>Leaderboard</span>
+            <span>%</span>
+          </div>
+          <div id="leaderboardList">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-box" id="settingsBox">
+          <div class="settings-title">Game Options</div>
+          <div class="settings-row">
+            <label for="mapSize">Map Size:</label>
+            <select id="mapSize">
+              <option value="small">Small (40x25)</option>
+              <option value="medium">Medium (60x38)</option>
+              <option value="large" selected>Large (80x50)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="mapShape">Map Shape:</label>
+            <select id="mapShape">
+              <option value="rectangle" selected>Rectangle</option>
+              <option value="circle">Circle</option>
+            </select>
+          </div>
+          <div class="settings-row checkbox-row" id="botsToggleRow">
+            <label for="botsToggle">Activate Bots:</label>
+            <input type="checkbox" id="botsToggle" checked>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="../../multiplayer.js"></script>
   <script>
+    const gameMP = (window.parent && window.parent !== window && window.parent.MP) ? window.parent.MP : MP;
+    if (gameMP && typeof gameMP.clearGameListeners === 'function') {
+      gameMP.clearGameListeners();
+    }
+
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const muteBtn = document.getElementById('mute-btn');
@@ -342,126 +478,172 @@
     const killsVal = document.getElementById('killsVal');
     const leaderboardList = document.getElementById('leaderboardList');
     const backBtn = document.getElementById('backBtn');
+    
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const settingsBox = document.getElementById('settingsBox');
+    const mapSizeSel = document.getElementById('mapSize');
+    const mapShapeSel = document.getElementById('mapShape');
+    const botsToggle = document.getElementById('botsToggle');
 
-    // Load configurations
+    // Retrieve multiplayer details
+    const gameMode = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName = localStorage.getItem('playerName') || 'You';
+    const mpRole = gameMP ? gameMP.role : 'host'; // host | guest
 
     // Grid Dimensions
     const cw = 800;
     const ch = 500;
-    const cols = 80;
-    const rows = 50;
-    const cellSize = 10; // 800/80 = 10, 500/50 = 10
+    let cols = 80;
+    let rows = 50;
+    let cellSize = 10;
 
-    // Grid State array
-    // Each element is an object: { owner: null|id, trail: null|id }
+    // Grid State: 2D array of objects: { owner: null|id, trail: null|id, void: boolean }
     let grid = [];
+    
+    // Players List
+    let players = [];
+    let particles = [];
+    let gameState = 'hold'; // hold | playing | gameover
+    let isMuted = localStorage.getItem('mute') === 'true';
+    let paused = false;
+    let enableBots = true;
+    let spawnTimer = 0; // Countdown timer at round start
+    
+    // Size settings map
+    const SIZES = {
+      small: { cols: 40, rows: 25 },
+      medium: { cols: 60, rows: 38 },
+      large: { cols: 80, rows: 50 }
+    };
+
+    // Color definitions representing famous AIs
+    const COLORS = [
+      { id: 1, name: myName, main: '#3b82f6', trail: 'rgba(59, 130, 246, 0.45)', head: '#60a5fa' },          // Player 1 (Blue)
+      { id: 2, name: 'Player 2', main: '#10b981', trail: 'rgba(16, 185, 129, 0.45)', head: '#34d399' },      // Player 2 / Bot (Green)
+      { id: 3, name: 'ChatGPT', main: '#10a37f', trail: 'rgba(16, 163, 127, 0.45)', head: '#30cbb0' },       // OpenAI Teal
+      { id: 4, name: 'Claude', main: '#d97706', trail: 'rgba(217, 119, 6, 0.45)', head: '#fb923c' },         // Anthracite Orange
+      { id: 5, name: 'DeepSeek', main: '#0054ff', trail: 'rgba(0, 84, 255, 0.45)', head: '#5e94ff' },        // DeepSeek Blue
+      { id: 6, name: 'Gemini', main: '#8b5cf6', trail: 'rgba(139, 92, 246, 0.45)', head: '#c084fc' },        // Google Purple
+      { id: 7, name: 'Siri', main: '#ec4899', trail: 'rgba(236, 72, 153, 0.45)', head: '#f472b6' }           // Apple Pink
+    ];
+
+    // Initialization Mode Setup
+    function initMode() {
+      // Configure elements depending on mode
+      if (gameMode === 'bot') {
+        document.getElementById('modeBadge').textContent = '🤖 vs. Bot';
+        botsToggle.checked = true;
+        botsToggle.disabled = true;
+      } else if (gameMode === 'solo') {
+        document.getElementById('modeBadge').textContent = '🎮 Solo (2P)';
+        botsToggle.checked = false; // default off for local 2P but toggleable
+      } else if (gameMode === 'multi') {
+        document.getElementById('modeBadge').textContent = '📡 Online';
+        
+        // Only Host controls options
+        if (mpRole === 'guest') {
+          settingsBox.style.display = 'none';
+          pauseBtn.style.display = 'none';
+          restartBtn.style.display = 'none';
+        }
+        setupMultiplayerEvents();
+      }
+
+      updateSoundBtn();
+      loadSettingsFromDOM();
+    }
+
+    function updateSoundBtn() {
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    muteBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      localStorage.setItem('mute', isMuted ? 'true' : 'false');
+      updateSoundBtn();
+    });
+
+    // Pause functionality
+    pauseBtn.addEventListener('click', () => {
+      if (gameMode === 'multi' && mpRole === 'guest') return;
+      togglePause(true);
+    });
+
+    function togglePause(sync = true) {
+      paused = !paused;
+      pauseBtn.textContent = paused ? '▶' : 'II';
+      updateOverlay();
+      if (gameMode === 'multi' && mpRole === 'host' && sync) {
+        gameMP.send('pause_change', { paused });
+      }
+    }
+
+    restartBtn.addEventListener('click', () => {
+      if (gameMode === 'multi' && mpRole === 'guest') return;
+      triggerRestart(true);
+    });
+
+    function triggerRestart(sync = true) {
+      loadSettingsFromDOM();
+      restartGame();
+      if (gameMode === 'multi' && mpRole === 'host' && sync) {
+        gameMP.send('restart_game', {
+          game: 'paper-io',
+          mapSize: mapSizeSel.value,
+          mapShape: mapShapeSel.value,
+          enableBots: botsToggle.checked
+        });
+      }
+    }
+
+    function loadSettingsFromDOM() {
+      const sizeKey = mapSizeSel.value;
+      cols = SIZES[sizeKey].cols;
+      rows = SIZES[sizeKey].rows;
+      cellSize = cw / cols;
+
+      enableBots = botsToggle.checked;
+    }
+
+    // Grid Boundary Validation
+    function isCellValid(c, r) {
+      if (c < 0 || c >= cols || r < 0 || r >= rows) return false;
+      if (mapShapeSel.value === 'circle') {
+        const cx = cols / 2;
+        const cy = rows / 2;
+        const rad = Math.min(cols, rows) / 2 - 1.5;
+        return Math.hypot(c - cx, r - cy) <= rad;
+      }
+      return true;
+    }
+
     function initGrid() {
       grid = [];
       for (let c = 0; c < cols; c++) {
         grid[c] = [];
         for (let r = 0; r < rows; r++) {
-          grid[c][r] = { owner: null, trail: null };
+          grid[c][r] = { owner: null, trail: null, void: !isCellValid(c, r) };
         }
       }
     }
 
-    // Players list
-    let players = [];
-    let particles = [];
-    let gameState = 'hold'; // hold | playing | gameover
-    let isMuted = localStorage.getItem('mute') === 'true';
-
-    // Update Mute UI
-    muteBtn.textContent = isMuted ? '🔇' : '🔊';
-    muteBtn.addEventListener('click', () => {
-      isMuted = !isMuted;
-      localStorage.setItem('mute', isMuted);
-      muteBtn.textContent = isMuted ? '🔇' : '🔊';
-    });
-
-    backBtn.addEventListener('click', (e) => {
-      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
-        e.preventDefault();
-        window.parent.closeGameFrame();
-      }
-    });
-
-    // Web Audio Sound Engine
-    let audioCtx = null;
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
-    ['click', 'touchstart', 'keydown'].forEach(evt => {
-      document.addEventListener(evt, initAudio, { once: true, passive: true });
-    });
-
-    function playSound(type) {
-      if (isMuted) return;
-      try {
-        initAudio();
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
-
-        if (type === 'score') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, now); // C5
-          osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-          gain.gain.setValueAtTime(0.04, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          osc.start(now);
-          osc.stop(now + 0.25);
-        } else if (type === 'hit') {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(150, now);
-          osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-          osc.start(now);
-          osc.stop(now + 0.18);
-        } else if (type === 'gameover') {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.linearRampToValueAtTime(60, now + 0.5);
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-          osc.start(now);
-          osc.stop(now + 0.5);
-        }
-      } catch (e) {}
-    }
-
-    // Colors list
-    const COLORS = [
-      { id: 1, name: myName, main: '#3b82f6', trail: 'rgba(59, 130, 246, 0.45)', head: '#60a5fa' }, // Blue (Player)
-      { id: 2, name: 'Siri', main: '#ec4899', trail: 'rgba(236, 72, 153, 0.45)', head: '#f472b6' },   // Pink (Bot 1)
-      { id: 3, name: 'Alexa', main: '#10b981', trail: 'rgba(16, 185, 129, 0.45)', head: '#34d399' },  // Emerald (Bot 2)
-      { id: 4, name: 'Cortana', main: '#f59e0b', trail: 'rgba(245, 158, 11, 0.45)', head: '#fbbf24' },// Orange (Bot 3)
-      { id: 5, name: 'Copilot', main: '#8b5cf6', trail: 'rgba(139, 92, 246, 0.45)', head: '#a78bfa' } // Violet (Bot 4)
-    ];
-
-    // Initialize Game Entities
+    // Spawning players/bots
     function spawnPlayer(entityConfig, isBot = false) {
-      // Find a safe spot not occupied by owned cells
       let startC, startR;
       let attempts = 0;
-      while (attempts < 100) {
-        startC = Math.floor(Math.random() * (cols - 10)) + 5;
-        startR = Math.floor(Math.random() * (rows - 10)) + 5;
+      
+      while (attempts < 200) {
+        startC = Math.floor(Math.random() * (cols - 4)) + 2;
+        startR = Math.floor(Math.random() * (rows - 4)) + 2;
+        
         let clear = true;
-        // Ensure starting 3x3 territory is free from others' ownership
-        for (let dc = -2; dc <= 2; dc++) {
-          for (let dr = -2; dr <= 2; dr++) {
-            if (grid[startC + dc][startR + dr].owner !== null) {
+        // Verify 3x3 territory is within valid boundary and unoccupied
+        for (let dc = -1; dc <= 1; dc++) {
+          for (let dr = -1; dr <= 1; dr++) {
+            const tc = startC + dc;
+            const tr = startR + dr;
+            if (!isCellValid(tc, tr) || grid[tc][tr].owner !== null) {
               clear = false;
               break;
             }
@@ -471,15 +653,18 @@
         attempts++;
       }
 
-      // Grant initial 3x3 territory
+      // Assign initial 3x3 territory
       const id = entityConfig.id;
       for (let dc = -1; dc <= 1; dc++) {
         for (let dr = -1; dr <= 1; dr++) {
-          grid[startC + dc][startR + dr].owner = id;
+          const tc = startC + dc;
+          const tr = startR + dr;
+          if (isCellValid(tc, tr)) {
+            grid[tc][tr].owner = id;
+          }
         }
       }
 
-      // Setup Entity
       const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
       const startDir = directions[Math.floor(Math.random() * directions.length)];
 
@@ -498,9 +683,9 @@
         trail: [],
         dead: false,
         isBot: isBot,
-        score: 0,
+        score: 0.0,
         kills: 0,
-        botAiState: 'explore', // explore | returning
+        botAiState: 'explore', // explore | returning | attacking
         botTimer: 0
       };
     }
@@ -509,78 +694,168 @@
       initGrid();
       particles = [];
       players = [];
+      paused = false;
+      pauseBtn.textContent = 'II';
 
-      // Spawn Player (ID 1)
-      players.push(spawnPlayer(COLORS[0], false));
+      // 1. Spawning Humans based on gameMode
+      if (gameMode === 'bot') {
+        players.push(spawnPlayer(COLORS[0], false)); // Player 1
+        
+        // Spawn AI bots
+        if (enableBots) {
+          for (let i = 2; i < COLORS.length; i++) {
+            players.push(spawnPlayer(COLORS[i], true));
+          }
+        }
+      } else if (gameMode === 'solo') {
+        // Local 2-Player mode
+        const p1Config = COLORS[0];
+        const p2Config = {...COLORS[1], name: 'Player 2'};
+        
+        players.push(spawnPlayer(p1Config, false)); // Player 1
+        players.push(spawnPlayer(p2Config, false)); // Player 2
 
-      // Spawn Bots (ID 2 to 5)
-      for (let i = 1; i < COLORS.length; i++) {
-        players.push(spawnPlayer(COLORS[i], true));
+        if (enableBots) {
+          for (let i = 2; i < COLORS.length; i++) {
+            players.push(spawnPlayer(COLORS[i], true));
+          }
+        }
+      } else if (gameMode === 'multi') {
+        // Online P2P mode
+        const p1Config = COLORS[0]; // Host
+        const p2Config = {...COLORS[1], name: gameMP.opponent || 'Opponent'}; // Guest
+        
+        players.push(spawnPlayer(p1Config, false));
+        players.push(spawnPlayer(p2Config, false));
+
+        if (enableBots) {
+          for (let i = 2; i < COLORS.length; i++) {
+            players.push(spawnPlayer(COLORS[i], true));
+          }
+        }
       }
 
+      // Start the 1-second countdown delay
+      spawnTimer = 1000; 
       gameState = 'playing';
-      overlay.classList.remove('visible');
+      updateOverlay();
     }
 
-    // Input Handling
+    // Input Steering listeners
     window.addEventListener('keydown', e => {
-      if (gameState !== 'playing') return;
-      const p = players[0];
-      if (p.dead) return;
+      if (gameState !== 'playing' || paused || spawnTimer > 0) return;
 
-      switch(e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
-          if (p.vy !== 1) { p.nextVx = 0; p.nextVy = -1; }
-          break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
-          if (p.vy !== -1) { p.nextVx = 0; p.nextVy = 1; }
-          break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
-          if (p.vx !== 1) { p.nextVx = -1; p.nextVy = 0; }
-          break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
-          if (p.vx !== -1) { p.nextVx = 1; p.nextVy = 0; }
-          break;
+      // Player 1 controls (WASD)
+      const p1 = players[0];
+      if (p1 && !p1.dead) {
+        switch (e.key.toLowerCase()) {
+          case 'w': if (p1.vy !== 1) { p1.nextVx = 0; p1.nextVy = -1; } break;
+          case 's': if (p1.vy !== -1) { p1.nextVx = 0; p1.nextVy = 1; } break;
+          case 'a': if (p1.vx !== 1) { p1.nextVx = -1; p1.nextVy = 0; } break;
+          case 'd': if (p1.vx !== -1) { p1.nextVx = 1; p1.nextVy = 0; } break;
+        }
+      }
+
+      // Player 2 controls (Arrow keys) - Solo (local) Mode
+      if (gameMode === 'solo') {
+        const p2 = players[1];
+        if (p2 && !p2.dead) {
+          switch (e.key) {
+            case 'ArrowUp':    if (p2.vy !== 1) { p2.nextVx = 0; p2.nextVy = -1; } break;
+            case 'ArrowDown':  if (p2.vy !== -1) { p2.nextVx = 0; p2.nextVy = 1; } break;
+            case 'ArrowLeft':  if (p2.vx !== 1) { p2.nextVx = -1; p2.nextVy = 0; } break;
+            case 'ArrowRight': if (p2.vx !== -1) { p2.nextVx = 1; p2.nextVy = 0; } break;
+          }
+        }
+      }
+
+      // Guest online multiplayer steering
+      if (gameMode === 'multi' && mpRole === 'guest') {
+        const pGuest = players[1];
+        if (pGuest && !pGuest.dead) {
+          let steerSent = false;
+          let vx = 0, vy = 0;
+          switch (e.key) {
+            case 'ArrowUp': case 'w': case 'W':
+              if (pGuest.vy !== 1) { vx = 0; vy = -1; steerSent = true; }
+              break;
+            case 'ArrowDown': case 's': case 'S':
+              if (pGuest.vy !== -1) { vx = 0; vy = 1; steerSent = true; }
+              break;
+            case 'ArrowLeft': case 'a': case 'A':
+              if (pGuest.vx !== 1) { vx = -1; vy = 0; steerSent = true; }
+              break;
+            case 'ArrowRight': case 'd': case 'D':
+              if (pGuest.vx !== -1) { vx = 1; vy = 0; steerSent = true; }
+              break;
+          }
+          if (steerSent) {
+            gameMP.send('steer', { vx, vy });
+          }
+        }
       }
     });
 
-    // Touch Swipe Steer Support
+    // Touch Swipe Steer divided vertically for local 2-Player (Solo)
     let touchStartX = 0;
     let touchStartY = 0;
+    let touchSide = ''; // 'left' or 'right'
+
     window.addEventListener('touchstart', e => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+
+      const rect = canvas.getBoundingClientRect();
+      const relativeX = touch.clientX - rect.left;
+      if (relativeX < rect.width / 2) {
+        touchSide = 'left';
+      } else {
+        touchSide = 'right';
+      }
     }, { passive: true });
 
     window.addEventListener('touchmove', e => {
-      if (gameState !== 'playing') return;
-      const p = players[0];
-      if (p.dead || touchStartX === 0) return;
+      if (gameState !== 'playing' || paused || spawnTimer > 0 || touchStartX === 0) return;
 
-      const diffX = e.touches[0].clientX - touchStartX;
-      const diffY = e.touches[0].clientY - touchStartY;
+      const touch = e.touches[0];
+      const diffX = touch.clientX - touchStartX;
+      const diffY = touch.clientY - touchStartY;
       const threshold = 20;
 
       if (Math.max(Math.abs(diffX), Math.abs(diffY)) > threshold) {
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-          // Horizontal swipe
-          if (diffX > 0 && p.vx !== -1) { p.nextVx = 1; p.nextVy = 0; }
-          else if (diffX < 0 && p.vx !== 1) { p.nextVx = -1; p.nextVy = 0; }
-        } else {
-          // Vertical swipe
-          if (diffY > 0 && p.vy !== -1) { p.nextVx = 0; p.nextVy = 1; }
-          else if (diffY < 0 && p.vy !== 1) { p.nextVx = 0; p.nextVy = -1; }
+        let p = null;
+        if (gameMode === 'bot') {
+          p = players[0]; // Player 1 gets full screen touches
+        } else if (gameMode === 'solo') {
+          p = touchSide === 'left' ? players[0] : players[1];
+        } else if (gameMode === 'multi') {
+          p = mpRole === 'host' ? players[0] : players[1];
         }
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+
+        if (p && !p.dead) {
+          let vx = 0, vy = 0;
+          let changed = false;
+          if (Math.abs(diffX) > Math.abs(diffY)) {
+            // Horizontal Swipe
+            if (diffX > 0 && p.vx !== -1) { vx = 1; vy = 0; changed = true; }
+            else if (diffX < 0 && p.vx !== 1) { vx = -1; vy = 0; changed = true; }
+          } else {
+            // Vertical Swipe
+            if (diffY > 0 && p.vy !== -1) { vx = 0; vy = 1; changed = true; }
+            else if (diffY < 0 && p.vy !== 1) { vx = 0; vy = -1; changed = true; }
+          }
+          if (changed) {
+            if (gameMode === 'multi' && mpRole === 'guest') {
+              gameMP.send('steer', { vx, vy });
+            } else {
+              p.nextVx = vx;
+              p.nextVy = vy;
+            }
+          }
+        }
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
       }
     }, { passive: false });
 
@@ -589,59 +864,54 @@
       touchStartY = 0;
     });
 
-    // Particle Explosions
+    // Particle Renderer
     function spawnDeathParticles(x, y, color) {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 22; i++) {
         particles.push({
           x: x * cellSize + cellSize / 2,
           y: y * cellSize + cellSize / 2,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
           size: Math.random() * 3 + 2,
           color: color,
           life: 1.0,
-          decay: Math.random() * 0.05 + 0.03
+          decay: Math.random() * 0.04 + 0.02
         });
       }
     }
 
-    // BFS Territory Claiming Algorithm
-    // Claims all enclosed cells when returning back to owned territory.
+    // BFS Flood-fill area claiming
     function claimTerritory(player) {
       const pid = player.id;
 
-      // 1. Create boundary map: mark owned + trail as visited/solid
+      // 1. Solid boundary map
       let visited = [];
       for (let c = 0; c < cols; c++) {
         visited[c] = [];
         for (let r = 0; r < rows; r++) {
-          const isBoundary = (grid[c][r].owner === pid) || (grid[c][r].trail === pid);
-          visited[c][r] = isBoundary;
+          const cell = grid[c][r];
+          // Treat owned, trails, and void cells as boundaries/visited
+          visited[c][r] = (cell.owner === pid) || (cell.trail === pid) || cell.void;
         }
       }
 
-      // 2. BFS starting from all borders to mark "outside" cells
+      // 2. BFS from edges
       let queue = [];
-      
-      // Start BFS from left/right borders
       for (let r = 0; r < rows; r++) {
         if (!visited[0][r]) { visited[0][r] = true; queue.push({ c: 0, r: r }); }
         if (!visited[cols - 1][r]) { visited[cols - 1][r] = true; queue.push({ c: cols - 1, r: r }); }
       }
-      // Start BFS from top/bottom borders
       for (let c = 1; c < cols - 1; c++) {
         if (!visited[c][0]) { visited[c][0] = true; queue.push({ c: c, r: 0 }); }
         if (!visited[c][rows - 1]) { visited[c][rows - 1] = true; queue.push({ c: c, r: rows - 1 }); }
       }
 
-      // Process queue
       let head = 0;
       while (head < queue.length) {
         const cell = queue[head++];
         const nc = cell.c;
         const nr = cell.r;
 
-        // Check 4 neighbors
         const neighbors = [
           { c: nc + 1, r: nr },
           { c: nc - 1, r: nr },
@@ -659,12 +929,11 @@
         }
       }
 
-      // 3. All unvisited cells are enclosed! Add them to player's territory.
+      // 3. Claim unvisited cells
       let claimedCount = 0;
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
           if (!visited[c][r] || grid[c][r].trail === pid) {
-            // If it belonged to someone else, turn off their ownership
             grid[c][r].owner = pid;
             grid[c][r].trail = null;
             claimedCount++;
@@ -672,23 +941,18 @@
         }
       }
 
-      // Clear trail array
-      player.trail.forEach(cell => {
-        grid[cell.c][cell.r].trail = null;
-      });
       player.trail = [];
-
       if (claimedCount > 0) {
         playSound('score');
       }
     }
 
-    // Kill/Clean player territory on death
+    // Handles eliminations and erases cells/trails instantly
     function handleDeath(p) {
       p.dead = true;
       spawnDeathParticles(p.x, p.y, p.color);
 
-      // Clear all owned cells and trails
+      // Clear owned cells and trails instantly
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
           if (grid[c][r].owner === p.id) {
@@ -700,40 +964,122 @@
         }
       }
 
-      if (p.id === 1) {
-        // Human died
-        gameState = 'gameover';
-        playSound('gameover');
-        overlayTitle.textContent = 'Game Over';
-        overlaySub.textContent = `You captured ${p.score}% of the board and got ${p.kills} kills.`;
-        overlayBtn.textContent = 'Try Again';
-        overlay.classList.add('visible');
+      playSound('hit');
 
-        // Update Highscores
-        const currentBest = parseFloat(localStorage.getItem('highscore_paper-io') || '0');
-        if (parseFloat(p.score) > currentBest) {
-          localStorage.setItem('highscore_paper-io', p.score);
+      // Bot Mode Game Over trigger
+      if (gameMode === 'bot' && p.id === 1) {
+        endSession();
+      }
+
+      // Solo Mode Game Over trigger (when BOTH are dead)
+      if (gameMode === 'solo') {
+        const p1 = players[0];
+        const p2 = players[1];
+        if (p1.dead && p2.dead) {
+          endSession();
         }
-      } else {
-        // Bot died
-        playSound('hit');
-        // Respawn the bot after a small delay
-        setTimeout(() => {
-          if (gameState !== 'playing') return;
-          // Find config matching bot id
-          const conf = COLORS.find(c => c.id === p.id);
-          const index = players.findIndex(item => item.id === p.id);
-          if (index !== -1) {
-            players[index] = spawnPlayer(conf, true);
-          }
-        }, 3000);
+      }
+
+      // Online Multiplayer Game Over trigger (when BOTH are dead)
+      if (gameMode === 'multi') {
+        const p1 = players[0];
+        const p2 = players[1];
+        if (p1.dead && p2.dead) {
+          endSession();
+        }
       }
     }
 
-    // Bot AI Logic
+    function endSession() {
+      gameState = 'gameover';
+      updateOverlay();
+    }
+
+    function updateOverlay() {
+      if (paused) {
+        overlayTitle.textContent = 'II';
+        overlaySub.textContent = 'Game Paused';
+        overlayBtn.style.display = 'none';
+        overlay.classList.add('visible');
+        return;
+      }
+
+      if (gameState === 'hold') {
+        overlayTitle.textContent = 'Paper.io';
+        overlaySub.textContent = gameMode === 'solo' 
+          ? 'Player 1: WASD\nPlayer 2: Arrow keys\nCapture cells by completing loops!'
+          : 'Use WASD, Arrow keys, or swiping to steer.\nCapture territory and cut opponent trails!';
+        overlayBtn.textContent = 'Play Game';
+        overlayBtn.style.display = 'block';
+        overlay.classList.add('visible');
+        return;
+      }
+
+      if (gameState === 'gameover') {
+        overlayTitle.textContent = 'Game Over';
+        
+        let text = '';
+        if (gameMode === 'bot') {
+          const human = players[0];
+          text = `You captured ${human.score}% of the board with ${human.kills} kills.`;
+          
+          // Save highscore
+          const currentBest = parseFloat(localStorage.getItem('highscore_paper-io') || '0');
+          if (parseFloat(human.score) > currentBest) {
+            localStorage.setItem('highscore_paper-io', human.score);
+          }
+        } else {
+          // Solo / Multiplayer - Check who won between P1 and P2
+          const p1 = players[0];
+          const p2 = players[1];
+          const score1 = parseFloat(p1.score);
+          const score2 = parseFloat(p2.score);
+
+          if (score1 > score2) {
+            text = `${p1.name} wins with ${p1.score}%! \n(${p2.name} got ${p2.score}%)`;
+          } else if (score2 > score1) {
+            text = `${p2.name} wins with ${p2.score}%! \n(${p1.name} got ${p1.score}%)`;
+          } else {
+            text = `It's a draw! Both players got ${p1.score}%.`;
+          }
+        }
+
+        overlaySub.textContent = text;
+        
+        if (gameMode !== 'multi' || mpRole === 'host') {
+          overlayBtn.textContent = 'Play Again';
+          overlayBtn.style.display = 'block';
+        } else {
+          overlaySub.textContent += '\nWaiting for Host to restart...';
+          overlayBtn.style.display = 'none';
+        }
+        overlay.classList.add('visible');
+        return;
+      }
+
+      // Playing mode removes overlay
+      overlay.classList.remove('visible');
+    }
+
+    // Pathfinding helper: Manhattan distance to nearest owned cell
+    function getDistanceToTerritory(sc, sr, pid) {
+      let minDist = Infinity;
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          if (grid[c][r].owner === pid) {
+            const dist = Math.abs(c - sc) + Math.abs(r - sr);
+            if (dist < minDist) {
+              minDist = dist;
+            }
+          }
+        }
+      }
+      return minDist;
+    }
+
+    // Smart AI Bot Pathfinding & Collision Interception
     function updateBotAI(b) {
       b.botTimer++;
-
       const isSafe = grid[b.x][b.y].owner === b.id;
 
       // 4 neighboring directions
@@ -744,21 +1090,74 @@
         { vx: 0, vy: -1 }
       ];
 
-      // Filter directions: no out of bounds, no hitting own trail
+      // Filter valid cells (inside circular/rectangular boundary, not hitting own trail)
       const validDirs = dirs.filter(d => {
         const nc = b.x + d.vx;
         const nr = b.y + d.vy;
-        if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) return false;
+        if (!isCellValid(nc, nr)) return false;
         if (grid[nc][nr].trail === b.id) return false;
         return true;
       });
 
-      if (validDirs.length === 0) return; // Trapped, will hit own trail and die
+      if (validDirs.length === 0) return; // Trapped, will die
 
-      // State machine logic
+      // God-tier AI Trail Interception (DeepSeek, Claude)
+      let targetTrailCell = null;
+      let targetOpponent = null;
+      let minStepsToCut = Infinity;
+
+      const isSmartBot = (b.name === 'DeepSeek' || b.name === 'Claude');
+      const isAdvancedBot = (b.name === 'ChatGPT' || b.name === 'Gemini');
+
+      if (isSmartBot || isAdvancedBot) {
+        players.forEach(other => {
+          if (other.dead || other.id === b.id) return;
+          if (other.trail.length === 0) return; // No trail to attack
+
+          // Estimate how long other player needs to reach safety
+          const otherHomeDist = getDistanceToTerritory(other.x, other.y, other.id);
+
+          other.trail.forEach(tCell => {
+            const distToCut = Math.abs(tCell.c - b.x) + Math.abs(tCell.r - b.y);
+            // If the bot can reach the trail cell before the owner gets home
+            if (distToCut < otherHomeDist) {
+              const rangeLimit = isSmartBot ? 18 : 10;
+              if (distToCut < rangeLimit && distToCut < minStepsToCut) {
+                minStepsToCut = distToCut;
+                targetTrailCell = tCell;
+                targetOpponent = other;
+              }
+            }
+          });
+        });
+      }
+
+      // 1. Attack active trail in range
+      if (targetTrailCell) {
+        b.botAiState = 'attacking';
+        let bestDir = null;
+        let minDist = Infinity;
+
+        validDirs.forEach(d => {
+          const nc = b.x + d.vx;
+          const nr = b.y + d.vy;
+          const dist = Math.abs(nc - targetTrailCell.c) + Math.abs(nr - targetTrailCell.r);
+          if (dist < minDist) {
+            minDist = dist;
+            bestDir = d;
+          }
+        });
+
+        if (bestDir) {
+          b.nextVx = bestDir.vx;
+          b.nextVy = bestDir.vy;
+          return;
+        }
+      }
+
+      // 2. Normal State Machine Behaviors
       if (isSafe) {
         b.botAiState = 'explore';
-        // When inside owned territory, just wander around
         const shouldChange = Math.random() < 0.15 || !validDirs.some(d => d.vx === b.vx && d.vy === b.vy);
         if (shouldChange) {
           const next = validDirs[Math.floor(Math.random() * validDirs.length)];
@@ -766,18 +1165,21 @@
           b.nextVy = next.vy;
         }
       } else {
-        // Outside own territory (drawing trail)
+        // Drawing trail outside home
         const trailLen = b.trail.length;
 
-        // If trail is long, try returning home
-        if (trailLen > 12) {
-          b.botAiState = 'returning';
-        } else if (trailLen > 6 && Math.random() < 0.1) {
+        // Custom limits depending on AI brand
+        let returnLimit = 12;
+        if (b.name === 'DeepSeek') returnLimit = 14;
+        if (b.name === 'Claude') returnLimit = 8; // highly defensive
+        if (b.name === 'Siri') returnLimit = 18;  // greedy/erratic
+
+        if (trailLen > returnLimit || (trailLen > 4 && Math.random() < 0.08)) {
           b.botAiState = 'returning';
         }
 
         if (b.botAiState === 'returning') {
-          // Find path home (closest cell we own)
+          // Find path home (closest cell b owns)
           let bestDir = null;
           let minDist = Infinity;
 
@@ -796,7 +1198,7 @@
             b.nextVy = bestDir.vy;
           }
         } else {
-          // Normal explore drawing
+          // Continue exploring
           const shouldChange = Math.random() < 0.1 || !validDirs.some(d => d.vx === b.vx && d.vy === b.vy);
           if (shouldChange) {
             const next = validDirs[Math.floor(Math.random() * validDirs.length)];
@@ -807,49 +1209,57 @@
       }
     }
 
-    // Helper: calculate Manhattan distance to nearest owned cell
-    function getDistanceToTerritory(sc, sr, pid) {
-      let minDist = Infinity;
-      // Scan grid to find nearest owned cell
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          if (grid[c][r].owner === pid) {
-            const dist = Math.abs(c - sc) + Math.abs(r - sr);
-            if (dist < minDist) {
-              minDist = dist;
-            }
-          }
-        }
+    //authoritative Host Physics update
+    function step(dt) {
+      if (gameState !== 'playing' || paused) return;
+
+      // Delayed spawn countdown ticker
+      if (spawnTimer > 0) {
+        spawnTimer -= dt;
+        return;
       }
-      return minDist;
-    }
 
-    // Update Game Logic Step (10 Hz step speed)
-    function step() {
-      if (gameState !== 'playing') return;
-
-      // 1. Update directions and move heads
+      // 1. Move heads
       players.forEach(p => {
         if (p.dead) return;
 
-        // Bots run AI logic
         if (p.isBot) {
           updateBotAI(p);
         }
 
-        // Apply next directions
         p.vx = p.nextVx;
         p.vy = p.nextVy;
 
-        // Calculate next cell position
         let nx = p.x + p.vx;
         let ny = p.y + p.vy;
 
-        // Block boundaries: slide along borders rather than dying
-        if (nx < 0) { nx = 0; p.nextVx = 0; p.nextVy = Math.random() > 0.5 ? 1 : -1; }
-        if (nx >= cols) { nx = cols - 1; p.nextVx = 0; p.nextVy = Math.random() > 0.5 ? 1 : -1; }
-        if (ny < 0) { ny = 0; p.nextVy = 0; p.nextVx = Math.random() > 0.5 ? 1 : -1; }
-        if (ny >= rows) { ny = rows - 1; p.nextVy = 0; p.nextVx = Math.random() > 0.5 ? 1 : -1; }
+        // Bounce/slide along map boundaries (Circle or Rectangle)
+        if (!isCellValid(nx, ny)) {
+          // Try to steer/bounce along adjacent coordinates
+          let foundDir = false;
+          const alternatives = [
+            { vx: -p.vy, vy: p.vx },
+            { vx: p.vy, vy: -p.vx },
+            { vx: -p.vx, vy: -p.vy }
+          ];
+          for (const alt of alternatives) {
+            if (isCellValid(p.x + alt.vx, p.y + alt.vy)) {
+              p.nextVx = alt.vx;
+              p.nextVy = alt.vy;
+              p.vx = alt.vx;
+              p.vy = alt.vy;
+              nx = p.x + alt.vx;
+              ny = p.y + alt.vy;
+              foundDir = true;
+              break;
+            }
+          }
+          if (!foundDir) {
+            // Completely trapped
+            nx = p.x;
+            ny = p.y;
+          }
+        }
 
         p.x = nx;
         p.y = ny;
@@ -859,57 +1269,54 @@
       let deadList = new Set();
       let scoreChange = false;
 
+      // Check trail cutting (independent of territory checks)
       players.forEach(p => {
         if (p.dead) return;
+        players.forEach(other => {
+          if (other.dead || other.id === p.id) return;
+          
+          const hitIndex = other.trail.findIndex(t => t.c === p.x && t.r === p.y);
+          if (hitIndex !== -1) {
+            deadList.add(other);
+            p.kills++;
+            if (p.id === 1) {
+              killsVal.textContent = p.kills;
+            }
+          }
+        });
+      });
+
+      players.forEach(p => {
+        if (p.dead || deadList.has(p)) return;
 
         const cell = grid[p.x][p.y];
 
         if (cell.owner === p.id) {
-          // Inside owned territory
+          // Back inside owned zone
           if (p.trail.length > 0) {
-            // Completed loop! Claim territory
             claimTerritory(p);
             scoreChange = true;
           }
         } else {
-          // Outside owned territory, drawing trail
-          // If stepping on someone else's trail, cut it!
-          players.forEach(other => {
-            if (other.dead) return;
-
-            // Check if head hits other player's trail
-            const hitIndex = other.trail.findIndex(t => t.c === p.x && t.r === p.y);
-            if (hitIndex !== -1) {
-              // Other player dies!
-              deadList.add(other);
-              p.kills++;
-              if (p.id === 1) {
-                killsVal.textContent = p.kills;
-              }
-            }
-          });
-
-          // Check if player stepped on their own trail (suicide)
+          // Outside owned zone, drawing trail
           const hitSelf = p.trail.some(t => t.c === p.x && t.r === p.y);
           if (hitSelf) {
             deadList.add(p);
           } else {
-            // Add current cell to trail
             p.trail.push({ c: p.x, r: p.y });
             cell.trail = p.id;
           }
         }
       });
 
-      // Handle Head-to-Head Collisions
+      // Head to head check
       for (let i = 0; i < players.length; i++) {
         for (let j = i + 1; j < players.length; j++) {
           const p1 = players[i];
           const p2 = players[j];
-          if (p1.dead || p2.dead) continue;
+          if (p1.dead || p2.dead || deadList.has(p1) || deadList.has(p2)) continue;
 
           if (p1.x === p2.x && p1.y === p2.y) {
-            // Head-on collision!
             const p1Safe = grid[p1.x][p1.y].owner === p1.id;
             const p2Safe = grid[p2.x][p2.y].owner === p2.id;
 
@@ -920,15 +1327,13 @@
               deadList.add(p1);
               p2.kills++;
             } else {
-              // Both outside or both inside, compare territory sizes
-              if (p1.score > p2.score) {
+              if (parseFloat(p1.score) > parseFloat(p2.score)) {
                 deadList.add(p2);
                 p1.kills++;
-              } else if (p2.score > p1.score) {
+              } else if (parseFloat(p2.score) > parseFloat(p1.score)) {
                 deadList.add(p1);
                 p2.kills++;
               } else {
-                // Draw, both die
                 deadList.add(p1);
                 deadList.add(p2);
               }
@@ -937,7 +1342,7 @@
         }
       }
 
-      // Apply deaths
+      // Execute deaths
       deadList.forEach(p => {
         handleDeath(p);
         scoreChange = true;
@@ -946,39 +1351,53 @@
       // 3. Recalculate owned percentages
       if (scoreChange || Math.random() < 0.05) {
         let cellCounts = {};
-        players.forEach(p => { cellCounts[p.id] = 0; });
-        let totalCells = cols * rows;
+        let totalValidCells = 0;
 
         for (let c = 0; c < cols; c++) {
           for (let r = 0; r < rows; r++) {
-            const owner = grid[c][r].owner;
-            if (owner !== null && cellCounts[owner] !== undefined) {
-              cellCounts[owner]++;
+            if (!grid[c][r].void) {
+              totalValidCells++;
+              const owner = grid[c][r].owner;
+              if (owner !== null) {
+                cellCounts[owner] = (cellCounts[owner] || 0) + 1;
+              }
             }
           }
         }
 
         players.forEach(p => {
           const count = cellCounts[p.id] || 0;
-          p.score = ((count / totalCells) * 100).toFixed(1);
-          if (p.id === 1) {
-            scoreVal.textContent = `${p.score}%`;
-          }
+          p.score = ((count / totalValidCells) * 100).toFixed(1);
         });
+
+        // Always show the human P1 scoreboard values
+        const human = players[0];
+        if (human) {
+          scoreVal.textContent = `${human.score}%`;
+          killsVal.textContent = human.kills;
+        }
 
         updateLeaderboard();
       }
+
+      // Broadcast changes to Guest in multiplayer
+      if (gameMode === 'multi' && mpRole === 'host') {
+        broadcastState(scoreChange);
+      }
     }
 
+    // Leaderboard Updater
     function updateLeaderboard() {
-      // Sort players by score
       const sorted = [...players].sort((a, b) => b.score - a.score);
       leaderboardList.innerHTML = '';
 
       sorted.forEach((p, index) => {
         if (p.dead) return;
         const row = document.createElement('div');
-        row.className = `leaderboard-row ${p.id === 1 ? 'mine' : ''}`;
+        row.className = `leaderboard-row`;
+        if (p.id === 1) row.style.color = COLORS[0].main;
+        if (p.id === 2 && gameMode !== 'bot') row.style.color = COLORS[1].main;
+        
         row.innerHTML = `
           <span>#${index + 1} ${p.name}</span>
           <span>${p.score}%</span>
@@ -987,53 +1406,75 @@
       });
     }
 
-    // Particle Renderer
+    // Particle updater
     function updateParticles() {
-      particles.forEach((p, index) => {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.life -= p.decay;
         if (p.life <= 0) {
-          particles.splice(index, 1);
+          particles.splice(i, 1);
         }
-      });
+      }
     }
 
-    // Canvas Drawing Loop
+    // Canvas Graphics Loop
     function draw() {
-      // Clear screen
+      // 1. Draw outer background
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, cw, ch);
 
-      // Draw Grid cells
+      // 2. Draw map grid bounds
+      if (mapShapeSel.value === 'circle') {
+        ctx.fillStyle = '#020617';
+        ctx.beginPath();
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const radius = (Math.min(cols, rows) / 2 - 1.5) * cellSize;
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, cw, ch);
+      }
+
+      // 3. Draw Grid Owned/Trails
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
           const cell = grid[c][r];
+          if (cell.void) continue;
 
-          // 1. Draw Owned Territories
+          // Owned Territories
           if (cell.owner !== null) {
             const owner = players.find(p => p.id === cell.owner);
             if (owner && !owner.dead) {
               ctx.fillStyle = owner.color;
-              ctx.globalAlpha = 0.3; // Transparency for territory
-              ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+              ctx.globalAlpha = 0.28;
+              
+              // Draw rounded rect cells for smooth styling
+              ctx.fillRect(c * cellSize + 0.5, r * cellSize + 0.5, cellSize - 1, cellSize - 1);
               ctx.globalAlpha = 1.0;
             }
           }
 
-          // 2. Draw active trails
-          if (cell.trail !== null) {
-            const owner = players.find(p => p.id === cell.trail);
-            if (owner && !owner.dead) {
-              ctx.fillStyle = owner.trailColor;
-              ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-            }
-          }
+      // 4. Draw Active Trails directly from player coordinates
+      players.forEach(p => {
+        if (p.dead) return;
+        ctx.fillStyle = p.trailColor;
+        p.trail.forEach(t => {
+          ctx.fillRect(t.c * cellSize + 0.5, t.r * cellSize + 0.5, cellSize - 1, cellSize - 1);
+        });
+      });
         }
       }
 
-      // Draw grid lines (subtle dark grid)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      // Subtle grid line overlays
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.01)';
       ctx.lineWidth = 0.5;
       for (let c = 0; c <= cols; c++) {
         ctx.beginPath();
@@ -1048,50 +1489,215 @@
         ctx.stroke();
       }
 
-      // 3. Draw Player Heads
+      // 4. Draw Heads, Eyes & Nametags
       players.forEach(p => {
         if (p.dead) return;
 
+        // Head
         ctx.fillStyle = p.headColor;
-        ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+        
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = p.color;
+        
+        ctx.beginPath();
+        // Rounded heads
+        ctx.roundRect(p.x * cellSize + 0.5, p.y * cellSize + 0.5, cellSize - 1, cellSize - 1, 3);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
 
-        // Draw simple eyes on heads to make them look alive
+        // Eyes
         ctx.fillStyle = '#000000';
-        if (p.vx === 1) { // moving right
-          ctx.fillRect(p.x * cellSize + 7, p.y * cellSize + 2, 2, 2);
-          ctx.fillRect(p.x * cellSize + 7, p.y * cellSize + 6, 2, 2);
-        } else if (p.vx === -1) { // moving left
-          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + 2, 2, 2);
-          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + 6, 2, 2);
-        } else if (p.vy === 1) { // moving down
-          ctx.fillRect(p.x * cellSize + 2, p.y * cellSize + 7, 2, 2);
-          ctx.fillRect(p.x * cellSize + 6, p.y * cellSize + 7, 2, 2);
-        } else if (p.vy === -1) { // moving up
-          ctx.fillRect(p.x * cellSize + 2, p.y * cellSize + 1, 2, 2);
-          ctx.fillRect(p.x * cellSize + 6, p.y * cellSize + 1, 2, 2);
+        const eyeSize = Math.max(1.5, cellSize * 0.15);
+        const eyeOffset = cellSize * 0.2;
+        
+        if (p.vx === 1) {
+          ctx.fillRect(p.x * cellSize + cellSize - eyeSize - 1, p.y * cellSize + eyeOffset, eyeSize, eyeSize);
+          ctx.fillRect(p.x * cellSize + cellSize - eyeSize - 1, p.y * cellSize + cellSize - eyeSize - eyeOffset, eyeSize, eyeSize);
+        } else if (p.vx === -1) {
+          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + eyeOffset, eyeSize, eyeSize);
+          ctx.fillRect(p.x * cellSize + 1, p.y * cellSize + cellSize - eyeSize - eyeOffset, eyeSize, eyeSize);
+        } else if (p.vy === 1) {
+          ctx.fillRect(p.x * cellSize + eyeOffset, p.y * cellSize + cellSize - eyeSize - 1, eyeSize, eyeSize);
+          ctx.fillRect(p.x * cellSize + cellSize - eyeSize - eyeOffset, p.y * cellSize + cellSize - eyeSize - 1, eyeSize, eyeSize);
+        } else if (p.vy === -1) {
+          ctx.fillRect(p.x * cellSize + eyeOffset, p.y * cellSize + 1, eyeSize, eyeSize);
+          ctx.fillRect(p.x * cellSize + cellSize - eyeSize - eyeOffset, p.y * cellSize + 1, eyeSize, eyeSize);
         }
+
+        // Small Nametag
+        ctx.font = '700 9px Fredoka';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.fillText(p.name, p.x * cellSize + cellSize/2, p.y * cellSize - 4);
       });
 
-      // 4. Draw Death Particles
+      // 5. Draw Death Particles
       particles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.life;
         ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
       });
       ctx.globalAlpha = 1.0;
+
+      // 6. Draw Countdown overlay
+      if (gameState === 'playing' && spawnTimer > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(0, 0, cw, ch);
+        
+        ctx.font = '800 64px Fredoka';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const countSeconds = Math.ceil(spawnTimer / 1000);
+        ctx.fillText(countSeconds > 0 ? countSeconds : 'GO!', cw / 2, ch / 2);
+        ctx.textBaseline = 'alphabetic';
+      }
     }
 
-    // Timing Variables (Separate game physics rate from rendering frame rate)
-    let lastStepTime = 0;
-    const stepInterval = 100; // 10 steps per second (100ms)
+    // WebRTC Authoritative state sync
+    function broadcastState(forceGrid = false) {
+      if (gameMode !== 'multi' || mpRole !== 'host') return;
+
+      const hostData = {
+        players: players.map(p => ({
+          id: p.id,
+          name: p.name,
+          color: p.color,
+          trailColor: p.trailColor,
+          headColor: p.headColor,
+          x: p.x,
+          y: p.y,
+          vx: p.vx,
+          vy: p.vy,
+          trail: p.trail,
+          dead: p.dead,
+          score: p.score,
+          kills: p.kills
+        })),
+        gameState: gameState,
+        paused: paused,
+        spawnTimer: spawnTimer,
+        particles: particles.map(p => ({
+          x: p.x, y: p.y, vx: p.vx, vy: p.vy, size: p.size, color: p.color, life: p.life, decay: p.decay
+        }))
+      };
+
+      if (forceGrid) {
+        // Compress grid owners to 2D array
+        const compressedGrid = grid.map(col => col.map(cell => cell.owner !== null ? cell.owner : 0));
+        hostData.grid = compressedGrid;
+      }
+
+      gameMP.send('move', {
+        game: 'paper-io',
+        data: hostData
+      });
+    }
+
+    // Multiplayer Event Receivers (Guest processes incoming Host ticks)
+    let onMoveHandler, onSteerHandler, onPauseHandler, onRestartHandler;
+    
+    function setupMultiplayerEvents() {
+      if (mpRole === 'guest') {
+        onMoveHandler = ({ game, data }) => {
+          if (game !== 'paper-io') return;
+
+          // Sync game states
+          gameState = data.gameState;
+          paused = data.paused;
+          spawnTimer = data.spawnTimer;
+
+          // Re-instantiate players
+          players = data.players.map(p => ({
+            ...p,
+            isBot: p.id > 2 // Bots are ID 3+
+          }));
+
+          // Sync scoreboard
+          const guestP = players[1]; // Guest is Player 2
+          if (guestP) {
+            scoreVal.textContent = `${guestP.score}%`;
+            killsVal.textContent = guestP.kills;
+          }
+          updateLeaderboard();
+          updateOverlay();
+
+          // Sync particles
+          particles = data.particles || [];
+
+          // Sync grid (if sent on change)
+          if (data.grid) {
+            const compressed = data.grid;
+            for (let c = 0; c < cols; c++) {
+              for (let r = 0; r < rows; r++) {
+                grid[c][r].owner = compressed[c][r] === 0 ? null : compressed[c][r];
+              }
+            }
+          }
+        };
+        gameMP.on('move', onMoveHandler);
+      }
+
+      if (mpRole === 'host') {
+        // Receive steering commands from guest
+        onSteerHandler = (data) => {
+          const guestP = players[1];
+          if (guestP && !guestP.dead) {
+            guestP.nextVx = data.vx;
+            guestP.nextVy = data.vy;
+          }
+        };
+        gameMP.on('steer', onSteerHandler);
+      }
+
+      onPauseHandler = (data) => {
+        if (mpRole === 'guest') {
+          paused = data.paused;
+          pauseBtn.textContent = paused ? '▶' : 'II';
+          updateOverlay();
+        }
+      };
+      gameMP.on('pause_change', onPauseHandler);
+
+      onRestartHandler = (data) => {
+        if (data && data.game === 'paper-io' && mpRole === 'guest') {
+          mapSizeSel.value = data.mapSize;
+          mapShapeSel.value = data.mapShape;
+          botsToggle.checked = data.enableBots;
+          loadSettingsFromDOM();
+          restartGame();
+        }
+      };
+      gameMP.on('restart_game', onRestartHandler);
+    }
+
+    // Clean up WebRTC listeners
+    window.addEventListener('unload', () => {
+      if (gameMode === 'multi' && gameMP) {
+        if (onMoveHandler) gameMP.off('move', onMoveHandler);
+        if (onSteerHandler) gameMP.off('steer', onSteerHandler);
+        if (onPauseHandler) gameMP.off('pause_change', onPauseHandler);
+        if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
+      }
+    });
+
+    // Main Loop delta tracking
+    let lastTime = performance.now();
+    let physicsAccumulator = 0;
+    const physicsStep = 100; // 10 Hz physics step
 
     function loop(timestamp) {
-      if (!lastStepTime) lastStepTime = timestamp;
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
 
-      // Update game physics at 10 Hz
-      if (gameState === 'playing' && timestamp - lastStepTime >= stepInterval) {
-        step();
-        lastStepTime = timestamp;
+      if (gameState === 'playing' && !paused) {
+        physicsAccumulator += dt;
+        while (physicsAccumulator >= physicsStep) {
+          step(physicsStep);
+          physicsAccumulator -= physicsStep;
+        }
       }
 
       updateParticles();
@@ -1100,13 +1706,17 @@
       requestAnimationFrame(loop);
     }
 
-    // Start Button Overlay Click
     overlayBtn.addEventListener('click', () => {
       initAudio();
-      restartGame();
+      triggerRestart(true);
     });
 
-    // Initialize Menu
+    // Trigger Mode Options
+    mapSizeSel.addEventListener('change', () => triggerRestart(true));
+    mapShapeSel.addEventListener('change', () => triggerRestart(true));
+    botsToggle.addEventListener('change', () => triggerRestart(true));
+
+    initMode();
     initGrid();
     overlay.classList.add('visible');
     requestAnimationFrame(loop);
