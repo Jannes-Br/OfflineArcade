@@ -593,9 +593,9 @@
     // Grid Dimensions
     const cw = 800;
     const ch = 500;
-    let cols = 80;
-    let rows = 50;
-    let cellSize = 10;
+    let cols = 81;
+    let rows = 51;
+    let cellSize = cw / cols;
 
     // ── Retina/High-DPI Canvas Resizing ──
     function resizeCanvas() {
@@ -670,9 +670,9 @@
     
     // Size settings map
     const SIZES = {
-      small: { cols: 40, rows: 25 },
-      medium: { cols: 60, rows: 38 },
-      large: { cols: 80, rows: 50 }
+      small: { cols: 41, rows: 27 },
+      medium: { cols: 61, rows: 39 },
+      large: { cols: 81, rows: 51 }
     };
 
     // Color definitions representing famous AIs
@@ -778,15 +778,22 @@
     function isCellValid(c, r) {
       if (c < 0 || c >= cols || r < 0 || r >= rows) return false;
       if (mapShapeSel.value === 'circle') {
-        const cx = cols / 2;
-        const cy = rows / 2;
-        const rad = Math.min(cols, rows) / 2 - 1.5;
+        const cx = (cols - 1) / 2;
+        const cy = (rows - 1) / 2;
+        const rad = Math.min(cols, rows) / 2 - 0.5;
         return Math.hypot(c - cx, r - cy) <= rad;
       }
       if (mapShapeSel.value === 'triangle') {
-        const cx = cols / 2;
-        const halfWidthAtRow = (r / rows) * (cols / 2);
-        return Math.abs(c - cx) <= halfWidthAtRow;
+        const B = mapSizeSel.value === 'small' ? 1 : (mapSizeSel.value === 'medium' ? 2 : 3);
+        const cx = (cols - 1) / 2;
+        const rStart = B;
+        const rEnd = rows - 1 - B;
+        if (r < rStart || r > rEnd) return false;
+        
+        const halfWidthMax = (cols - 1) / 2 - B;
+        const t = (r - rStart) / (rEnd - rStart);
+        const halfWidth = t * halfWidthMax;
+        return Math.abs(c - cx) <= halfWidth;
       }
       return true;
     }
@@ -935,6 +942,16 @@
 
     // Input Steering listeners
     window.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        if (gameState === 'hold' || gameState === 'gameover') {
+          triggerRestart(true);
+        } else if (gameState === 'playing') {
+          togglePause(true);
+        }
+        return;
+      }
+
       if (gameState !== 'playing' || paused || spawnTimer > 0) return;
 
       // Player 1 controls (WASD & Arrow Keys if not in local 2-Player solo mode)
@@ -1114,8 +1131,9 @@
         }
       }
 
-      // 2. BFS from edges (shape-agnostic)
+      // 2. Find boundary candidates and seed from the single furthest cell from center of mass
       let queue = [];
+      let boundaryCandidates = [];
       for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
           if (visited[c][r]) continue;
@@ -1133,10 +1151,34 @@
           }
           
           if (isEdge || hasVoidNeighbor) {
-            visited[c][r] = true;
-            queue.push({ c: c, r: r });
+            boundaryCandidates.push({ c: c, r: r });
           }
         }
+      }
+
+      // Calculate center of mass of player's owned cells
+      let sumC = 0, sumR = 0, count = 0;
+      player.ownedCells.forEach(cell => {
+        sumC += cell.c;
+        sumR += cell.r;
+        count++;
+      });
+      const avgC = count > 0 ? sumC / count : (cols - 1) / 2;
+      const avgR = count > 0 ? sumR / count : (rows - 1) / 2;
+
+      // Seed the flood fill with the single furthest boundary candidate
+      if (boundaryCandidates.length > 0) {
+        let bestCandidate = boundaryCandidates[0];
+        let maxDist = -1;
+        boundaryCandidates.forEach(cand => {
+          const dist = Math.hypot(cand.c - avgC, cand.r - avgR);
+          if (dist > maxDist) {
+            maxDist = dist;
+            bestCandidate = cand;
+          }
+        });
+        visited[bestCandidate.c][bestCandidate.r] = true;
+        queue.push(bestCandidate);
       }
 
       let head = 0;
@@ -1279,15 +1321,15 @@
       }
 
       if (gameState === 'gameover') {
-        overlayTitle.textContent = 'Game Over';
-        
+        let isVictory = false;
         let text = '';
         if (gameMode === 'bot') {
           const human = players[0];
           if (human.dead) {
             text = `Game Over!\nYou captured ${human.score}% of the board with ${human.kills} kills.`;
           } else {
-            text = `Victory! You are the last survivor!\nYou captured ${human.score}% of the board with ${human.kills} kills.`;
+            isVictory = true;
+            text = `You are the last survivor!\nYou captured ${human.score}% of the board with ${human.kills} kills.`;
           }
           
           // Save highscore
@@ -1312,10 +1354,13 @@
               text += `It's a draw! Both got ${p1.score}%.`;
             }
           } else if (!p1.dead && p2.dead) {
-            text = `Victory! ${p1.name} wins as the last survivor!\nScore: ${p1.score}% (Kills: ${p1.kills})`;
+            isVictory = true;
+            text = `${p1.name} wins as the last survivor!\nScore: ${p1.score}% (Kills: ${p1.kills})`;
           } else if (!p2.dead && p1.dead) {
-            text = `Victory! ${p2.name} wins as the last survivor!\nScore: ${p2.score}% (Kills: ${p2.kills})`;
+            isVictory = true;
+            text = `${p2.name} wins as the last survivor!\nScore: ${p2.score}% (Kills: ${p2.kills})`;
           } else {
+            isVictory = true;
             const score1 = parseFloat(p1.score);
             const score2 = parseFloat(p2.score);
             if (score1 > score2) {
@@ -1325,6 +1370,8 @@
             }
           }
         }
+
+        overlayTitle.textContent = isVictory ? 'Victory!' : 'Game Over';
 
         overlaySub.textContent = text;
         
@@ -1358,11 +1405,118 @@
       return minDist;
     }
 
+    function getBotConfig(name) {
+      if (name === 'Claude') {
+        return { range: 10, maxTrail: 6, wanderChance: 0.03 };
+      } else if (name === 'DeepSeek') {
+        return { range: 25, maxTrail: 18, wanderChance: 0.10 };
+      } else { // ChatGPT, Gemini, Alexa, Siri
+        return { range: 15, maxTrail: 12, wanderChance: 0.06 };
+      }
+    }
+
+    // Pathfinding helper: find step direction to target
+    function findPathToTarget(startX, startY, targetX, targetY, botId) {
+      if (startX === targetX && startY === targetY) return null;
+      let queue = [{ x: startX, y: startY, path: [] }];
+      let visited = new Set();
+      visited.add(`${startX},${startY}`);
+      
+      let head = 0;
+      const dirs = [
+        { vx: 1, vy: 0 },
+        { vx: -1, vy: 0 },
+        { vx: 0, vy: 1 },
+        { vx: 0, vy: -1 }
+      ];
+      
+      while (head < queue.length && head < 800) {
+        const curr = queue[head++];
+        if (curr.x === targetX && curr.y === targetY) {
+          return curr.path[0];
+        }
+        
+        for (const d of dirs) {
+          const nx = curr.x + d.vx;
+          const ny = curr.y + d.vy;
+          const key = `${nx},${ny}`;
+          
+          if (!visited.has(key) && isCellValid(nx, ny)) {
+            if (grid[nx][ny].trail !== botId) {
+              // Avoid head collision if we are outside and they are in territory
+              const headCollision = players.some(other => {
+                if (other.dead || other.id === botId) return false;
+                if (other.x === nx && other.y === ny) {
+                  return grid[nx][ny].owner !== botId;
+                }
+                return false;
+              });
+              if (!headCollision) {
+                visited.add(key);
+                queue.push({
+                  x: nx,
+                  y: ny,
+                  path: curr.path.concat([d])
+                });
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // Pathfinding helper: find step direction to home
+    function findPathHome(startX, startY, botId) {
+      let queue = [{ x: startX, y: startY, path: [] }];
+      let visited = new Set();
+      visited.add(`${startX},${startY}`);
+      
+      let head = 0;
+      const dirs = [
+        { vx: 1, vy: 0 },
+        { vx: -1, vy: 0 },
+        { vx: 0, vy: 1 },
+        { vx: 0, vy: -1 }
+      ];
+      
+      while (head < queue.length && head < 800) {
+        const curr = queue[head++];
+        if (grid[curr.x][curr.y].owner === botId) {
+          return curr.path[0];
+        }
+        
+        for (const d of dirs) {
+          const nx = curr.x + d.vx;
+          const ny = curr.y + d.vy;
+          const key = `${nx},${ny}`;
+          
+          if (!visited.has(key) && isCellValid(nx, ny)) {
+            if (grid[nx][ny].trail !== botId) {
+              visited.add(key);
+              queue.push({
+                x: nx,
+                y: ny,
+                path: curr.path.concat([d])
+              });
+            }
+          }
+        }
+      }
+      return null;
+    }
+
     // Unbeatable Smart AI Bot Pathfinding & Collision Interception
     function updateBotAI(b) {
-      b.botTimer++;
-      const isSafe = grid[b.x][b.y].owner === b.id;
+      b.botTimer = (b.botTimer || 0) + 1;
+      
+      // Initialize states if not present
+      if (!b.aiState) b.aiState = 'inside';
+      if (b.planPhase === undefined) b.planPhase = 0;
+      if (b.planSteps === undefined) b.planSteps = 0;
 
+      const conf = getBotConfig(b.name);
+      
       // 4 neighboring directions
       const dirs = [
         { vx: 1, vy: 0 },
@@ -1371,14 +1525,14 @@
         { vx: 0, vy: -1 }
       ];
 
-      // 1. Filter safe directions (no boundaries hit, no own trail hit, no immediate head collisions)
+      // Safe directions (no boundaries hit, no own trail hit, no immediate head collisions)
       const validDirs = dirs.filter(d => {
         const nc = b.x + d.vx;
         const nr = b.y + d.vy;
         if (!isCellValid(nc, nr)) return false;
         if (grid[nc][nr].trail === b.id) return false;
 
-        // Head collision look-ahead
+        // Head collision look-ahead outside own territory
         const headCollide = players.some(other => {
           if (other.dead || other.id === b.id) return false;
           const dist = Math.abs(other.x - nc) + Math.abs(other.y - nr);
@@ -1391,35 +1545,59 @@
 
       if (validDirs.length === 0) return; // Trapped
 
-      // Initialize state variables if not present
-      if (!b.aiState) b.aiState = 'inside';
-      if (b.planPhase === undefined) b.planPhase = 0;
-      if (b.planSteps === undefined) b.planSteps = 0;
-
-      // 2. Threat detection
+      // Threat detection: is any opponent within 5 cells of any cell of our trail?
       let threatDetected = false;
-      let nearestThreatDist = Infinity;
       if (b.trail.length > 0) {
         players.forEach(other => {
           if (other.dead || other.id === b.id) return;
           b.trail.forEach(tCell => {
-            const distToTrail = Math.abs(tCell.c - other.x) + Math.abs(tCell.r - other.y);
-            if (distToTrail < nearestThreatDist) {
-              nearestThreatDist = distToTrail;
+            const dist = Math.abs(tCell.c - other.x) + Math.abs(tCell.r - other.y);
+            if (dist < 5) {
+              threatDetected = true;
             }
           });
         });
-        if (nearestThreatDist < 8) {
-          threatDetected = true;
+      }
+
+      // Check if we should retire home due to trail length or threat
+      if (b.aiState !== 'inside') {
+        if (threatDetected || b.trail.length >= conf.maxTrail) {
+          b.aiState = 'returning';
         }
       }
 
-      // AI Decision logic
+      // Scan for nearest opponent trail cell in range
+      let targetTrailCell = null;
+      let minTrailDist = Infinity;
+      if (b.aiState !== 'returning') {
+        players.forEach(other => {
+          if (other.dead || other.id === b.id) return;
+          other.trail.forEach(tCell => {
+            const dist = Math.abs(tCell.c - b.x) + Math.abs(tCell.r - b.y);
+            if (dist < minTrailDist) {
+              minTrailDist = dist;
+              targetTrailCell = tCell;
+            }
+          });
+        });
+        
+        if (targetTrailCell && minTrailDist <= conf.range) {
+          b.aiState = 'hunting';
+        } else if (b.aiState === 'hunting') {
+          // Lost target, go back to returning or expanding
+          b.aiState = 'returning';
+        }
+      }
+
+      // Execute state logic
       if (b.aiState === 'inside') {
         // Wandering inside territory
-        // 8% chance to start an expansion loop
-        if (Math.random() < 0.08 && validDirs.length > 0) {
-          // Choose a direction that goes OUT of territory
+        // Check if there is an opponent trail to hunt
+        if (targetTrailCell && minTrailDist <= conf.range) {
+          b.aiState = 'hunting';
+        } else if (Math.random() < 0.05 && validDirs.length > 0) {
+          // 5% chance to start an expansion loop
+          // Choose a direction that leaves territory, or any valid direction
           const outDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
           const chosenDir = outDirs.length > 0 ? outDirs[Math.floor(Math.random() * outDirs.length)] : validDirs[Math.floor(Math.random() * validDirs.length)];
           
@@ -1429,95 +1607,40 @@
           b.planVy = chosenDir.vy;
           b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
           
-          // Personality sizes
-          if (b.name === 'Claude') { // Defensive
-            b.planS1 = Math.floor(Math.random() * 2) + 2; // 2-3 steps
+          if (b.name === 'Claude') {
+            b.planS1 = Math.floor(Math.random() * 2) + 2; // 2-3
             b.planS2 = Math.floor(Math.random() * 2) + 2;
-          } else if (b.name === 'DeepSeek') { // Hunter / aggressive
-            b.planS1 = Math.floor(Math.random() * 4) + 6; // 6-9 steps
+          } else if (b.name === 'DeepSeek') {
+            b.planS1 = Math.floor(Math.random() * 4) + 6; // 6-9
             b.planS2 = Math.floor(Math.random() * 4) + 6;
-          } else { // Gemini, Alexa, ChatGPT, Siri
-            b.planS1 = Math.floor(Math.random() * 3) + 4; // 4-6 steps
+          } else {
+            b.planS1 = Math.floor(Math.random() * 3) + 4; // 4-6
             b.planS2 = Math.floor(Math.random() * 3) + 4;
           }
           b.planSteps = b.planS1;
         } else {
-          // Keep wandering inside territory safely
-          const safeWanderDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner === b.id);
-          const wanderDir = safeWanderDirs.length > 0 ? safeWanderDirs[Math.floor(Math.random() * safeWanderDirs.length)] : validDirs[Math.floor(Math.random() * validDirs.length)];
-          b.nextVx = wanderDir.vx;
-          b.nextVy = wanderDir.vy;
+          // Continue in straight line if safe and inside owned territory
+          const hasCurrentDir = b.vx !== 0 || b.vy !== 0;
+          const currentDirSafeAndInside = hasCurrentDir && validDirs.some(d => d.vx === b.vx && d.vy === b.vy) && grid[b.x + b.vx][b.y + b.vy].owner === b.id;
+          
+          if (currentDirSafeAndInside && Math.random() > conf.wanderChance) {
+            b.nextVx = b.vx;
+            b.nextVy = b.vy;
+          } else {
+            // Pick a new safe direction that stays inside owned territory
+            const insideDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner === b.id);
+            const chosenDir = insideDirs.length > 0 ? insideDirs[Math.floor(Math.random() * insideDirs.length)] : validDirs[Math.floor(Math.random() * validDirs.length)];
+            b.nextVx = chosenDir.vx;
+            b.nextVy = chosenDir.vy;
+          }
           return;
         }
       }
 
-      // If expanding, update plan
       if (b.aiState === 'expanding') {
-        if (threatDetected) {
-          // Abort and go home immediately
-          b.planPhase = 2;
-          b.planSteps = 999;
-        }
-
-        // Instant kill opportunity
-        let killDir = null;
-        for (const d of validDirs) {
-          const nx = b.x + d.vx;
-          const ny = b.y + d.vy;
-          const cellTrail = grid[nx][ny].trail;
-          if (cellTrail !== null && cellTrail !== b.id) {
-            const victim = players.find(o => o.id === cellTrail);
-            if (victim && !victim.dead) {
-              killDir = d;
-              break;
-            }
-          }
-        }
-
-        if (killDir) {
-          b.nextVx = killDir.vx;
-          b.nextVy = killDir.vy;
-          return;
-        }
-
-        // Hunt opponent trails if close by (DeepSeek and Alexa are trackers)
-        if ((b.name === 'DeepSeek' || b.name === 'Alexa') && b.planPhase !== 2) {
-          let targetTrailCell = null;
-          let minStepsToCut = Infinity;
-          players.forEach(other => {
-            if (other.dead || other.id === b.id) return;
-            other.trail.forEach(tCell => {
-              const dist = Math.abs(tCell.c - b.x) + Math.abs(tCell.r - b.y);
-              if (dist < minStepsToCut) {
-                minStepsToCut = dist;
-                targetTrailCell = tCell;
-              }
-            });
-          });
-          
-          if (targetTrailCell && minStepsToCut < 10) {
-            // Divert plan to hunt trail
-            let bestHuntDir = null;
-            let minHuntDist = Infinity;
-            validDirs.forEach(d => {
-              const nx = b.x + d.vx;
-              const ny = b.y + d.vy;
-              const dist = Math.abs(nx - targetTrailCell.c) + Math.abs(ny - targetTrailCell.r);
-              if (dist < minHuntDist) {
-                minHuntDist = dist;
-                bestHuntDir = d;
-              }
-            });
-            if (bestHuntDir) {
-              b.nextVx = bestHuntDir.vx;
-              b.nextVy = bestHuntDir.vy;
-              return;
-            }
-          }
-        }
-
-        // Standard plan progression
-        if (b.planSteps <= 0) {
+        // Look ahead for walls/boundaries
+        const wallAhead = !isCellValid(b.x + b.planVx * 2, b.y + b.planVy * 2);
+        if (b.planSteps <= 0 || wallAhead) {
           if (b.planPhase === 0) {
             // Turn 90 degrees
             const vx = b.planVx;
@@ -1531,69 +1654,71 @@
             }
             b.planPhase = 1;
             b.planSteps = b.planS2;
-          } else if (b.planPhase === 1) {
-            // Turn 90 degrees again to head home
-            const vx = b.planVx;
-            const vy = b.planVy;
-            if (b.planTurnDir === 'left') {
-              b.planVx = vy;
-              b.planVy = -vx;
-            } else {
-              b.planVx = -vy;
-              b.planVy = vx;
-            }
-            b.planPhase = 2;
-            b.planSteps = 999;
+          } else {
+            // Switch to returning
+            b.aiState = 'returning';
           }
         }
-
+        
         b.planSteps--;
-
-        // Determine next move based on current plan phase
-        let chosenDir = null;
-        if (b.planPhase === 2) {
-          // Pathfind home
-          let minHomeDist = Infinity;
-          validDirs.forEach(d => {
-            const nx = b.x + d.vx;
-            const ny = b.y + d.vy;
-            const dist = getDistanceToTerritory(nx, ny, b.id);
-            if (dist < minHomeDist) {
-              minHomeDist = dist;
-              chosenDir = d;
-            }
-          });
-        } else {
-          // Try to follow planned direction
-          chosenDir = validDirs.find(d => d.vx === b.planVx && d.vy === b.planVy);
-        }
-
-        // Avoid walls/boundaries lookahead for all shapes (Circle, Triangle, Rectangle)
-        if (chosenDir) {
-          const nx = b.x + chosenDir.vx;
-          const ny = b.y + chosenDir.vy;
-          if (!isCellValid(nx + chosenDir.vx, ny + chosenDir.vy) || !isCellValid(nx + chosenDir.vx * 2, ny + chosenDir.vy * 2)) {
-            chosenDir = null; // Abort and find another direction
-          }
-        }
-
-        // Fallback: if planned direction is unsafe or blocked, choose the safest available direction
-        if (!chosenDir) {
-          let minHomeDist = Infinity;
-          validDirs.forEach(d => {
-            const nx = b.x + d.vx;
-            const ny = b.y + d.vy;
-            const dist = getDistanceToTerritory(nx, ny, b.id);
-            if (dist < minHomeDist) {
-              minHomeDist = dist;
-              chosenDir = d;
-            }
-          });
-        }
-
+        
+        // Find direction matching plan
+        const chosenDir = validDirs.find(d => d.vx === b.planVx && d.vy === b.planVy);
         if (chosenDir) {
           b.nextVx = chosenDir.vx;
           b.nextVy = chosenDir.vy;
+        } else {
+          // Plan blocked, go home
+          b.aiState = 'returning';
+        }
+      }
+
+      if (b.aiState === 'hunting' && targetTrailCell) {
+        const pathStep = findPathToTarget(b.x, b.y, targetTrailCell.c, targetTrailCell.r, b.id);
+        if (pathStep) {
+          b.nextVx = pathStep.vx;
+          b.nextVy = pathStep.vy;
+        } else {
+          // No path to target, fallback to returning
+          b.aiState = 'returning';
+        }
+      }
+
+      if (b.aiState === 'returning') {
+        const pathStep = findPathHome(b.x, b.y, b.id);
+        if (pathStep) {
+          b.nextVx = pathStep.vx;
+          b.nextVy = pathStep.vy;
+        } else {
+          // Stuck or no path home, find any valid direction that gets closer to home
+          let targetX = (cols - 1) / 2;
+          let targetY = (rows - 1) / 2;
+          let minHomeDist = Infinity;
+          const owner = players.find(p => p.id === b.id);
+          if (owner) {
+            owner.ownedCells.forEach(cell => {
+              const dist = Math.abs(cell.c - b.x) + Math.abs(cell.r - b.y);
+              if (dist < minHomeDist) {
+                minHomeDist = dist;
+                targetX = cell.c;
+                targetY = cell.r;
+              }
+            });
+          }
+          
+          let bestDir = validDirs[0];
+          let minDist = Infinity;
+          validDirs.forEach(d => {
+            const dist = Math.hypot(b.x + d.vx - targetX, b.y + d.vy - targetY);
+            if (dist < minDist) {
+              minDist = dist;
+              bestDir = d;
+            }
+          });
+          if (bestDir) {
+            b.nextVx = bestDir.vx;
+            b.nextVy = bestDir.vy;
+          }
         }
       }
     }
