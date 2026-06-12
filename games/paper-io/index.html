@@ -604,11 +604,11 @@
     // Grid Dimensions
     const cw = 800;
     const ch = 500;
-    const padX = 0;
-    const padY = 0;
+    const padX = 24;
+    const padY = 15;
     let cols = 80;
     let rows = 50;
-    let cellSize = cw / cols;
+    let cellSize = (cw - 2 * padX) / cols;
 
     // ── Retina/High-DPI Canvas Resizing ──
     function resizeCanvas() {
@@ -787,7 +787,7 @@
       const sizeKey = mapSizeSel.value;
       cols = SIZES[sizeKey].cols;
       rows = SIZES[sizeKey].rows;
-      cellSize = cw / cols;
+      cellSize = (cw - 2 * padX) / cols;
     }
 
     // Grid Boundary Validation
@@ -1134,83 +1134,7 @@
       }
     }
 
-    // Helper to detect if a player's head is completely surrounded/encircled by pid's blocks
-    function isPlayerSurrounded(other, pid) {
-      if (other.dead) return false;
-      
-      // 1. Gather all free cells (playable cells not owned by pid and not in pid's trail)
-      const freeSet = new Set();
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          if (!grid[c][r].void && grid[c][r].owner !== pid && grid[c][r].trail !== pid) {
-            freeSet.add(`${c},${r}`);
-          }
-        }
-      }
-      
-      const victimKey = `${other.x},${other.y}`;
-      if (!freeSet.has(victimKey)) return true;
-      
-      // 2. Find the component containing the victim's head
-      const victimComponent = new Set();
-      const queue = [{ c: other.x, r: other.y }];
-      victimComponent.add(victimKey);
-      
-      let head = 0;
-      const dirs = [
-        { vx: 1, vy: 0 }, { vx: -1, vy: 0 }, { vx: 0, vy: 1 }, { vx: 0, vy: -1 }
-      ];
-      
-      while (head < queue.length) {
-        const curr = queue[head++];
-        for (const d of dirs) {
-          const nc = curr.c + d.vx;
-          const nr = curr.r + d.vy;
-          const key = `${nc},${nr}`;
-          if (freeSet.has(key) && !victimComponent.has(key)) {
-            victimComponent.add(key);
-            queue.push({ c: nc, r: nr });
-          }
-        }
-      }
-      
-      // 3. Find the size of the largest component of free cells
-      const unvisitedFree = new Set(freeSet);
-      let maxComponentSize = 0;
-      
-      while (unvisitedFree.size > 0) {
-        const startKey = unvisitedFree.values().next().value;
-        const [sc, sr] = startKey.split(',').map(Number);
-        
-        const comp = new Set();
-        const compQueue = [{ c: sc, r: sr }];
-        comp.add(startKey);
-        unvisitedFree.delete(startKey);
-        
-        let cHead = 0;
-        while (cHead < compQueue.length) {
-          const curr = compQueue[cHead++];
-          for (const d of dirs) {
-            const nc = curr.c + d.vx;
-            const nr = curr.r + d.vy;
-            const key = `${nc},${nr}`;
-            if (unvisitedFree.has(key)) {
-              comp.add(key);
-              unvisitedFree.delete(key);
-              compQueue.push({ c: nc, r: nr });
-            }
-          }
-        }
-        
-        if (comp.size > maxComponentSize) {
-          maxComponentSize = comp.size;
-        }
-      }
-      
-      // If the victim's component is smaller than the largest component of free cells,
-      // they are surrounded!
-      return victimComponent.size < maxComponentSize;
-    }
+
 
     // BFS Flood-fill area claiming
     function claimTerritory(player) {
@@ -1353,14 +1277,7 @@
         }
       }
 
-      // 4. Surround Check: Check if any other player is fully encircled by pid's blocks
-      players.forEach(other => {
-        if (!other.dead && other.id !== pid) {
-          if (isPlayerSurrounded(other, pid)) {
-            playersToKill.add(other);
-          }
-        }
-      });
+
 
       player.trail = [];
       if (player.isBot) {
@@ -1553,20 +1470,22 @@
     }
 
     function getBotConfig(name) {
-      if (name === 'Claude') { // Defensive, small square loops
-        return { range: 10, maxTrail: 6, wanderChance: 0.02, risk: 'low', shape: 'square' };
-      } else if (name === 'DeepSeek') { // Ultra aggressive, hunter, long rectangular loops
-        return { range: 25, maxTrail: 20, wanderChance: 0.12, risk: 'high', shape: 'long-rect' };
-      } else if (name === 'Gemini') { // Balanced, adaptive, circular/rounded loop plans
-        return { range: 16, maxTrail: 12, wanderChance: 0.06, risk: 'medium-high', shape: 'circle' };
-      } else if (name === 'ChatGPT') { // Standard balanced loops
-        return { range: 14, maxTrail: 10, wanderChance: 0.05, risk: 'medium', shape: 'rect' };
-      } else if (name === 'Siri') { // Erratically wandering
-        return { range: 12, maxTrail: 8, wanderChance: 0.15, risk: 'low-medium', shape: 'erratic' };
-      } else if (name === 'Alexa') { // Track and trace, defensive
-        return { range: 18, maxTrail: 9, wanderChance: 0.04, risk: 'medium-low', shape: 'rect' };
-      } else { // Fallback (Player 2 or others)
-        return { range: 15, maxTrail: 10, wanderChance: 0.05, risk: 'medium', shape: 'rect' };
+      if (name === 'Claude') {
+        return { maxTrail: 8, wanderChance: 0.01, smartThreat: true, attackRange: 12, risk: 'low' };
+      } else if (name === 'DeepSeek') {
+        return { maxTrail: 16, wanderChance: 0.05, smartThreat: true, attackRange: 22, risk: 'high' };
+      } else if (name === 'Gemini') {
+        return { maxTrail: 12, wanderChance: 0.03, smartThreat: true, attackRange: 16, risk: 'medium-high' };
+      } else if (name === 'ChatGPT') {
+        return { maxTrail: 10, wanderChance: 0.03, smartThreat: true, attackRange: 14, risk: 'medium' };
+      } else if (name === 'Siri') {
+        // Siri is erratic and has no smart threat evasion, high wander chance
+        return { maxTrail: 7, wanderChance: 0.20, smartThreat: false, attackRange: 10, risk: 'low-medium' };
+      } else if (name === 'Alexa') {
+        // Alexa is slow, erratic and has no smart threat evasion, high wander chance
+        return { maxTrail: 8, wanderChance: 0.15, smartThreat: false, attackRange: 10, risk: 'medium-low' };
+      } else {
+        return { maxTrail: 10, wanderChance: 0.05, smartThreat: true, attackRange: 12, risk: 'medium' };
       }
     }
 
@@ -1751,24 +1670,47 @@
         return true;
       });
 
-      if (validDirs.length === 0) return; // Trapped
+      // Fallback: If trapped, allow stepping on own trail to prevent freezing, but still avoid walls
+      let dirsToUse = validDirs;
+      if (dirsToUse.length === 0) {
+        dirsToUse = dirs.filter(d => isCellValid(b.x + d.vx, b.y + d.vy));
+      }
+      if (dirsToUse.length === 0) {
+        dirsToUse = dirs; // Complete fallback
+      }
 
       // Prevent 180-degree turns unless trapped
-      let nonReverseDirs = validDirs.filter(d => !(d.vx === -b.vx && d.vy === -b.vy));
-      const dirsToUse = nonReverseDirs.length > 0 ? nonReverseDirs : validDirs;
+      let nonReverseDirs = dirsToUse.filter(d => !(d.vx === -b.vx && d.vy === -b.vy));
+      const finalDirs = nonReverseDirs.length > 0 ? nonReverseDirs : dirsToUse;
 
-      // Threat detection: is any opponent within 5 cells of any cell of our trail?
+      // Threat detection: is any opponent within range of any cell of our trail?
       let threatDetected = false;
+      let minEnemyToTrailDist = Infinity;
       if (b.trail.length > 0) {
         players.forEach(other => {
           if (other.dead || other.id === b.id) return;
           b.trail.forEach(tCell => {
             const dist = Math.abs(tCell.c - other.x) + Math.abs(tCell.r - other.y);
-            if (dist < 5) {
-              threatDetected = true;
+            if (dist < minEnemyToTrailDist) {
+              minEnemyToTrailDist = dist;
             }
           });
         });
+      }
+
+      if (b.trail.length > 0) {
+        if (conf.smartThreat) {
+          const distToHome = getDistanceToTerritory(b.x, b.y, b.id);
+          // Smart bots calculate: if enemy can reach the trail before we get home + 3 steps safety margin
+          if (minEnemyToTrailDist <= distToHome + 3) {
+            threatDetected = true;
+          }
+        } else {
+          // Dumb bots (Siri/Alexa): only flee if enemy is very close (< 4), and sometimes ignore threats (15% chance)
+          if (minEnemyToTrailDist < 4 && Math.random() > 0.15) {
+            threatDetected = true;
+          }
+        }
       }
 
       // Check if we should retire home due to trail length or threat
@@ -1796,18 +1738,16 @@
           });
         });
         
-        if (targetTrailCell && minTrailDist <= conf.range) {
+        if (targetTrailCell && minTrailDist <= conf.attackRange) {
           const opponentDistHome = getDistanceToTerritory(targetOpponent.x, targetOpponent.y, targetOpponent.id);
           
           let worthIt = false;
-          if (b.name === 'DeepSeek') {
-            worthIt = minTrailDist < opponentDistHome + 4; // High risk
-          } else if (b.name === 'Claude') {
-            worthIt = minTrailDist < opponentDistHome - 2 && minTrailDist < 6; // Very low risk
-          } else if (b.name === 'Siri') {
-            worthIt = Math.random() < 0.6; // Erratic
+          if (conf.smartThreat) {
+            // Smart bots calculate risk based on opponent home distance
+            worthIt = minTrailDist < opponentDistHome + (conf.risk === 'high' ? 4 : 1);
           } else {
-            worthIt = minTrailDist < opponentDistHome + 1; // Standard
+            // Siri/Alexa just attack randomly or if extremely close
+            worthIt = minTrailDist < 6 || Math.random() < 0.4;
           }
           
           if (worthIt) {
@@ -1822,8 +1762,8 @@
 
       // Execute state logic
       if (b.aiState === 'inside') {
-        if (targetTrailCell && minTrailDist <= conf.range && b.aiState === 'hunting') {
-          // Handled above
+        if (targetTrailCell && minTrailDist <= conf.attackRange && b.aiState === 'hunting') {
+          // Handled below in hunting block
         } else {
           // Sweeping behavior when big
           let targetHole = null;
@@ -1861,7 +1801,7 @@
             b.sweepTarget = targetHole;
           } else {
             // Check if we can step outside
-            const outDirs = dirsToUse.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
+            const outDirs = finalDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
             if (outDirs.length > 0) {
               const chosenDir = outDirs[Math.floor(Math.random() * outDirs.length)];
               b.aiState = 'expanding';
@@ -1870,31 +1810,29 @@
               b.planVy = chosenDir.vy;
               b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
               
-              if (conf.shape === 'square') {
-                b.planS1 = Math.floor(Math.random() * 2) + 3;
-                b.planS2 = b.planS1;
-              } else if (conf.shape === 'long-rect') {
-                b.planS1 = Math.floor(Math.random() * 5) + 12;
+              // Simplified rectangular loop based on risk
+              if (conf.risk === 'low') {
+                b.planS1 = Math.floor(Math.random() * 2) + 3; // 3-4
                 b.planS2 = Math.floor(Math.random() * 2) + 3;
-              } else if (conf.shape === 'circle') {
-                b.planS1 = Math.floor(Math.random() * 2) + 3;
-                b.planS2 = Math.floor(Math.random() * 2) + 3;
+              } else if (conf.risk === 'high') {
+                b.planS1 = Math.floor(Math.random() * 5) + 8; // 8-12
+                b.planS2 = Math.floor(Math.random() * 4) + 6; // 6-9
               } else {
-                b.planS1 = Math.floor(Math.random() * 3) + 5;
-                b.planS2 = Math.floor(Math.random() * 3) + 4;
+                b.planS1 = Math.floor(Math.random() * 3) + 5; // 5-7
+                b.planS2 = Math.floor(Math.random() * 3) + 4; // 4-6
               }
               
               b.planSteps = b.planS1;
               b.nextVx = chosenDir.vx;
               b.nextVy = chosenDir.vy;
             } else {
-              // Find direction to the nearest exit (passing current direction to avoid 180 oscillation inside)
+              // Find direction to the nearest exit
               const pathStep = findPathToExit(b.x, b.y, b.id, b.vx, b.vy);
-              if (pathStep) {
+              if (pathStep && finalDirs.some(d => d.vx === pathStep.vx && d.vy === pathStep.vy)) {
                 b.nextVx = pathStep.vx;
                 b.nextVy = pathStep.vy;
               } else {
-                const chosenDir = dirsToUse[Math.floor(Math.random() * dirsToUse.length)];
+                const chosenDir = finalDirs[Math.floor(Math.random() * finalDirs.length)];
                 b.nextVx = chosenDir.vx;
                 b.nextVy = chosenDir.vy;
               }
@@ -1912,92 +1850,86 @@
           b.aiState = 'returning';
         } else {
           const pathStep = findPathToTarget(b.x, b.y, target.c, target.r, b.id);
-          if (pathStep) {
+          if (pathStep && finalDirs.some(d => d.vx === pathStep.vx && d.vy === pathStep.vy)) {
             b.nextVx = pathStep.vx;
             b.nextVy = pathStep.vy;
           } else {
             b.aiState = 'returning';
+            b.nextVx = finalDirs[0].vx;
+            b.nextVy = finalDirs[0].vy;
           }
         }
         return;
       }
 
       if (b.aiState === 'expanding') {
-        const wallAhead = !isCellValid(b.x + b.planVx * 2, b.y + b.planVy * 2);
-        let shouldTurn = b.planSteps <= 0 || wallAhead;
-        
-        if (conf.shape === 'erratic') {
-          if (Math.random() < 0.15 || wallAhead) {
-            shouldTurn = true;
-            b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
+        // Siri/Alexa occasional random mistake: abandon expansion early
+        if (!conf.smartThreat && Math.random() < conf.wanderChance) {
+          b.aiState = 'returning';
+        } else {
+          const wallAhead = !isCellValid(b.x + b.planVx * 2, b.y + b.planVy * 2);
+          let shouldTurn = b.planSteps <= 0 || wallAhead;
+          
+          if (shouldTurn) {
+            if (b.planPhase === 0) {
+              const vx = b.planVx;
+              const vy = b.planVy;
+              if (b.planTurnDir === 'left') {
+                b.planVx = vy;
+                b.planVy = -vx;
+              } else {
+                b.planVx = -vy;
+                b.planVy = vx;
+              }
+              b.planPhase = 1;
+              b.planSteps = b.planS2;
+            } else {
+              b.aiState = 'returning';
+            }
           }
-        }
-        
-        if (shouldTurn) {
-          if (conf.shape === 'circle' && b.planPhase < 2) {
-            const vx = b.planVx;
-            const vy = b.planVy;
-            if (b.planTurnDir === 'left') {
-              b.planVx = vy;
-              b.planVy = -vx;
-            } else {
-              b.planVx = -vy;
-              b.planVy = vx;
-            }
-            b.planPhase++;
-            b.planSteps = Math.floor(Math.random() * 2) + 3;
-          } else if (conf.shape === 'erratic') {
-            const vx = b.planVx;
-            const vy = b.planVy;
-            if (b.planTurnDir === 'left') {
-              b.planVx = vy;
-              b.planVy = -vx;
-            } else {
-              b.planVx = -vy;
-              b.planVy = vx;
-            }
-            b.planSteps = Math.floor(Math.random() * 3) + 2;
-          } else if (b.planPhase === 0) {
-            const vx = b.planVx;
-            const vy = b.planVy;
-            if (b.planTurnDir === 'left') {
-              b.planVx = vy;
-              b.planVy = -vx;
-            } else {
-              b.planVx = -vy;
-              b.planVy = vx;
-            }
-            b.planPhase = 1;
-            b.planSteps = b.planS2;
+          
+          b.planSteps--;
+          
+          const chosenDir = finalDirs.find(d => d.vx === b.planVx && d.vy === b.planVy);
+          if (chosenDir) {
+            b.nextVx = chosenDir.vx;
+            b.nextVy = chosenDir.vy;
           } else {
             b.aiState = 'returning';
+            // Safe fallback
+            b.nextVx = finalDirs[0].vx;
+            b.nextVy = finalDirs[0].vy;
           }
         }
-        
-        b.planSteps--;
-        
-        const chosenDir = dirsToUse.find(d => d.vx === b.planVx && d.vy === b.planVy);
-        if (chosenDir) {
-          b.nextVx = chosenDir.vx;
-          b.nextVy = chosenDir.vy;
-        } else {
-          b.aiState = 'returning';
-        }
+        return;
       }
 
-      if (b.aiState === 'hunting' && targetTrailCell) {
-        const pathStep = findPathToTarget(b.x, b.y, targetTrailCell.c, targetTrailCell.r, b.id);
-        if (pathStep) {
-          b.nextVx = pathStep.vx;
-          b.nextVy = pathStep.vy;
-        } else {
+      if (b.aiState === 'hunting') {
+        if (!targetTrailCell) {
           b.aiState = 'returning';
+        } else {
+          const pathStep = findPathToTarget(b.x, b.y, targetTrailCell.c, targetTrailCell.r, b.id);
+          if (pathStep && finalDirs.some(d => d.vx === pathStep.vx && d.vy === pathStep.vy)) {
+            b.nextVx = pathStep.vx;
+            b.nextVy = pathStep.vy;
+          } else {
+            b.aiState = 'returning';
+            b.nextVx = finalDirs[0].vx;
+            b.nextVy = finalDirs[0].vy;
+          }
         }
+        return;
       }
 
       if (b.aiState === 'returning') {
-        const pathStep = findPathHome(b.x, b.y, b.id);
-        if (pathStep) {
+        let pathStep = findPathHome(b.x, b.y, b.id);
+        
+        // Siri/Alexa occasional random deviation
+        if (!conf.smartThreat && Math.random() < conf.wanderChance) {
+          pathStep = null;
+        }
+
+        if (pathStep && finalDirs.some(d => d.vx === pathStep.vx && d.vy === pathStep.vy)) {
           b.nextVx = pathStep.vx;
           b.nextVy = pathStep.vy;
         } else {
@@ -2016,9 +1948,9 @@
             });
           }
           
-          let bestDir = dirsToUse[0];
+          let bestDir = finalDirs[0];
           let minDist = Infinity;
-          dirsToUse.forEach(d => {
+          finalDirs.forEach(d => {
             const dist = Math.hypot(b.x + d.vx - targetX, b.y + d.vy - targetY);
             if (dist < minDist) {
               minDist = dist;
@@ -2282,6 +2214,11 @@
       // 1. Draw outer background
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, cw, ch);
+
+      // Draw a clean outer border around the grid to visually define the playing area
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(padX - 1, padY - 1, cols * cellSize + 2, rows * cellSize + 2);
 
       // 2. Draw blocky map grid & boundaries
       for (let c = 0; c < cols; c++) {
