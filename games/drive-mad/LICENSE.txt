@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2026 Grayson Brown (https://codepen.io/Grayson-Brown/pen/pvgejad)
+Copyright (c) 2026 Thorge Mrowinski (https://github.com/thorge-mrk/Drive-Mad)
 Modified and published by Jannes-Br (https://github.com/Jannes-Br)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
