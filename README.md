@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/28881941/README.md)
+[README.md](https://github.com/user-attachments/files/28882035/README.md)
 # OfflineArcade
 
 OfflineArcade is a modern, responsive, and fully offline-capable web application containing a collection of classic retro games. Designed as a Progressive Web App (PWA) with a premium glassmorphic dark-mode interface, it allows users to play alone, against smart AI bots, or with friends over local WebRTC peer-to-peer connections.
@@ -42,7 +42,8 @@ Open `http://localhost:8000` in your web browser.
 
 - **OfflineArcade Base Template**:
   - Copyright (c) 2026 Grayson Brown ([Grayson-Brown Codepen](https://codepen.io/Grayson-Brown/pen/pvgejad))
-  - Modified and published by Jannes-Br ([GitHub](https://github.com/Jannes-Br))
+  - Modified by Thorge Mrowinski ([GitHub](https://github.com/thorge-mrk))
+  - Further modified and published by Jannes-Br ([GitHub](https://github.com/Jannes-Br))
   - Licensed under the MIT License (see `LICENSE` or files for terms).
 
 - **Escape Road (WebGL Wrapper)**:
