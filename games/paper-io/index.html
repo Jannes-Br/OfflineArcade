@@ -93,10 +93,12 @@
       position: relative;
     }
 
-    .back-btn:hover, #mute-btn:hover {
-      transform: translateY(-2px);
-      background: var(--btn-hover-bg);
-      border-color: var(--btn-hover-border);
+    @media (hover: hover) {
+      .back-btn:hover, #mute-btn:hover {
+        transform: translateY(-2px);
+        background: var(--btn-hover-bg);
+        border-color: var(--btn-hover-border);
+      }
     }
 
     .back-btn:active, #mute-btn:active {
@@ -173,8 +175,10 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .top-action-btn:hover {
-      background: var(--btn-hover-bg);
+    @media (hover: hover) {
+      .top-action-btn:hover {
+        background: var(--btn-hover-bg);
+      }
     }
 
     /* ── Layout ── */
@@ -338,9 +342,11 @@
       font-family: 'Fredoka', sans-serif;
     }
 
-    .opt-btn:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
+    @media (hover: hover) {
+      .opt-btn:hover {
+        opacity: 0.85;
+        transform: translateY(-1px);
+      }
     }
 
     .opt-btn.active {
@@ -400,9 +406,11 @@
       box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
     }
 
-    .overlay-btn:hover {
-      transform: translateY(-2px);
-      opacity: 0.95;
+    @media (hover: hover) {
+      .overlay-btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.95;
+      }
     }
 
     .overlay-btn:active {
@@ -593,8 +601,8 @@
     // Grid Dimensions
     const cw = 800;
     const ch = 500;
-    let cols = 81;
-    let rows = 51;
+    let cols = 80;
+    let rows = 50;
     let cellSize = cw / cols;
 
     // ── Retina/High-DPI Canvas Resizing ──
@@ -670,9 +678,9 @@
     
     // Size settings map
     const SIZES = {
-      small: { cols: 41, rows: 27 },
-      medium: { cols: 61, rows: 39 },
-      large: { cols: 81, rows: 51 }
+      small: { cols: 40, rows: 26 },
+      medium: { cols: 60, rows: 38 },
+      large: { cols: 80, rows: 50 }
     };
 
     // Color definitions representing famous AIs
@@ -731,12 +739,14 @@
       isMuted = !isMuted;
       localStorage.setItem('mute', isMuted ? 'true' : 'false');
       updateSoundBtn();
+      muteBtn.blur();
     });
 
     // Pause functionality
     pauseBtn.addEventListener('click', () => {
       if (gameMode === 'multi' && mpRole === 'guest') return;
       togglePause(true);
+      pauseBtn.blur();
     });
 
     function togglePause(sync = true) {
@@ -751,6 +761,7 @@
     restartBtn.addEventListener('click', () => {
       if (gameMode === 'multi' && mpRole === 'guest') return;
       triggerRestart(true);
+      restartBtn.blur();
     });
 
     function triggerRestart(sync = true) {
@@ -778,22 +789,22 @@
     function isCellValid(c, r) {
       if (c < 0 || c >= cols || r < 0 || r >= rows) return false;
       if (mapShapeSel.value === 'circle') {
-        const cx = (cols - 1) / 2;
-        const cy = (rows - 1) / 2;
+        const cx = cols / 2;
+        const cy = rows / 2;
         const rad = Math.min(cols, rows) / 2 - 0.5;
-        return Math.hypot(c - cx, r - cy) <= rad;
+        return Math.hypot(c + 0.5 - cx, r + 0.5 - cy) <= rad;
       }
       if (mapShapeSel.value === 'triangle') {
         const B = mapSizeSel.value === 'small' ? 1 : (mapSizeSel.value === 'medium' ? 2 : 3);
-        const cx = (cols - 1) / 2;
+        const cx = cols / 2;
         const rStart = B;
         const rEnd = rows - 1 - B;
         if (r < rStart || r > rEnd) return false;
         
-        const halfWidthMax = (cols - 1) / 2 - B;
+        const halfWidthMax = cols / 2 - B;
         const t = (r - rStart) / (rEnd - rStart);
-        const halfWidth = t * halfWidthMax;
-        return Math.abs(c - cx) <= halfWidth;
+        const halfWidth = 0.5 + t * (halfWidthMax - 0.5);
+        return Math.abs(c + 0.5 - cx) <= halfWidth;
       }
       return true;
     }
@@ -1506,6 +1517,48 @@
       return null;
     }
 
+    // Pathfinding helper: find direction to the nearest exit of own territory
+    function findPathToExit(startX, startY, botId) {
+      let queue = [{ x: startX, y: startY, path: [] }];
+      let visited = new Set();
+      visited.add(`${startX},${startY}`);
+      
+      let head = 0;
+      const dirs = [
+        { vx: 1, vy: 0 },
+        { vx: -1, vy: 0 },
+        { vx: 0, vy: 1 },
+        { vx: 0, vy: -1 }
+      ];
+      
+      while (head < queue.length && head < 800) {
+        const curr = queue[head++];
+        if (grid[curr.x][curr.y].owner !== botId && !grid[curr.x][curr.y].void) {
+          return curr.path[0];
+        }
+        
+        for (const d of dirs) {
+          const nx = curr.x + d.vx;
+          const ny = curr.y + d.vy;
+          const key = `${nx},${ny}`;
+          
+          if (!visited.has(key) && isCellValid(nx, ny)) {
+            const isTarget = grid[nx][ny].owner !== botId && !grid[nx][ny].void;
+            const isOwnTerritory = grid[nx][ny].owner === botId;
+            if (isTarget || isOwnTerritory) {
+              visited.add(key);
+              queue.push({
+                x: nx,
+                y: ny,
+                path: curr.path.concat([d])
+              });
+            }
+          }
+        }
+      }
+      return null;
+    }
+
     // Unbeatable Smart AI Bot Pathfinding & Collision Interception
     function updateBotAI(b) {
       b.botTimer = (b.botTimer || 0) + 1;
@@ -1591,47 +1644,46 @@
 
       // Execute state logic
       if (b.aiState === 'inside') {
-        // Wandering inside territory
         // Check if there is an opponent trail to hunt
         if (targetTrailCell && minTrailDist <= conf.range) {
           b.aiState = 'hunting';
-        } else if (Math.random() < 0.05 && validDirs.length > 0) {
-          // 5% chance to start an expansion loop
-          // Choose a direction that leaves territory, or any valid direction
-          const outDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
-          const chosenDir = outDirs.length > 0 ? outDirs[Math.floor(Math.random() * outDirs.length)] : validDirs[Math.floor(Math.random() * validDirs.length)];
-          
-          b.aiState = 'expanding';
-          b.planPhase = 0;
-          b.planVx = chosenDir.vx;
-          b.planVy = chosenDir.vy;
-          b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
-          
-          if (b.name === 'Claude') {
-            b.planS1 = Math.floor(Math.random() * 2) + 2; // 2-3
-            b.planS2 = Math.floor(Math.random() * 2) + 2;
-          } else if (b.name === 'DeepSeek') {
-            b.planS1 = Math.floor(Math.random() * 4) + 6; // 6-9
-            b.planS2 = Math.floor(Math.random() * 4) + 6;
-          } else {
-            b.planS1 = Math.floor(Math.random() * 3) + 4; // 4-6
-            b.planS2 = Math.floor(Math.random() * 3) + 4;
-          }
-          b.planSteps = b.planS1;
         } else {
-          // Continue in straight line if safe and inside owned territory
-          const hasCurrentDir = b.vx !== 0 || b.vy !== 0;
-          const currentDirSafeAndInside = hasCurrentDir && validDirs.some(d => d.vx === b.vx && d.vy === b.vy) && grid[b.x + b.vx][b.y + b.vy].owner === b.id;
-          
-          if (currentDirSafeAndInside && Math.random() > conf.wanderChance) {
-            b.nextVx = b.vx;
-            b.nextVy = b.vy;
-          } else {
-            // Pick a new safe direction that stays inside owned territory
-            const insideDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner === b.id);
-            const chosenDir = insideDirs.length > 0 ? insideDirs[Math.floor(Math.random() * insideDirs.length)] : validDirs[Math.floor(Math.random() * validDirs.length)];
+          // Check if we can step outside
+          const outDirs = validDirs.filter(d => grid[b.x + d.vx][b.y + d.vy].owner !== b.id);
+          if (outDirs.length > 0) {
+            // Choose one and start expanding
+            const chosenDir = outDirs[Math.floor(Math.random() * outDirs.length)];
+            b.aiState = 'expanding';
+            b.planPhase = 0;
+            b.planVx = chosenDir.vx;
+            b.planVy = chosenDir.vy;
+            b.planTurnDir = Math.random() < 0.5 ? 'left' : 'right';
+            
+            if (b.name === 'Claude') {
+              b.planS1 = Math.floor(Math.random() * 2) + 2;
+              b.planS2 = Math.floor(Math.random() * 2) + 2;
+            } else if (b.name === 'DeepSeek') {
+              b.planS1 = Math.floor(Math.random() * 4) + 6;
+              b.planS2 = Math.floor(Math.random() * 4) + 6;
+            } else {
+              b.planS1 = Math.floor(Math.random() * 3) + 4;
+              b.planS2 = Math.floor(Math.random() * 3) + 4;
+            }
+            b.planSteps = b.planS1;
             b.nextVx = chosenDir.vx;
             b.nextVy = chosenDir.vy;
+          } else {
+            // Find direction to the nearest exit
+            const pathStep = findPathToExit(b.x, b.y, b.id);
+            if (pathStep) {
+              b.nextVx = pathStep.vx;
+              b.nextVy = pathStep.vy;
+            } else {
+              // Fallback: choose any valid direction
+              const chosenDir = validDirs[Math.floor(Math.random() * validDirs.length)];
+              b.nextVx = chosenDir.vx;
+              b.nextVy = chosenDir.vy;
+            }
           }
           return;
         }
@@ -1691,8 +1743,8 @@
           b.nextVy = pathStep.vy;
         } else {
           // Stuck or no path home, find any valid direction that gets closer to home
-          let targetX = (cols - 1) / 2;
-          let targetY = (rows - 1) / 2;
+          let targetX = cols / 2;
+          let targetY = rows / 2;
           let minHomeDist = Infinity;
           const owner = players.find(p => p.id === b.id);
           if (owner) {
@@ -2279,6 +2331,7 @@
     overlayBtn.addEventListener('click', () => {
       initAudio();
       triggerRestart(true);
+      overlayBtn.blur();
     });
 
     function setupButtonGroup(groupId, onChange) {
