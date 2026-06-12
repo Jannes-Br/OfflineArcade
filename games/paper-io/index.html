@@ -311,6 +311,42 @@
       cursor: pointer;
     }
 
+    /* ── Settings Button Groups ── */
+    .button-group {
+      display: flex;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--box-border);
+      margin-top: 4px;
+    }
+
+    .opt-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Fredoka', sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .opt-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .opt-btn.active {
+      background: #3b82f6;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
     /* ── Overlay ── */
     .overlay {
       position: absolute;
@@ -437,19 +473,20 @@
         <div class="settings-box" id="settingsBox">
           <div class="settings-title">Game Options</div>
           <div class="settings-row">
-            <label for="mapSize">Map Size:</label>
-            <select id="mapSize">
-              <option value="small">Small (40x25)</option>
-              <option value="medium">Medium (60x38)</option>
-              <option value="large" selected>Large (80x50)</option>
-            </select>
+            <label>Map Size:</label>
+            <div class="button-group" id="mapSizeGroup">
+              <button class="opt-btn" data-value="small">Small</button>
+              <button class="opt-btn" data-value="medium">Medium</button>
+              <button class="opt-btn active" data-value="large">Large</button>
+            </div>
           </div>
           <div class="settings-row">
-            <label for="mapShape">Map Shape:</label>
-            <select id="mapShape">
-              <option value="rectangle" selected>Rectangle</option>
-              <option value="circle">Circle</option>
-            </select>
+            <label>Map Shape:</label>
+            <div class="button-group" id="mapShapeGroup">
+              <button class="opt-btn active" data-value="rectangle">Rect</button>
+              <button class="opt-btn" data-value="circle">Circle</button>
+              <button class="opt-btn" data-value="triangle">Triangle</button>
+            </div>
           </div>
           <div class="settings-row checkbox-row" id="botsToggleRow">
             <label for="botsToggle">Activate Bots:</label>
@@ -482,9 +519,39 @@
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
     const settingsBox = document.getElementById('settingsBox');
-    const mapSizeSel = document.getElementById('mapSize');
-    const mapShapeSel = document.getElementById('mapShape');
     const botsToggle = document.getElementById('botsToggle');
+
+    const mapSizeSel = {
+      get value() {
+        const active = document.querySelector('#mapSizeGroup .opt-btn.active');
+        return active ? active.dataset.value : 'large';
+      },
+      set value(val) {
+        document.querySelectorAll('#mapSizeGroup .opt-btn').forEach(btn => {
+          if (btn.dataset.value === val) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    };
+
+    const mapShapeSel = {
+      get value() {
+        const active = document.querySelector('#mapShapeGroup .opt-btn.active');
+        return active ? active.dataset.value : 'rectangle';
+      },
+      set value(val) {
+        document.querySelectorAll('#mapShapeGroup .opt-btn').forEach(btn => {
+          if (btn.dataset.value === val) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    };
 
     // Retrieve multiplayer details
     const gameMode = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
@@ -498,6 +565,19 @@
     let rows = 50;
     let cellSize = 10;
 
+    // ── Retina/High-DPI Canvas Resizing ──
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.resetTransform();
+      ctx.scale((rect.width * dpr) / cw, (rect.height * dpr) / ch);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', resizeCanvas);
+
     // Grid State: 2D array of objects: { owner: null|id, trail: null|id, void: boolean }
     let grid = [];
     
@@ -506,6 +586,52 @@
     let particles = [];
     let gameState = 'hold'; // hold | playing | gameover
     let isMuted = localStorage.getItem('mute') === 'true';
+
+    // ── Sound engine (Web Audio API) ──
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, initAudio, { once: true, passive: true });
+    });
+
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'hit') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'score') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(330, now);
+          osc.frequency.linearRampToValueAtTime(660, now + 0.12);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        }
+      } catch (e) {}
+    }
+
     let paused = false;
     let enableBots = true;
     let spawnTimer = 0; // Countdown timer at round start
@@ -552,6 +678,7 @@
 
       updateSoundBtn();
       loadSettingsFromDOM();
+      resizeCanvas();
     }
 
     function updateSoundBtn() {
@@ -614,6 +741,11 @@
         const cy = rows / 2;
         const rad = Math.min(cols, rows) / 2 - 1.5;
         return Math.hypot(c - cx, r - cy) <= rad;
+      }
+      if (mapShapeSel.value === 'triangle') {
+        const cx = cols / 2;
+        const halfWidthAtRow = (r / rows) * (cols / 2);
+        return Math.abs(c - cx) <= halfWidthAtRow;
       }
       return true;
     }
@@ -816,6 +948,7 @@
     }, { passive: true });
 
     window.addEventListener('touchmove', e => {
+      if (e.cancelable) e.preventDefault();
       if (gameState !== 'playing' || paused || spawnTimer > 0 || touchStartX === 0) return;
 
       const touch = e.touches[0];
@@ -1370,9 +1503,9 @@
           p.score = ((count / totalValidCells) * 100).toFixed(1);
         });
 
-        // Always show the human P1 scoreboard values
+        // Always show the human P1 scoreboard values (if not dead)
         const human = players[0];
-        if (human) {
+        if (human && !human.dead) {
           scoreVal.textContent = `${human.score}%`;
           killsVal.textContent = human.kills;
         }
@@ -1433,6 +1566,18 @@
         const cy = ch / 2;
         const radius = (Math.min(cols, rows) / 2 - 1.5) * cellSize;
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (mapShapeSel.value === 'triangle') {
+        ctx.fillStyle = '#020617';
+        ctx.beginPath();
+        ctx.moveTo(cw / 2, 0);
+        ctx.lineTo(cw, ch);
+        ctx.lineTo(0, ch);
+        ctx.closePath();
         ctx.fill();
         
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -1617,7 +1762,7 @@
 
           // Sync scoreboard
           const guestP = players[1]; // Guest is Player 2
-          if (guestP) {
+          if (guestP && !guestP.dead) {
             scoreVal.textContent = `${guestP.score}%`;
             killsVal.textContent = guestP.kills;
           }
@@ -1711,9 +1856,24 @@
       triggerRestart(true);
     });
 
+    function setupButtonGroup(groupId, onChange) {
+      const group = document.getElementById(groupId);
+      if (!group) return;
+      const buttons = group.querySelectorAll('.opt-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (gameMode === 'multi' && mpRole === 'guest') return;
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          btn.blur();
+          onChange();
+        });
+      });
+    }
+
     // Trigger Mode Options
-    mapSizeSel.addEventListener('change', () => triggerRestart(true));
-    mapShapeSel.addEventListener('change', () => triggerRestart(true));
+    setupButtonGroup('mapSizeGroup', () => triggerRestart(true));
+    setupButtonGroup('mapShapeGroup', () => triggerRestart(true));
     botsToggle.addEventListener('change', () => triggerRestart(true));
 
     initMode();
