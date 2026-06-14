@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v117';
+const CACHE_VERSION = 'v106';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong', 'paper-io'];
 
 /* ── Random name generator ── */
@@ -188,7 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
       'games/pong/index.html',
       'assets/thumbnails/pong.png',
       'games/paper-io/index.html',
-      'assets/thumbnails/paper-io.png'
+      'assets/thumbnails/paper-io.png',
+      'games/flappy-bird/index.html',
+      'games/flappy-bird/style.css',
+      'games/flappy-bird/game.js',
+      'assets/thumbnails/flappy-bird.png'
     ];
 
     try {
