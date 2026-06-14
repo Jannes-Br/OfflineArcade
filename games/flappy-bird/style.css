@@ -1,0 +1,122 @@
+:root {
+  --bg-color: #1a1a2e;
+  --text-color: #ffffff;
+  --box-bg: rgba(255, 255, 255, 0.03);
+  --box-border: rgba(255, 255, 255, 0.08);
+  --btn-bg: rgba(255, 255, 255, 0.06);
+  --btn-border: rgba(255, 255, 255, 0.08);
+  --btn-hover-bg: rgba(255, 255, 255, 0.16);
+  --btn-hover-border: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-color);
+  font-family: "Segoe UI", Arial, sans-serif;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Header ── */
+.game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: max(16px, env(safe-area-inset-top)) 16px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.back-btn {
+  pointer-events: auto;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--box-border);
+  color: var(--text-color);
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  background: var(--btn-hover-bg);
+  border-color: var(--btn-hover-border);
+}
+
+.back-btn:active {
+  transform: scale(0.95);
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.mode-badge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--box-bg);
+  border: 1px solid var(--box-border);
+  color: var(--text-color);
+  padding: 6px 12px;
+  border-radius: 20px;
+  opacity: 0.8;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game {
+  display: block;
+  max-width: 100vw;
+  max-height: 100vh;
+  /* Seitenverhältnis 2:3 beibehalten */
+  width: auto;
+  height: 100vh;
+  aspect-ratio: 2 / 3;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+@media (max-aspect-ratio: 2/3) {
+  #game {
+    width: 100vw;
+    height: auto;
+  }
+}
