@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Flappy Bird Klon – spielbar mit Tastatur, Maus und Touch">
+  <title>Flappy Bird</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation Header -->
+  <div class="game-header">
+    <a href="../../index.html" class="back-btn" id="backBtn">← Menu</a>
+    <span class="mode-badge" id="modeBadge">Flappy Bird</span>
+    <div class="header-right">
+      <!-- Solo-Spiel benötigt keinen Chat oder Stummschalter im Header -->
+    </div>
+  </div>
+
+  <div id="game-container">
+    <canvas id="game" width="400" height="600"></canvas>
+  </div>
+  
+  <script src="game.js"></script>
+  <script>
+    document.getElementById('backBtn').addEventListener('click', (e) => {
+      if (window.parent && window.parent !== window && window.parent.closeGameFrame) {
+        e.preventDefault();
+        window.parent.closeGameFrame();
+      }
+    });
+  </script>
+</body>
+</html>
