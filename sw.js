@@ -1,4 +1,4 @@
-const CACHE = 'offlinearcade-v117';
+const CACHE = 'offlinearcade-v118';
 
 // Essential App Shell files (SW fails if these cannot be loaded)
 const ESSENTIAL_ASSETS = [
@@ -36,7 +36,12 @@ const GAME_ASSETS = [
   'assets/thumbnails/pong.png',
 
   'games/paper-io/index.html',
-  'assets/thumbnails/paper-io.png'
+  'assets/thumbnails/paper-io.png',
+
+  'games/flappy-bird/index.html',
+  'games/flappy-bird/style.css',
+  'games/flappy-bird/game.js',
+  'assets/thumbnails/flappy-bird.png'
 ];
 
 // Installation: Cache essentials (must succeed) and cache games optionally
