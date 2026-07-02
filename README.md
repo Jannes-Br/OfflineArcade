@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/28897700/README.md)
+[README.md](https://github.com/user-attachments/files/29611816/README.md)
 # OfflineArcade
 
 OfflineArcade is a modern, responsive, and fully offline-capable web application containing a collection of classic retro games. Designed as a Progressive Web App (PWA) with a premium glassmorphic dark-mode interface, it allows users to play alone, against smart AI bots, or with friends over local WebRTC peer-to-peer connections.
@@ -41,9 +41,10 @@ Open `http://localhost:8000` in your web browser.
 ## Licenses & Credits
 
 - **OfflineArcade**:
-  - Created and developed entirely by [Jannes-Br](https://github.com/Jannes-Br).
-  - All core application framework logic, glassmorphic styles, WebRTC P2P multiplayer engine, offline service worker caching, and games (Paper.io, Pong, 2048, Tic Tac Toe, Block Smasher) are original creations by [Jannes-Br](https://github.com/Jannes-Br).
+  - Created and developed by the owner of this repository.
+  - All core application framework logic, P2P multiplayer engine, offline service worker caching, and games (Paper.io, Pong, 2048, Tic Tac Toe, Block Smasher) are original creations.
 
-- **Escape Road & Drive Mad (WebGL Wrappers)**:
-  - Integration wrappers and WebGL base code obtained from Thorge Mrowinski ([GitHub](https://github.com/thorge-mrk)), who originally based them on templates by Grayson Brown ([Grayson-Brown Codepen](https://codepen.io/Grayson-Brown/pen/pvgejad)).
+- **Escape Road, Drive Mad & Flappy Bird**:
+  - Code obtained from Thorge Mrowinski ([GitHub](https://github.com/thorge-mrk)).
+  - Escape Road & Drive Mad were originally based on templates by Grayson Brown ([Grayson-Brown Codepen](https://codepen.io/Grayson-Brown/pen/pvgejad)).
   - Licensed under the MIT License (see game subdirectories for terms).
