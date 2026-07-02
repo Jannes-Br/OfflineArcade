@@ -640,6 +640,22 @@
       set value(val) {}
     };
 
+    const inheritTerritorySel = {
+      get value() {
+        const active = document.querySelector('#inheritTerritoryGroup .opt-btn.active');
+        return active ? active.dataset.value === 'true' : false;
+      },
+      set value(val) {
+        document.querySelectorAll('#inheritTerritoryGroup .opt-btn').forEach(btn => {
+          if ((btn.dataset.value === 'true') === val) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    };
+
     // Retrieve multiplayer details
     const gameMode = localStorage.getItem('gameMode') || 'solo'; // solo | bot | multi
     const myName = localStorage.getItem('playerName') || 'You';
