@@ -444,6 +444,40 @@
         flex: 1;
       }
     }
+    @media (max-height: 550px) {
+      .game-layout {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 12px;
+        height: calc(100vh - 80px) !important;
+        overflow: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      #gameWrap {
+        order: 1 !important;
+        flex-shrink: 0 !important;
+        height: 100% !important;
+        width: min(65vw, calc(100% - 220px)) !important;
+        aspect-ratio: 16 / 10 !important;
+      }
+      .side-panel {
+        order: 2 !important;
+        flex: 1 !important;
+        width: auto !important;
+        max-width: 250px !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        padding-right: 4px;
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+      .leaderboard-box, .settings-box {
+        flex: none !important;
+        width: 100% !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1440,7 +1474,7 @@
     }
 
     // Pathfinding helper: find step direction to target
-    function findPathToTarget(startX, startY, targetX, targetY, botId) {
+    function findPathToTarget(startX, startY, targetX, targetY, botId, maxIterations = 500) {
       if (startX === targetX && startY === targetY) return null;
       let queue = [{ x: startX, y: startY, path: [] }];
       let visited = new Set();
@@ -1454,7 +1488,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 4000) {
+      while (head < queue.length && head < maxIterations) {
         const curr = queue[head++];
         if (curr.x === targetX && curr.y === targetY) {
           return curr.path[0];
@@ -1490,7 +1524,7 @@
     }
 
     // Pathfinding helper: find step direction to home
-    function findPathHome(startX, startY, botId) {
+    function findPathHome(startX, startY, botId, maxIterations = 500) {
       let queue = [{ x: startX, y: startY, path: [] }];
       let visited = new Set();
       visited.add(`${startX},${startY}`);
@@ -1503,7 +1537,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 4000) {
+      while (head < queue.length && head < maxIterations) {
         const curr = queue[head++];
         if (grid[curr.x][curr.y].owner === botId) {
           return curr.path[0];
@@ -1530,7 +1564,7 @@
     }
 
     // Pathfinding helper: find direction to the nearest exit of own territory
-    function findPathToExit(startX, startY, botId, currentVx, currentVy) {
+    function findPathToExit(startX, startY, botId, currentVx, currentVy, maxIterations = 500) {
       let queue = [{ x: startX, y: startY, path: [] }];
       let visited = new Set();
       visited.add(`${startX},${startY}`);
@@ -1543,7 +1577,7 @@
         { vx: 0, vy: -1 }
       ];
       
-      while (head < queue.length && head < 4000) {
+      while (head < queue.length && head < maxIterations) {
         const curr = queue[head++];
         if (grid[curr.x][curr.y].owner !== botId && !grid[curr.x][curr.y].void) {
           return curr.path[0];
@@ -1906,7 +1940,14 @@
       }
 
       if (b.aiState === 'returning') {
-        let pathStep = findPathHome(b.x, b.y, b.id);
+        b.pathHomeTimer = (b.pathHomeTimer || 0) + 1;
+        let pathStep = null;
+        if (b.pathHomeTimer % 4 === 0 || !b.lastPathStep) {
+          pathStep = findPathHome(b.x, b.y, b.id);
+          b.lastPathStep = pathStep;
+        } else {
+          pathStep = b.lastPathStep;
+        }
         
         // Siri/Alexa occasional random deviation
         if (!conf.smartThreat && Math.random() < conf.wanderChance) {
