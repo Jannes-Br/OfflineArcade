@@ -488,6 +488,7 @@
     let powerupsEnabled = false;
     let activePowerup = null;
     let powerupSpawnTimer = 0;
+    let paddleHitsSincePowerup = 0;
     
     const modeBadge = document.getElementById('modeBadge');
     const speedGroup = document.getElementById('speedGroup');
@@ -762,6 +763,10 @@
     function resetBall(direction = 1) {
       activePowerup = null;
       powerupSpawnTimer = 4000; // 4 seconds cooldown after a goal before spawning
+      ball.invisible = false;
+      ball.glowing = false;
+      ball.lastHitBy = null;
+      paddleHitsSincePowerup = 0;
       ball.x = 400;
       ball.y = 250;
       ball.currentSpeed = getBaseSpeed();
@@ -1087,17 +1092,28 @@
           clampPaddles();
         }
 
-        // Spawn powerups (only if cooldown has elapsed)
-        if (powerupsEnabled && activePowerup === null && powerupSpawnTimer <= 0) {
-          if (Math.random() < 0.005) {
-            const types = ['score_plus2', 'score_minus2', 'grow_paddle', 'invisible_ball', 'glow_ball'];
-            const type = types[Math.floor(Math.random() * types.length)];
-            const px = Math.floor(Math.random() * 500) + 150;
-            const py = Math.floor(Math.random() * 340) + 80;
-            activePowerup = { x: px, y: py, radius: 25, type }; // stays indefinitely until goal/collection
-            if (gameMode === 'multi' && mpRole === 'X') {
-              gameMP.send('powerup_spawn', { activePowerup });
+        // Spawn powerups (after 3 paddle hits and no active power-up, never close to the ball)
+        if (powerupsEnabled && activePowerup === null && paddleHitsSincePowerup >= 3) {
+          const types = ['score_plus2', 'score_minus2', 'grow_paddle', 'invisible_ball', 'glow_ball'];
+          const type = types[Math.floor(Math.random() * types.length)];
+          
+          let px, py;
+          let validPos = false;
+          let attempts = 0;
+          while (!validPos && attempts < 50) {
+            px = Math.floor(Math.random() * 500) + 150;
+            py = Math.floor(Math.random() * 340) + 80;
+            if (Math.hypot(px - ball.x, py - ball.y) >= 150) {
+              validPos = true;
             }
+            attempts++;
+          }
+          
+          activePowerup = { x: px, y: py, radius: 25, type };
+          paddleHitsSincePowerup = 0;
+          
+          if (gameMode === 'multi' && mpRole === 'X') {
+            gameMP.send('powerup_spawn', { activePowerup });
           }
         }
 
@@ -1277,6 +1293,7 @@
       ball.invisible = false;
       ball.glowing = false;
       ball.lastHitBy = isLeft ? 'left' : 'right';
+      paddleHitsSincePowerup++;
 
       const pH = p.paddleHeight || paddle.height;
 
@@ -1486,9 +1503,9 @@
         ctx.save();
         const grad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, 250);
         grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)'); // Solid white center
-        grad.addColorStop(0.15, 'rgba(255, 255, 255, 0.95)');
-        grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.65)');
-        grad.addColorStop(0.6, 'rgba(255, 255, 255, 0.25)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)'); // 100% solid white up to 125px radius!
+        grad.addColorStop(0.7, 'rgba(255, 255, 255, 0.9)'); // 90% opaque up to 175px radius!
+        grad.addColorStop(0.9, 'rgba(255, 255, 255, 0.4)');
         grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
