@@ -2,7 +2,7 @@
    OfflineArcade – main.js  (complete rewrite with QR P2P, Pre-Caching & English)
    ============================================================ */
 
-const CACHE_VERSION = 'v118';
+const CACHE_VERSION = 'v119';
 const MULTIPLAYER_GAMES = ['tic-tac-toe', '2048', 'pong', 'paper-io'];
 
 /* ── Random name generator ── */
@@ -515,11 +515,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (nameSaveBtn) nameSaveBtn.addEventListener('click', saveName);
-  if (nameInput) nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+  if (nameInput) {
+    nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+    nameInput.addEventListener('input', () => {
+      const nameError = document.getElementById('nameError');
+      if (nameError) nameError.style.display = 'none';
+    });
+  }
   function saveName() {
     if (!nameInput) return;
-    const n = nameInput.value.trim();
-    if (!n) return;
+    let n = nameInput.value.trim();
+    const nameError = document.getElementById('nameError');
+    if (!n || n.length > 20) {
+      if (nameError) {
+        nameError.textContent = !n ? "Der Name darf nicht leer sein!" : "Der Name darf maximal 20 Zeichen lang sein!";
+        nameError.style.display = 'block';
+      }
+      if (n.length > 20) {
+        n = n.slice(0, 20).trim();
+        nameInput.value = n;
+        if (!n) return;
+      } else {
+        return;
+      }
+    }
+    if (nameError) nameError.style.display = 'none';
     playerName = n;
     localStorage.setItem('playerName', playerName);
     if (nameDisplay) nameDisplay.textContent = playerName;
