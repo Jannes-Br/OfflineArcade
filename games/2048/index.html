@@ -609,8 +609,8 @@
     @media (max-height: 550px) {
       .container {
         padding: 50px 12px 6px;
-        height: auto;
-        min-height: 100vh;
+        height: 100%;
+        overflow: hidden;
       }
       
       .game-box {
@@ -2225,16 +2225,22 @@
       const gameBox = document.querySelector('.game-box');
       if (!gameBox) return;
       gameBox.style.transform = 'none';
+      gameBox.style.position = '';
+      gameBox.style.top = '';
+      gameBox.style.left = '';
       
       const windowHeight = window.innerHeight;
-      const headerHeight = 70;
+      const headerHeight = 60;
       const padding = 20;
       const availableHeight = windowHeight - headerHeight - padding;
       const boxHeight = gameBox.offsetHeight;
       
       if (boxHeight > availableHeight) {
-        const scale = Math.max(0.4, availableHeight / boxHeight);
-        gameBox.style.transform = `scale(${scale})`;
+        const scale = Math.max(0.45, availableHeight / boxHeight);
+        gameBox.style.position = 'absolute';
+        gameBox.style.top = 'calc(50% + 20px)';
+        gameBox.style.left = '50%';
+        gameBox.style.transform = `translate(-50%, -50%) scale(${scale})`;
         gameBox.style.transformOrigin = 'center center';
       }
     }
