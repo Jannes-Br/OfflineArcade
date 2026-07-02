@@ -445,14 +445,21 @@
       }
     }
     @media (max-height: 550px) {
+      .container {
+        padding: 60px 12px 10px !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
       .game-layout {
         flex-direction: row !important;
         align-items: stretch !important;
         gap: 12px;
-        height: calc(100vh - 80px) !important;
+        height: calc(100vh - 75px) !important;
         overflow: hidden !important;
         width: 100% !important;
         max-width: 100% !important;
+        box-sizing: border-box !important;
       }
       #gameWrap {
         order: 1 !important;
@@ -472,6 +479,7 @@
         padding-right: 4px;
         flex-direction: column !important;
         gap: 12px !important;
+        box-sizing: border-box !important;
       }
       .leaderboard-box, .settings-box {
         flex: none !important;
@@ -1992,7 +2000,7 @@
 
     //authoritative Host Physics update
     function step(dt) {
-      if (gameState !== 'playing' || paused) return;
+      if ((gameState !== 'playing' && gameState !== 'spectating') || paused) return;
 
       // Delayed spawn countdown ticker
       if (spawnTimer > 0) {
