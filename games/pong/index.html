@@ -238,7 +238,7 @@
     }
 
     #gameWrap {
-      width: min(100%, calc((100vh - 200px) * 1.6));
+      width: min(100%, calc((100vh - 220px) * 1.6));
       max-width: 900px;
       aspect-ratio: 16 / 10;
       border-radius: 24px;
@@ -350,7 +350,7 @@
     }
     @media (max-height: 550px) {
       .container {
-        padding-top: 55px;
+        padding-top: 75px;
       }
       #topbar {
         position: fixed;
@@ -362,9 +362,14 @@
         pointer-events: auto;
       }
       #gameWrap {
-        max-height: calc(100vh - 75px);
-        width: min(100%, calc((100vh - 75px) * 1.6));
+        max-height: calc(100vh - 90px);
+        width: min(100%, calc((100vh - 90px) * 1.6));
       }
+    }
+    .overlay.countdown-mode {
+      background: rgba(15, 23, 42, 0.25) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
     }
   </style>
 </head>
@@ -399,6 +404,11 @@
         <button id="normalBtn" class="game-opt-btn active">Normal</button>
         <button id="fastBtn" class="game-opt-btn">Fast</button>
         <button id="superBtn" class="game-opt-btn">Super</button>
+      </div>
+
+      <!-- Power-ups toggle -->
+      <div class="group" id="powerupGroup">
+        <button id="powerupBtn" class="game-opt-btn">Powerups: Off</button>
       </div>
 
       <!-- Pause button -->
@@ -472,8 +482,11 @@
     const fastBtn = document.getElementById('fastBtn');
     const superBtn = document.getElementById('superBtn');
     const pauseBtn = document.getElementById('pauseBtn');
+    const powerupBtn = document.getElementById('powerupBtn');
     const pauseSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display: inline-block; vertical-align: middle;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>`;
     const playSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display: inline-block; vertical-align: middle;"><path d="M8 6.82v10.36c0 .79.86 1.28 1.54.87l8.28-5.18c.63-.39.63-1.34 0-1.73L9.54 5.95C8.86 5.53 8 6.03 8 6.82z"></path></svg>`;
+    let powerupsEnabled = false;
+    let activePowerup = null;
     
     const modeBadge = document.getElementById('modeBadge');
     const speedGroup = document.getElementById('speedGroup');
@@ -714,6 +727,20 @@
     fastBtn.onclick = () => setSpeed('fast');
     superBtn.onclick = () => setSpeed('super');
 
+    powerupBtn.onclick = () => {
+      if (gameMode === 'multi' && mpRole === 'O') return;
+      togglePowerups(true);
+    };
+
+    function togglePowerups(sync = true) {
+      powerupsEnabled = !powerupsEnabled;
+      powerupBtn.classList.toggle('active', powerupsEnabled);
+      powerupBtn.textContent = `Powerups: ${powerupsEnabled ? 'On' : 'Off'}`;
+      if (gameMode === 'multi' && mpRole === 'X' && sync) {
+        gameMP.send('powerups_change', { powerupsEnabled });
+      }
+    }
+
     pauseBtn.onclick = () => {
       if (gameMode === 'multi' && mpRole === 'O') return;
       togglePause(true);
@@ -786,6 +813,14 @@
     function restartGame(sync = true) {
       left.score = 0;
       right.score = 0;
+      left.paddleHeight = paddle.height;
+      left.growTimer = 0;
+      right.paddleHeight = paddle.height;
+      right.growTimer = 0;
+      ball.invisible = false;
+      ball.glowing = false;
+      ball.lastHitBy = null;
+      activePowerup = null;
       paused = false;
       pauseBtn.innerHTML = pauseSvg;
       resetBall(Math.random() > 0.5 ? 1 : -1);
@@ -800,6 +835,7 @@
     }
 
     function updateOverlay() {
+      overlay.classList.remove('countdown-mode');
       if (paused) {
         overlayTitle.textContent = 'II';
         overlaySub.textContent = '';
@@ -809,6 +845,7 @@
       }
 
       if (gameState === 'countdown') {
+        overlay.classList.add('countdown-mode');
         overlayTitle.textContent = countdown > 0 ? countdown : 'GO!';
         overlaySub.textContent = 'Get Ready...';
         overlayBtn.style.display = 'none';
@@ -897,8 +934,8 @@
     }, { passive: true });
 
     function clampPaddles() {
-      left.y = Math.max(0, Math.min(ch - paddle.height, left.y));
-      right.y = Math.max(0, Math.min(ch - paddle.height, right.y));
+      left.y = Math.max(0, Math.min(ch - (left.paddleHeight || paddle.height), left.y));
+      right.y = Math.max(0, Math.min(ch - (right.paddleHeight || paddle.height), right.y));
     }
 
     // Check if the required inputs for "Hold to Play" are active
@@ -970,6 +1007,16 @@
         });
       }
 
+      // Update paddle sizes grow timers
+      if (left.growTimer > 0) {
+        left.growTimer -= dt;
+        if (left.growTimer <= 0) left.paddleHeight = paddle.height;
+      }
+      if (right.growTimer > 0) {
+        right.growTimer -= dt;
+        if (right.growTimer <= 0) right.paddleHeight = paddle.height;
+      }
+
       clampPaddles();
 
       // Track paddle vertical speeds
@@ -987,8 +1034,6 @@
           lastGuestSend = now;
         }
       }
-
-
 
       if (gameState === 'countdown') {
         if (gameMode !== 'multi' || mpRole === 'X') {
@@ -1013,105 +1058,174 @@
 
       // ── Physics loop (Authority: Host / Solo only) ──
       if (gameMode !== 'multi' || mpRole === 'X') {
-        // AI Bot movements
+        // AI Bot movements (Beatable scaling)
         if (mode === 'bot') {
-          const target = ball.y - paddle.height / 2;
+          const lH = right.paddleHeight || paddle.height;
+          if (Math.random() < 0.03) {
+            right.targetOffset = (Math.random() - 0.5) * (lH * 0.6);
+          }
+          const offset = right.targetOffset || 0;
+          const target = ball.y - lH / 2 + offset;
           const diff = target - right.y;
-          // Bot speed scales with ball speed to stay competitive
-          const botMaxSpeed = 3.5 + ball.currentSpeed * 0.25;
-          const botResponsiveness = 0.1 + (ball.currentSpeed / 30) * 0.05;
+          const botMaxSpeed = 3.2 + ball.currentSpeed * 0.22;
+          const botResponsiveness = 0.08 + (ball.currentSpeed / 30) * 0.04;
           right.y += Math.max(-botMaxSpeed, Math.min(botMaxSpeed, diff * botResponsiveness));
           clampPaddles();
         }
 
-        // Move ball (apply spin curvature if active)
-        if (ball.spin && ball.spin !== 0) {
-          // Rotate velocity vector by ball.spin radians
-          const dTheta = ball.spin;
-          const cosT = Math.cos(dTheta);
-          const sinT = Math.sin(dTheta);
-          const rx = ball.vx * cosT - ball.vy * sinT;
-          const ry = ball.vx * sinT + ball.vy * cosT;
-          
-          ball.vx = rx;
-          ball.vy = ry;
-
-          // Gradually decay spin over time for natural curvature
-          ball.spin *= 0.95;
-          if (Math.abs(ball.spin) < 0.001) ball.spin = 0;
-
-          // Re-normalize velocity vector to maintain speed
-          const len = Math.hypot(ball.vx, ball.vy);
-          if (len > 0) {
-            ball.vx = (ball.vx / len) * ball.currentSpeed;
-            ball.vy = (ball.vy / len) * ball.currentSpeed;
-          }
-        } else {
-          // Prevent perfectly vertical or horizontal movement to avoid stuckness (only when no spin is active)
-          const minVx = 1.5;
-          const minVy = 0.8;
-          let adjusted = false;
-          if (Math.abs(ball.vx) < minVx) {
-            ball.vx = Math.sign(ball.vx || (Math.random() > 0.5 ? 1 : -1)) * minVx;
-            adjusted = true;
-          }
-          if (Math.abs(ball.vy) < minVy) {
-            ball.vy = Math.sign(ball.vy || (Math.random() > 0.5 ? 1 : -1)) * minVy;
-            adjusted = true;
-          }
-          if (adjusted) {
-            const len = Math.hypot(ball.vx, ball.vy);
-            if (len > 0) {
-              ball.vx = (ball.vx / len) * ball.currentSpeed;
-              ball.vy = (ball.vy / len) * ball.currentSpeed;
+        // Spawn powerups
+        if (powerupsEnabled && activePowerup === null) {
+          if (Math.random() < 0.005) {
+            const types = ['score_plus2', 'score_minus2', 'grow_paddle', 'invisible_ball', 'glow_ball'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            const px = Math.floor(Math.random() * 500) + 150;
+            const py = Math.floor(Math.random() * 340) + 80;
+            activePowerup = { x: px, y: py, radius: 25, type };
+            if (gameMode === 'multi' && mpRole === 'X') {
+              gameMP.send('powerup_spawn', { activePowerup });
             }
           }
         }
-        ball.x += ball.vx;
-        ball.y += ball.vy;
 
-        // Ball trail
-        ball.trail.push({ x: ball.x, y: ball.y });
-        if (ball.trail.length > 8) ball.trail.shift();
+        // Move ball with continuous sub-stepping
+        const nextVxRaw = ball.vx;
+        const nextVyRaw = ball.vy;
 
-        // Top/Bottom wall bounce
-        if (ball.y - ball.size < 0 && ball.vy < 0) {
-          ball.y = ball.size;
-          ball.vy *= -1;
-          ball.spin = 0;
-          playSound('bounce');
+        // Apply spin curvature
+        let finalVx = nextVxRaw;
+        let finalVy = nextVyRaw;
+        if (ball.spin && ball.spin !== 0) {
+          const dTheta = ball.spin;
+          const cosT = Math.cos(dTheta);
+          const sinT = Math.sin(dTheta);
+          finalVx = nextVxRaw * cosT - nextVyRaw * sinT;
+          finalVy = nextVxRaw * sinT + nextVyRaw * cosT;
+          ball.spin *= 0.95;
+          if (Math.abs(ball.spin) < 0.001) ball.spin = 0;
+          const len = Math.hypot(finalVx, finalVy);
+          if (len > 0) {
+            finalVx = (finalVx / len) * ball.currentSpeed;
+            finalVy = (finalVy / len) * ball.currentSpeed;
+          }
+        } else {
+          const minVx = 1.5;
+          const minVy = 0.8;
+          let adjusted = false;
+          let tempVx = finalVx;
+          let tempVy = finalVy;
+          if (Math.abs(tempVx) < minVx) {
+            tempVx = Math.sign(tempVx || (Math.random() > 0.5 ? 1 : -1)) * minVx;
+            adjusted = true;
+          }
+          if (Math.abs(tempVy) < minVy) {
+            tempVy = Math.sign(tempVy || (Math.random() > 0.5 ? 1 : -1)) * minVy;
+            adjusted = true;
+          }
+          if (adjusted) {
+            const len = Math.hypot(tempVx, tempVy);
+            if (len > 0) {
+              finalVx = (tempVx / len) * ball.currentSpeed;
+              finalVy = (tempVy / len) * ball.currentSpeed;
+            }
+          }
         }
-        if (ball.y + ball.size > ch && ball.vy > 0) {
-          ball.y = ch - ball.size;
-          ball.vy *= -1;
-          ball.spin = 0;
-          playSound('bounce');
-        }
+        ball.vx = finalVx;
+        ball.vy = finalVy;
 
-        // Paddle hits
-        // Left paddle collision
-        if (ball.vx < 0 && 
-            ball.x - ball.size <= left.x + paddle.width && 
-            ball.x - ball.size >= left.x &&
-            ball.y >= left.y && 
-            ball.y <= left.y + paddle.height) {
-          
-          handlePaddleHit(left, true);
-        }
+        // Sub-stepping loop
+        const subSteps = Math.ceil(Math.hypot(ball.vx, ball.vy) / 3);
+        const dx = ball.vx / subSteps;
+        const dy = ball.vy / subSteps;
+        let hitSomething = false;
 
-        // Right paddle collision
-        if (ball.vx > 0 && 
-            ball.x + ball.size >= right.x && 
-            ball.x + ball.size <= right.x + paddle.width &&
-            ball.y >= right.y && 
-            ball.y <= right.y + paddle.height) {
-          
-          handlePaddleHit(right, false);
+        for (let stepIdx = 0; stepIdx < subSteps; stepIdx++) {
+          ball.x += dx;
+          ball.y += dy;
+
+          // Ball trail
+          ball.trail.push({ x: ball.x, y: ball.y });
+          if (ball.trail.length > 8) ball.trail.shift();
+
+          // Top/Bottom wall bounce
+          if (ball.y - ball.size < 0 && ball.vy < 0) {
+            ball.y = ball.size;
+            ball.vy *= -1;
+            ball.spin = 0;
+            playSound('bounce');
+          }
+          if (ball.y + ball.size > ch && ball.vy > 0) {
+            ball.y = ch - ball.size;
+            ball.vy *= -1;
+            ball.spin = 0;
+            playSound('bounce');
+          }
+
+          // Left paddle collision
+          const lH = left.paddleHeight || paddle.height;
+          if (ball.vx < 0 && 
+              ball.x - ball.size <= left.x + paddle.width && 
+              ball.x - ball.size >= left.x &&
+              ball.y >= left.y && 
+              ball.y <= left.y + lH) {
+            handlePaddleHit(left, true);
+            hitSomething = true;
+            break;
+          }
+
+          // Right paddle collision
+          const rH = right.paddleHeight || paddle.height;
+          if (ball.vx > 0 && 
+              ball.x + ball.size >= right.x && 
+              ball.x + ball.size <= right.x + paddle.width &&
+              ball.y >= right.y && 
+              ball.y <= right.y + rH) {
+            handlePaddleHit(right, false);
+            hitSomething = true;
+            break;
+          }
+
+          // Powerup collision
+          if (activePowerup !== null) {
+            const distToPower = Math.hypot(ball.x - activePowerup.x, ball.y - activePowerup.y);
+            if (distToPower <= ball.size + activePowerup.radius) {
+              const receiver = ball.lastHitBy;
+              if (receiver) {
+                if (activePowerup.type === 'score_plus2') {
+                  const pObj = (receiver === 'left') ? left : right;
+                  pObj.score = Math.min(10, pObj.score + 2);
+                  playSound('score');
+                  if (pObj.score >= 10) {
+                    endGame(receiver);
+                    activePowerup = null;
+                    return;
+                  }
+                } else if (activePowerup.type === 'score_minus2') {
+                  const pObj = (receiver === 'left') ? left : right;
+                  pObj.score = Math.max(0, pObj.score - 2);
+                  playSound('score');
+                } else if (activePowerup.type === 'grow_paddle') {
+                  const pObj = (receiver === 'left') ? left : right;
+                  pObj.paddleHeight = Math.min(ch, paddle.height * 1.8);
+                  pObj.growTimer = 10000;
+                  playSound('score');
+                } else if (activePowerup.type === 'invisible_ball') {
+                  ball.invisible = true;
+                  playSound('bounce');
+                } else if (activePowerup.type === 'glow_ball') {
+                  ball.glowing = true;
+                  playSound('bounce');
+                }
+              }
+              if (gameMode === 'multi' && mpRole === 'X') {
+                gameMP.send('powerup_collect', { lastHitBy: ball.lastHitBy, type: activePowerup.type });
+              }
+              activePowerup = null;
+            }
+          }
         }
 
         // Scoring goals
         if (ball.x < 0) {
-          // Right scores
           right.score++;
           playSound('score');
           ball.trail = [];
@@ -1119,10 +1233,9 @@
             endGame('right');
           } else {
             startCountdown();
-            resetBall(1); // Give ball to loser (left)
+            resetBall(1);
           }
         } else if (ball.x > cw) {
-          // Left scores
           left.score++;
           playSound('score');
           ball.trail = [];
@@ -1130,7 +1243,7 @@
             endGame('left');
           } else {
             startCountdown();
-            resetBall(-1); // Give ball to loser (right)
+            resetBall(-1);
           }
         }
       }
@@ -1140,12 +1253,19 @@
     }
 
     function handlePaddleHit(p, isLeft) {
+      // Reset ball invisible and glowing statuses
+      ball.invisible = false;
+      ball.glowing = false;
+      ball.lastHitBy = isLeft ? 'left' : 'right';
+
+      const pH = p.paddleHeight || paddle.height;
+
       // Reverse horizontal speed directly and apply speed boost (cap at 30)
       let vx = (isLeft ? 1 : -1) * Math.abs(ball.vx) * 1.05;
 
       // Deflect vertical speed based on paddle hit point
-      const relativeIntersectY = ball.y - (p.y + paddle.height / 2);
-      const normalizedIntersectY = relativeIntersectY / (paddle.height / 2); // -1 to 1
+      const relativeIntersectY = ball.y - (p.y + pH / 2);
+      const normalizedIntersectY = relativeIntersectY / (pH / 2); // -1 to 1
       
       const maxBounceAngle = 55 * Math.PI / 180;
       const bounceAngle = normalizedIntersectY * maxBounceAngle;
@@ -1237,8 +1357,18 @@
       ctx.shadowColor = color;
       ctx.fillStyle = color;
 
+      let currentHeight = p.paddleHeight || paddle.height;
+      if (p.growTimer > 0 && p.growTimer <= 3000) {
+        // Flicker height in last 3 seconds
+        if (Math.floor(p.growTimer / 250) % 2 === 0) {
+          currentHeight = paddle.height;
+        } else {
+          currentHeight = paddle.height * 1.8;
+        }
+      }
+
       ctx.beginPath();
-      ctx.roundRect(p.x, p.y, paddle.width, paddle.height, 8);
+      ctx.roundRect(p.x, p.y, paddle.width, currentHeight, 8);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -1246,18 +1376,34 @@
     function drawBallElement() {
       if (gameState === 'hold' || gameState === 'countdown') return;
 
-      // Draw trail
-      ball.trail.forEach((t, i) => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.05 + (i / ball.trail.length) * 0.2})`;
+      // Glow circle overlay if ball is in glowing state
+      if (ball.glowing) {
+        ctx.save();
+        const grad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, 180);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+        grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.3)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(t.x, t.y, ball.size * (0.4 + (i / ball.trail.length) * 0.6), 0, Math.PI * 2);
+        ctx.arc(ball.x, ball.y, 180, 0, Math.PI * 2);
         ctx.fill();
-      });
+        ctx.restore();
+      }
 
-      // Draw main ball
-      ctx.fillStyle = 'white';
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = 'white';
+      // Draw trail (hidden if invisible)
+      if (!ball.invisible) {
+        ball.trail.forEach((t, i) => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.05 + (i / ball.trail.length) * 0.2})`;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, ball.size * (0.4 + (i / ball.trail.length) * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // Draw main ball (background color if invisible)
+      ctx.fillStyle = ball.invisible ? '#0a0f1d' : 'white';
+      ctx.shadowBlur = ball.invisible ? 0 : 20;
+      ctx.shadowColor = ball.invisible ? 'transparent' : 'white';
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
       ctx.fill();
@@ -1290,7 +1436,8 @@
               gameState: gameState,
               countdown: countdown,
               paused: paused,
-              speedMode: speedMode
+              speedMode: speedMode,
+          powerupsEnabled: powerupsEnabled
             }
           });
           lastHostSend = now;
@@ -1386,6 +1533,41 @@
       };
       gameMP.on('speed_change', onSpeedHandler);
 
+      // Powerups synchronizer for Guest
+      onPowerupsHandler = (data) => {
+        if (mpRole === 'O') {
+          powerupsEnabled = data.powerupsEnabled;
+          powerupBtn.classList.toggle('active', powerupsEnabled);
+          powerupBtn.textContent = `Powerups: ${powerupsEnabled ? 'On' : 'Off'}`;
+        }
+      };
+      gameMP.on('powerups_change', onPowerupsHandler);
+
+      // Powerups Spawn synchronizer
+      onPowerupSpawnHandler = (data) => {
+        activePowerup = data.activePowerup;
+      };
+      gameMP.on('powerup_spawn', onPowerupSpawnHandler);
+
+      // Powerups Collect synchronizer
+      onPowerupCollectHandler = (data) => {
+        const receiver = data.lastHitBy;
+        const type = data.type;
+        if (receiver) {
+          if (type === 'grow_paddle') {
+            const pObj = (receiver === 'left') ? left : right;
+            pObj.paddleHeight = Math.min(ch, paddle.height * 1.8);
+            pObj.growTimer = 10000;
+          } else if (type === 'invisible_ball') {
+            ball.invisible = true;
+          } else if (type === 'glow_ball') {
+            ball.glowing = true;
+          }
+        }
+        activePowerup = null;
+      };
+      gameMP.on('powerup_collect', onPowerupCollectHandler);
+
       // Pause synchronizer for Guest
       onPauseHandler = (data) => {
         if (mpRole === 'O') {
@@ -1443,6 +1625,9 @@
         if (onMenuHandler) gameMP.off('menu', onMenuHandler);
         if (onRestartHandler) gameMP.off('restart_game', onRestartHandler);
         if (onSpeedHandler) gameMP.off('speed_change', onSpeedHandler);
+        if (onPowerupsHandler) gameMP.off('powerups_change', onPowerupsHandler);
+        if (onPowerupSpawnHandler) gameMP.off('powerup_spawn', onPowerupSpawnHandler);
+        if (onPowerupCollectHandler) gameMP.off('powerup_collect', onPowerupCollectHandler);
         if (onPauseHandler) gameMP.off('pause_change', onPauseHandler);
       }
     });
