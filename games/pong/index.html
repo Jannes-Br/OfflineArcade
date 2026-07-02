@@ -238,10 +238,9 @@
     }
 
     #gameWrap {
-      width: 100%;
+      width: min(100%, calc((100vh - 200px) * 1.6));
       max-width: 900px;
       aspect-ratio: 16 / 10;
-      max-height: calc(100vh - 200px);
       border-radius: 24px;
       overflow: hidden;
       border: 1px solid var(--box-border);
@@ -349,6 +348,24 @@
         border-radius: 10px;
       }
     }
+    @media (max-height: 550px) {
+      .container {
+        padding-top: 55px;
+      }
+      #topbar {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 0;
+        z-index: 200;
+        pointer-events: auto;
+      }
+      #gameWrap {
+        max-height: calc(100vh - 75px);
+        width: min(100%, calc((100vh - 75px) * 1.6));
+      }
+    }
   </style>
 </head>
 <body>
@@ -386,7 +403,9 @@
 
       <!-- Pause button -->
       <div class="group">
-        <button id="pauseBtn" class="game-opt-btn">II</button>
+        <button id="pauseBtn" class="game-opt-btn" title="Pause">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display: inline-block; vertical-align: middle;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+        </button>
       </div>
     </div>
 
@@ -453,6 +472,8 @@
     const fastBtn = document.getElementById('fastBtn');
     const superBtn = document.getElementById('superBtn');
     const pauseBtn = document.getElementById('pauseBtn');
+    const pauseSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display: inline-block; vertical-align: middle;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>`;
+    const playSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display: inline-block; vertical-align: middle;"><path d="M8 6.82v10.36c0 .79.86 1.28 1.54.87l8.28-5.18c.63-.39.63-1.34 0-1.73L9.54 5.95C8.86 5.53 8 6.03 8 6.82z"></path></svg>`;
     
     const modeBadge = document.getElementById('modeBadge');
     const speedGroup = document.getElementById('speedGroup');
@@ -700,7 +721,7 @@
 
     function togglePause(sync = true) {
       paused = !paused;
-      pauseBtn.textContent = paused ? '▶' : 'II';
+      pauseBtn.innerHTML = paused ? playSvg : pauseSvg;
       if (!paused && (gameState === 'playing' || gameState === 'countdown')) {
         startCountdown();
       }
@@ -766,7 +787,7 @@
       left.score = 0;
       right.score = 0;
       paused = false;
-      pauseBtn.textContent = 'II';
+      pauseBtn.innerHTML = pauseSvg;
       resetBall(Math.random() > 0.5 ? 1 : -1);
       if (gameMode !== 'multi' || mpRole === 'X') {
         startCountdown();
@@ -1333,7 +1354,7 @@
           const prevPaused = paused;
           paused = data.paused;
           if (paused !== prevPaused) {
-            pauseBtn.textContent = paused ? '▶' : 'II';
+            pauseBtn.innerHTML = paused ? playSvg : pauseSvg;
           }
 
           const prevSpeed = speedMode;
@@ -1369,7 +1390,7 @@
       onPauseHandler = (data) => {
         if (mpRole === 'O') {
           paused = data.paused;
-          pauseBtn.textContent = paused ? '▶' : 'II';
+          pauseBtn.innerHTML = paused ? playSvg : pauseSvg;
           if (!paused && (gameState === 'playing' || gameState === 'countdown')) {
             startCountdown();
           }
