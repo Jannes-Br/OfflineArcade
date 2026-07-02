@@ -137,8 +137,8 @@
     .control-btn:hover{background:var(--btn-hover-bg);border-color:var(--btn-hover-border);transform:translateY(-1px);}
     .control-btn:active{transform:scale(.97);}
 
-    /* ── Landscape ── */
-    @media(max-height:550px) and (orientation:landscape){
+     /* ── Landscape / Small Height ── */
+     @media(max-height:550px){
       .container{padding:55px 12px 10px;height:auto;min-height:100vh;}
       .game-box{max-width:680px;display:grid;grid-template-columns:1fr 1.1fr;gap:20px;padding:16px;align-items:center;}
       .title-section{display:flex;flex-direction:column;justify-content:center;}
@@ -843,6 +843,27 @@
     /* ── Start ── */
     initMode();
     createBoard();
+
+    function adjustScale() {
+      const gameBox = document.querySelector('.game-box');
+      if (!gameBox) return;
+      gameBox.style.transform = 'none';
+      
+      const windowHeight = window.innerHeight;
+      const headerHeight = 70;
+      const padding = 20;
+      const availableHeight = windowHeight - headerHeight - padding;
+      const boxHeight = gameBox.offsetHeight;
+      
+      if (boxHeight > availableHeight) {
+        const scale = Math.max(0.4, availableHeight / boxHeight);
+        gameBox.style.transform = `scale(${scale})`;
+        gameBox.style.transformOrigin = 'center center';
+      }
+    }
+    window.addEventListener('resize', adjustScale);
+    window.addEventListener('load', adjustScale);
+    setTimeout(adjustScale, 100);
   </script>
 </body>
 </html>
