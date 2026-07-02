@@ -760,6 +760,8 @@
     }
 
     function resetBall(direction = 1) {
+      activePowerup = null;
+      powerupSpawnTimer = 4000; // 4 seconds cooldown after a goal before spawning
       ball.x = 400;
       ball.y = 250;
       ball.currentSpeed = getBaseSpeed();
@@ -936,8 +938,11 @@
     }, { passive: true });
 
     function clampPaddles() {
-      left.y = Math.max(0, Math.min(ch - (left.paddleHeight || paddle.height), left.y));
-      right.y = Math.max(0, Math.min(ch - (right.paddleHeight || paddle.height), right.y));
+      const leftDiff = (left.paddleHeight || paddle.height) - paddle.height;
+      left.y = Math.max(leftDiff / 2, Math.min(ch - paddle.height - leftDiff / 2, left.y));
+      
+      const rightDiff = (right.paddleHeight || paddle.height) - paddle.height;
+      right.y = Math.max(rightDiff / 2, Math.min(ch - paddle.height - rightDiff / 2, right.y));
     }
 
     // Check if the required inputs for "Hold to Play" are active
@@ -1024,14 +1029,7 @@
         powerupSpawnTimer -= dt;
       }
 
-      // Update power-up expiry timer
-      if (activePowerup !== null) {
-        activePowerup.duration -= dt;
-        if (activePowerup.duration <= 0) {
-          activePowerup = null;
-          powerupSpawnTimer = 6000; // 6 seconds cooldown on expiry
-        }
-      }
+      // Power-up stays on screen until collected or goal scored (no expiry timer)
 
       clampPaddles();
 
@@ -1083,8 +1081,8 @@
           const offset = right.targetOffset || 0;
           const target = ball.y - lH / 2 + offset;
           const diff = target - right.y;
-          const botMaxSpeed = 3.2 + ball.currentSpeed * 0.22;
-          const botResponsiveness = 0.08 + (ball.currentSpeed / 30) * 0.04;
+          const botMaxSpeed = 3.8 + ball.currentSpeed * 0.28;
+          const botResponsiveness = 0.12 + (ball.currentSpeed / 30) * 0.06;
           right.y += Math.max(-botMaxSpeed, Math.min(botMaxSpeed, diff * botResponsiveness));
           clampPaddles();
         }
@@ -1096,7 +1094,7 @@
             const type = types[Math.floor(Math.random() * types.length)];
             const px = Math.floor(Math.random() * 500) + 150;
             const py = Math.floor(Math.random() * 340) + 80;
-            activePowerup = { x: px, y: py, radius: 25, type, duration: 8000 }; // 8 seconds duration
+            activePowerup = { x: px, y: py, radius: 25, type }; // stays indefinitely until goal/collection
             if (gameMode === 'multi' && mpRole === 'X') {
               gameMP.send('powerup_spawn', { activePowerup });
             }
@@ -1176,25 +1174,29 @@
             playSound('bounce');
           }
 
-          // Left paddle collision
+          // Left paddle collision (Symmetrical height offset)
           const lH = left.paddleHeight || paddle.height;
+          const leftDiff = lH - paddle.height;
+          const leftCollideY = left.y - leftDiff / 2;
           if (ball.vx < 0 && 
               ball.x - ball.size <= left.x + paddle.width && 
               ball.x - ball.size >= left.x &&
-              ball.y >= left.y && 
-              ball.y <= left.y + lH) {
+              ball.y >= leftCollideY && 
+              ball.y <= leftCollideY + lH) {
             handlePaddleHit(left, true);
             hitSomething = true;
             break;
           }
 
-          // Right paddle collision
+          // Right paddle collision (Symmetrical height offset)
           const rH = right.paddleHeight || paddle.height;
+          const rightDiff = rH - paddle.height;
+          const rightCollideY = right.y - rightDiff / 2;
           if (ball.vx > 0 && 
               ball.x + ball.size >= right.x && 
               ball.x + ball.size <= right.x + paddle.width &&
-              ball.y >= right.y && 
-              ball.y <= right.y + rH) {
+              ball.y >= rightCollideY && 
+              ball.y <= rightCollideY + rH) {
             handlePaddleHit(right, false);
             hitSomething = true;
             break;
@@ -1467,8 +1469,11 @@
       ctx.shadowColor = color;
       ctx.fillStyle = color;
 
+      const heightDiff = currentHeight - paddle.height;
+      const drawY = p.y - heightDiff / 2;
+
       ctx.beginPath();
-      ctx.roundRect(p.x, p.y, paddle.width, currentHeight, 8);
+      ctx.roundRect(p.x, drawY, paddle.width, currentHeight, 8);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -1476,16 +1481,18 @@
     function drawBallElement() {
       if (gameState === 'hold' || gameState === 'countdown') return;
 
-      // Glow circle overlay if ball is in glowing state
+      // Glow circle overlay if ball is in glowing state (blinding white glow)
       if (ball.glowing) {
         ctx.save();
-        const grad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, 180);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
-        grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.3)');
+        const grad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, 250);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)'); // Solid white center
+        grad.addColorStop(0.15, 'rgba(255, 255, 255, 0.95)');
+        grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.65)');
+        grad.addColorStop(0.6, 'rgba(255, 255, 255, 0.25)');
         grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(ball.x, ball.y, 180, 0, Math.PI * 2);
+        ctx.arc(ball.x, ball.y, 250, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
