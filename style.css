@@ -860,15 +860,16 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   }
   .header-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
     width: 100%;
   }
   .profile-pill {
-    flex-basis: 100%;
-    justify-content: center;
-    margin-bottom: 4px;
+    flex-basis: auto;
+    justify-content: flex-start;
+    margin-bottom: 0;
   }
 }
 @media (max-width: 900px) {
@@ -876,6 +877,7 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   #install-info { width: 100%; max-width: 320px; }
 }
 @media (max-height: 550px) {
+  .app { overflow-y: auto; }
   header { padding: max(8px,env(safe-area-inset-top)) 20px 0; margin-bottom: 6px; }
   h1 { font-size: 25px; letter-spacing: -0.5px; }
   .mode-tabs { margin: 0 20px; }
@@ -888,11 +890,6 @@ body.dark-mode .toast { background: rgba(255,255,255,0.12); }
   .game-description { font-size: 10px; }
   .footer { flex-direction: row !important; justify-content: center; gap: 6px; padding: 4px 20px max(6px,env(safe-area-inset-bottom)); }
   #install-info { display: none !important; }
-  #app-info { position: fixed; bottom: 10px; right: 10px; padding: 6px 10px; border-radius: 10px; }
-  .status-row { margin-bottom: 0; }
-  #online-status, .version-row { display: none; }
-  #reload-btn { width: 30px; height: 30px; font-size: 14px; }
-  .instructions-wrap { display: none; }
   .chat-fab { bottom: 60px; width: 44px; height: 44px; font-size: 18px; }
   .connection-bar { margin: 4px 20px 0; padding: 8px 12px; }
   .lobby-panel { margin: 4px 20px 0; padding: 10px; }
