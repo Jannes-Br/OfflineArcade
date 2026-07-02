@@ -866,6 +866,71 @@
       }
     }
 
+    let checkingEnclosures = false;
+    function checkEnclosures() {
+      const alive = players.filter(p => !p.dead);
+      const playersToKill = new Set();
+
+      alive.forEach(p => {
+        if (p.ownedCells.length === 0) return;
+
+        alive.forEach(b => {
+          if (b.id === p.id) return;
+          if (b.ownedCells.length === 0) return;
+
+          let queue = [];
+          let visited = [];
+          for (let c = 0; c < cols; c++) {
+            visited[c] = [];
+          }
+
+          p.ownedCells.forEach(cell => {
+            queue.push({ c: cell.c, r: cell.r });
+            visited[cell.c][cell.r] = true;
+          });
+
+          let surrounded = true;
+          let head = 0;
+
+          while (head < queue.length) {
+            const curr = queue[head++];
+            const neighbors = [
+              { c: curr.c + 1, r: curr.r },
+              { c: curr.c - 1, r: curr.r },
+              { c: curr.c, r: curr.r + 1 },
+              { c: curr.c, r: curr.r - 1 }
+            ];
+
+            for (const n of neighbors) {
+              if (isCellValid(n.c, n.r)) {
+                if (!visited[n.c][n.r]) {
+                  const ownerId = grid[n.c][n.r].owner;
+                  if (ownerId === b.id) {
+                    continue;
+                  }
+                  if (ownerId !== p.id) {
+                    surrounded = false;
+                    break;
+                  }
+                  visited[n.c][n.r] = true;
+                  queue.push(n);
+                }
+              }
+            }
+            if (!surrounded) break;
+          }
+
+          if (surrounded) {
+            playersToKill.add(p);
+          }
+        });
+      });
+
+      playersToKill.forEach(p => {
+        handleDeath(p, null);
+      });
+    }
+
     function rebuildOwnedCells() {
       players.forEach(p => {
         p.ownedCells = [];
@@ -880,6 +945,11 @@
             }
           }
         }
+      }
+      if (!checkingEnclosures) {
+        checkingEnclosures = true;
+        checkEnclosures();
+        checkingEnclosures = false;
       }
     }
 
@@ -1265,6 +1335,14 @@
                 playersToKill.add(other);
               }
             });
+            const prevOwnerId = grid[c][r].owner;
+            if (prevOwnerId !== null && prevOwnerId !== pid) {
+              const prevOwner = players.find(o => o.id === prevOwnerId);
+              if (prevOwner && prevOwner.isBot) {
+                prevOwner.rageTimer = 10000; // Rage/Anger for 10 seconds
+                prevOwner.rageTarget = player;
+              }
+            }
             grid[c][r].owner = pid;
             grid[c][r].trail = null;
             claimedCount++;
@@ -1649,8 +1727,25 @@
       if (!b.aiState) b.aiState = 'inside';
       if (b.planPhase === undefined) b.planPhase = 0;
       if (b.planSteps === undefined) b.planSteps = 0;
+      if (b.rageTimer === undefined) b.rageTimer = 0;
 
       const conf = getBotConfig(b.name);
+      
+      let minEnemyDist = Infinity;
+      players.forEach(other => {
+        if (other.dead || other.id === b.id) return;
+        const dist = Math.abs(b.x - other.x) + Math.abs(b.y - other.y);
+        if (dist < minEnemyDist) {
+          minEnemyDist = dist;
+        }
+      });
+
+      let dynamicMaxTrail = conf.maxTrail;
+      if (minEnemyDist > 25) {
+        dynamicMaxTrail = Math.floor(conf.maxTrail * 1.8);
+      } else if (minEnemyDist > 15) {
+        dynamicMaxTrail = Math.floor(conf.maxTrail * 1.4);
+      }
       
       // 4 neighboring directions
       const dirs = [
@@ -1691,6 +1786,31 @@
       let nonReverseDirs = dirsToUse.filter(d => !(d.vx === -b.vx && d.vy === -b.vy));
       const finalDirs = nonReverseDirs.length > 0 ? nonReverseDirs : dirsToUse;
 
+      // Loop prevention check
+      b.posHistory = b.posHistory || [];
+      b.posHistory.push(`${b.x},${b.y}`);
+      if (b.posHistory.length > 8) b.posHistory.shift();
+
+      const counts = {};
+      let isLooping = false;
+      b.posHistory.forEach(pos => {
+        counts[pos] = (counts[pos] || 0) + 1;
+        if (counts[pos] >= 3) {
+          isLooping = true;
+        }
+      });
+
+      if (isLooping) {
+        b.planPhase = 0;
+        b.planSteps = 0;
+        const chosen = finalDirs[Math.floor(Math.random() * finalDirs.length)];
+        b.nextVx = chosen.vx;
+        b.nextVy = chosen.vy;
+        b.aiState = 'returning';
+        b.posHistory = [];
+        return;
+      }
+
       // Threat detection: is any opponent within range of any cell of our trail?
       let threatDetected = false;
       let minEnemyToTrailDist = Infinity;
@@ -1724,7 +1844,7 @@
 
       // Check if we should retire home due to trail length or threat
       if (b.aiState !== 'inside') {
-        if (threatDetected || b.trail.length >= conf.maxTrail) {
+        if (threatDetected || b.trail.length >= dynamicMaxTrail) {
           b.aiState = 'returning';
         }
       }
@@ -1734,7 +1854,15 @@
       let minTrailDist = Infinity;
       let targetOpponent = null;
       
-      if (b.aiState !== 'returning') {
+      if (b.rageTimer > 0 && b.rageTarget && !b.rageTarget.dead) {
+        const targetCell = b.rageTarget.trail.length > 0 
+          ? b.rageTarget.trail[0] 
+          : { c: b.rageTarget.x, r: b.rageTarget.y };
+        b.aiState = 'hunting';
+        targetTrailCell = targetCell;
+        minTrailDist = Math.abs(b.x - targetCell.c) + Math.abs(b.y - targetCell.r);
+        targetOpponent = b.rageTarget;
+      } else if (b.aiState !== 'returning') {
         players.forEach(other => {
           if (other.dead || other.id === b.id) return;
           other.trail.forEach(tCell => {
@@ -2373,8 +2501,9 @@
         ctx.fillStyle = p.headColor;
         
         let glowSize = 10;
-        if (gameState === 'playing' && spawnTimer > 0) {
-          const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.008);
+        let isRaging = p.isBot && p.rageTimer > 0;
+        if ((gameState === 'playing' && spawnTimer > 0) || isRaging) {
+          const pulse = 0.5 + 0.5 * Math.sin(performance.now() * (isRaging ? 0.02 : 0.008));
           glowSize = 5 + pulse * 25;
           ctx.globalAlpha = 0.4 + pulse * 0.6;
         }
