@@ -606,8 +606,7 @@
     .toast-local.show{opacity:1;transform:translateX(-50%) translateY(0);}
     body.dark-mode .toast-local{background:rgba(255,255,255,.12);}
 
-    /* MOBILES QUERFORMAT (Landscape Optimierung) */
-    @media (max-height: 550px) and (orientation: landscape) {
+    @media (max-height: 550px) {
       .container {
         padding: 50px 12px 6px;
         height: auto;
@@ -2221,6 +2220,27 @@
 
     // Start Game
     init();
+
+    function adjustScale() {
+      const gameBox = document.querySelector('.game-box');
+      if (!gameBox) return;
+      gameBox.style.transform = 'none';
+      
+      const windowHeight = window.innerHeight;
+      const headerHeight = 70;
+      const padding = 20;
+      const availableHeight = windowHeight - headerHeight - padding;
+      const boxHeight = gameBox.offsetHeight;
+      
+      if (boxHeight > availableHeight) {
+        const scale = Math.max(0.4, availableHeight / boxHeight);
+        gameBox.style.transform = `scale(${scale})`;
+        gameBox.style.transformOrigin = 'center center';
+      }
+    }
+    window.addEventListener('resize', adjustScale);
+    window.addEventListener('load', adjustScale);
+    setTimeout(adjustScale, 100);
   </script>
 </body>
 </html>
